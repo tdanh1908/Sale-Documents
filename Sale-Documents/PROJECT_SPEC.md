@@ -12,7 +12,7 @@ Ngân sách vận hành: 500k-2 triệu VNĐ/tháng. Ưu tiên dịch vụ miễ
 - Thanh toán: SePay (webhook) + VietQR, ngân hàng MB (MBBank), tài khoản cá nhân của chủ web
 - Email giao dịch (reset mật khẩu, xác nhận): SMTP tùy chỉnh (Resend hoặc Brevo)
 - Thông báo cho admin: Telegram Bot
-- PDF: pdf-lib (watermark, cắt trang demo), pdf.js (xem online)
+- PDF: pdf-lib (đếm số trang), thư viện render trang PDF thành ảnh (làm ảnh bìa), pdf.js (xem online)
 - PWA: cài như app trên điện thoại
 
 ## Môn học
@@ -21,9 +21,14 @@ Văn: CHỈ bán tài liệu/đề, KHÔNG có bài thi thử và không xếp h
 
 ## Tài liệu
 - Loại: lý thuyết, bài tập, đề thi. Khoảng 30 tài liệu ban đầu: 20 miễn phí, 10 có phí.
-- Mỗi tài liệu có 2 file: bản demo (vài trang đầu, công khai) và bản đầy đủ (private).
+- Mỗi tài liệu chỉ có 2 file do admin tự upload: (1) FILE ĐẦY ĐỦ (private): đúng một file duy nhất; có watermark hay không là việc của admin, web KHÔNG thêm, sửa hay quan tâm tới watermark;
+  (2) FILE DEMO (public): đúng 3 trang do admin tự chọn và tự upload (web không tự cắt demo). Ảnh bìa tài liệu tự lấy từ trang 1 của file demo.
 - Giá xem online = số trang x đơn giá/trang (500-750đ, admin chỉnh được). Giá tải về = giá xem x 1,2 (làm tròn 500đ).
-- Chưa mua: chỉ xem demo. Đã mua xem online: xem đủ, có watermark tên + SĐT. Đã mua tải về: tải được file có watermark riêng.
+- Chưa mua: chỉ xem file demo. Đã mua gói "Xem online": đọc file đầy đủ trong trình xem của web (có nút Đọc, không có nút Tải).
+- Đã mua gói "Tải về": đọc được như trên và có thêm nút Tải; quyền tải VĨNH VIỄN (không hết hạn), tải lại bao nhiêu lần tùy ý. Người đã mua vẫn đọc/tải được kể cả khi tài liệu đã bị gỡ khỏi cửa hàng.
+  Xem và tải dùng CÙNG MỘT file đầy đủ, cấp qua link tạm thời hết hạn sau vài phút; web không thêm watermark hay dòng chữ nào vào file.
+- Giá tối thiểu: đơn hàng tối thiểu 2.000đ (ngân hàng không chuyển dưới mức này). Tổng nhỏ hơn thì giỏ hàng báo "Đơn tối thiểu 2.000đ" và gợi ý thêm tài liệu khác
+  (hiển thị vài tài liệu giá thấp/tài liệu liên quan để khách thêm vào). Phụ phí nâng cấp từ "xem" lên "tải" tối thiểu 2.000đ. Mức 2.000đ là cài đặt trong admin.
 - Tài liệu miễn phí: phải đăng nhập mới xem đủ (để gom danh sách học sinh).
 - Link file luôn là signed URL hết hạn sau vài phút, không bao giờ lộ đường dẫn cố định.
 
@@ -32,21 +37,49 @@ Văn: CHỈ bán tài liệu/đề, KHÔNG có bài thi thử và không xếp h
 - Admin tự làm được mọi việc mà không cần sửa code: đăng tài liệu mới, thay file PDF, sửa thông tin, đổi giá, gỡ khỏi cửa hàng, khôi phục.
 - "Gỡ" tài liệu = ẨN khỏi cửa hàng (soft delete). Người đã mua vẫn đọc/tải được. Chỉ cho xóa vĩnh viễn khi chưa có ai mua, và phải xác nhận 2 lần.
 - Đổi giá chỉ áp dụng cho đơn mới. Mỗi đơn lưu lại giá tại thời điểm mua (đơn cũ không bị đổi). Có lịch sử đổi giá.
-- Thay file PDF mới (phiên bản mới): người đã mua thấy bản mới, hệ thống xóa các file watermark đã lưu và tạo lại khi cần.
+- Thay file đầy đủ hoặc file demo (thay riêng từng file): người đã mua thấy file đầy đủ mới.
 - Mọi thao tác của admin được ghi nhật ký (audit log).
 
+## Email sau khi mua
+- KHÔNG đính kèm file PDF trong email. Sau khi thanh toán thành công, gửi email xác nhận đơn hàng gồm: tên tài liệu, quyền đã mua (xem online / tải về), số tiền, mã đơn, thời gian, và nút "Đọc tài liệu" dẫn tới trang đọc tài liệu trong tài khoản.
+- Link trong email là link tới trang web (ví dụ /doc/<slug>), khách PHẢI đăng nhập đúng tài khoản đã mua mới xem được. Không đặt signed URL trực tiếp tới file trong email.
+- Email gửi nền (không làm chậm webhook), tự thử lại nếu lỗi, không gửi trùng khi webhook gọi lặp. Dùng chung dịch vụ SMTP với email đặt lại mật khẩu.
+- Email giao dịch (xác nhận đơn) khác với email marketing: email marketing chỉ gửi cho người tick đồng ý nhận và phải có nút hủy đăng ký.
+
 ## Premium
-59.000đ / 30 ngày: xem online mọi tài liệu có phí, tải về tối đa 5 bản trong 30 ngày, làm mọi đề thi có phí (kể cả link Azota).
+59.000đ / 30 ngày: xem online mọi tài liệu có phí, làm mọi đề thi có phí (kể cả link Azota).
+Quyền tải: được tải tối đa 5 TÀI LIỆU KHÁC NHAU trong thời gian Premium. Lần đầu bấm tải một tài liệu thì tài liệu đó chiếm 1 trong 5 suất;
+5 tài liệu đã chiếm suất thì tải lại bao nhiêu lần cũng được trong thời gian Premium. Hết Premium thì hết quyền tải (file đã tải về máy vẫn còn).
+Gia hạn Premium: làm mới 5 suất cho kỳ mới. Web hiển thị "Đã dùng 2/5 suất tải".
 
 ## Mã giảm giá
 Giảm theo %, là chuỗi ký tự người dùng nhập. Mỗi tài khoản dùng tối đa 1 lần cho mỗi mã.
 Mỗi mã có ngày giờ bắt đầu và kết thúc (thường trong 1 ngày). Admin tự tạo/tắt mã.
+Hỗ trợ mã giảm 100% (đơn 0đ): không hiện mã QR, không cần chuyển khoản, đơn tự chuyển `paid` và mở khóa tài liệu ngay (vẫn gửi email xác nhận, báo Telegram).
+Đơn 0đ không tính vào doanh thu và không phải chịu mức đơn tối thiểu 2.000đ. Mã 100% bắt buộc có: số lượt dùng tối đa, thời gian hiệu lực, chỉ tài khoản đã xác minh email mới dùng được,
+và (tùy chọn) giới hạn áp dụng cho một số tài liệu. Tổng sau giảm nằm giữa 1đ và 1.999đ thì thu 2.000đ.
 
 ## Thi thử
 - Chỉ trắc nghiệm (A/B/C/D). Chấm tự động trên web, có bấm giờ.
 - Loại 1: đề làm trên web (tính điểm vào bảng xếp hạng).
 - Loại 2: đề làm trên Azota: admin dán link, chỉ hiện nút mở link khi người dùng đủ quyền (miễn phí / đã mua / premium). Loại này không tự vào bảng xếp hạng.
 - Admin nhập đề bằng cách dán JSON (do AI trích từ Word/PDF) vào trang admin.
+
+## Kỳ thi (sự kiện thi thử do admin quản lý, để kéo tương tác)
+- Admin tự tạo "Kỳ thi" để quyết định học sinh được thi đề nào, khi nào. Mỗi kỳ thi có: tên, mô tả và thể lệ, ảnh banner, danh sách đề được chọn từ kho đề (đề làm trên web hoặc đề Azota),
+  thời gian mở và đóng (hẹn giờ, web tự mở/đóng), ai được tham gia (mọi tài khoản / chỉ Premium / chỉ người đã mua), số lần thi tối đa,
+  tính vào bảng xếp hạng chung hay chỉ bảng xếp hạng riêng của kỳ thi, thời điểm hiện đáp án và giải thích (ngay sau khi nộp / sau khi kỳ thi kết thúc), phần thưởng (mã giảm giá, vinh danh top N).
+- Trạng thái: Nháp, Đã hẹn giờ, Đang diễn ra, Đã kết thúc. Có nút "Mở ngay", "Đóng ngay", "Nhân bản kỳ thi".
+- Mỗi đề trong kho chọn được: "Luôn mở" hoặc "Chỉ mở trong kỳ thi".
+- Trang chủ hiện kỳ thi đang diễn ra (đồng hồ đếm ngược, nút Tham gia) và kỳ thi sắp tới.
+- Thống kê từng kỳ thi: số người tham gia, số lượt thi, điểm trung bình, phân bố điểm, tỷ lệ hoàn thành, số người mua tài liệu sau khi thi, nguồn khách; xuất CSV; báo tổng kết qua Telegram khi kỳ thi kết thúc.
+
+## Chuyển đổi người thi thành người mua
+1. Gợi ý tài liệu sau khi thi: mỗi câu hỏi có trường `topic` (chủ đề). Admin gán chủ đề với tài liệu (bảng topic_documents). Trang kết quả hiện 2-3 chủ đề làm sai nhiều nhất kèm tài liệu gợi ý và nút Mua.
+   Chưa gán thì gợi ý tài liệu cùng môn.
+2. Mã giảm giá tặng sau lần thi đầu: cấu hình theo từng kỳ thi (% giảm, thời hạn tính từ lúc nộp bài, ví dụ 48 giờ, phạm vi tài liệu, số lượt tối đa). Web tự tạo mã riêng cho từng học sinh, dùng 1 lần,
+   hiện ở trang kết quả và trong tài khoản (có đếm ngược). Mỗi tài khoản chỉ nhận 1 mã cho mỗi kỳ thi.
+3. Chia sẻ kết quả: nút chia sẻ Facebook/Zalo/sao chép link, kèm mã giới thiệu bạn bè. Thẻ xem trước chỉ hiện môn, điểm và biệt danh ĐÃ DUYỆT (hoặc "Một học sinh"); KHÔNG hiện tên thật, trường, SĐT.
 
 ## Bảng xếp hạng
 - Top 10 theo từng môn: lấy điểm cao nhất của mỗi học sinh ở môn đó.
