@@ -27,6 +27,14 @@ Văn: CHỈ bán tài liệu/đề, KHÔNG có bài thi thử và không xếp h
 - Tài liệu miễn phí: phải đăng nhập mới xem đủ (để gom danh sách học sinh).
 - Link file luôn là signed URL hết hạn sau vài phút, không bao giờ lộ đường dẫn cố định.
 
+## Quản trị tài liệu (admin làm việc chủ yếu trên MÁY TÍNH)
+- Trang admin thiết kế desktop-first (bảng dữ liệu rộng, thao tác chuột/bàn phím, kéo thả file); điện thoại chỉ cần xem và duyệt nhanh.
+- Admin tự làm được mọi việc mà không cần sửa code: đăng tài liệu mới, thay file PDF, sửa thông tin, đổi giá, gỡ khỏi cửa hàng, khôi phục.
+- "Gỡ" tài liệu = ẨN khỏi cửa hàng (soft delete). Người đã mua vẫn đọc/tải được. Chỉ cho xóa vĩnh viễn khi chưa có ai mua, và phải xác nhận 2 lần.
+- Đổi giá chỉ áp dụng cho đơn mới. Mỗi đơn lưu lại giá tại thời điểm mua (đơn cũ không bị đổi). Có lịch sử đổi giá.
+- Thay file PDF mới (phiên bản mới): người đã mua thấy bản mới, hệ thống xóa các file watermark đã lưu và tạo lại khi cần.
+- Mọi thao tác của admin được ghi nhật ký (audit log).
+
 ## Premium
 59.000đ / 30 ngày: xem online mọi tài liệu có phí, tải về tối đa 5 bản trong 30 ngày, làm mọi đề thi có phí (kể cả link Azota).
 
