@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="vi" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ÔnThiPro - Nền tảng Tài liệu THPT Quốc Gia</title>
+    
+    <!-- Google Fonts: Nunito -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Nunito', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#3B82F6', // Xanh dương
+                        primaryHover: '#2563EB',
+                        accent: '#F97316', // Cam
+                        highlight: '#FACC15', // Vàng
+                        darkBg: '#0F172A',
+                        darkCard: '#1E293B',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Ẩn scrollbar cho khu vực lướt ngang (mobile) */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        /* CSS mượt mà cho Carousel */
+        .snap-x {
+            scroll-snap-type: x mandatory;
+        }
+        .snap-center {
+            scroll-snap-align: center;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-darkBg text-slate-800 dark:text-slate-100 font-sans transition-colors duration-300">
+
+    <header class="sticky top-0 z-50 bg-white dark:bg-darkCard shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <!-- Logo -->
+            <a href="#" class="flex items-center gap-2">
+                <div class="w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center font-bold text-xl shadow-lg shadow-blue-200 dark:shadow-none">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <span class="font-extrabold text-2xl tracking-tight text-primary">ÔnThiPro</span>
+            </a>
+
+            <!-- Search (Desktop) -->
+            <div class="hidden md:flex flex-1 max-w-xl mx-8 relative">
+                <input type="text" placeholder="Tìm tài liệu, đề thi, môn học..." 
+                       class="w-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-5 py-2.5 rounded-full outline-none focus:ring-2 focus:ring-primary border-none">
+                <button class="absolute right-1 top-1 bottom-1 px-4 bg-primary text-white rounded-full hover:bg-primaryHover transition">
+                    <i class="fa-solid fa-search"></i>
+                </button>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex items-center gap-3 md:gap-5">
+                <!-- Dark Mode Toggle -->
+                <button id="themeToggle" class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition">
+                    <i class="fa-solid fa-moon dark:hidden"></i>
+                    <i class="fa-solid fa-sun hidden dark:block text-highlight"></i>
+                </button>
+                <!-- Cart -->
+                <a href="#" class="relative w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                    <span class="absolute -top-1 -right-1 bg-accent text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white dark:border-darkCard">2</span>
+                </a>
+                <!-- Login (Desktop) -->
+                <a href="#" class="hidden md:block font-bold text-primary hover:text-primaryHover">Đăng nhập</a>
+                <!-- Hamburger (Mobile) -->
+                <button class="md:hidden w-10 h-10 flex items-center justify-center text-slate-600 dark:text-slate-300 text-xl">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+            </div>
+        </div>
+        <!-- Search (Mobile) -->
+        <div class="md:hidden px-4 pb-3">
+            <div class="relative w-full">
+                <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input type="text" placeholder="Tìm tài liệu, đề thi..." 
+                       class="w-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 pl-11 pr-4 py-3 rounded-2xl outline-none focus:ring-2 focus:ring-primary border-none">
+            </div>
+        </div>
+    </header>
+
+    <main class="pb-24">
+        
+        <!-- Banner Carousel: Vinh danh Top 10 -->
+        <section class="max-w-7xl mx-auto px-4 mt-6">
+            <div class="relative rounded-3xl overflow-hidden bg-gradient-to-r from-blue-600 to-indigo-600 shadow-xl">
+                <div class="flex overflow-x-auto snap-x hide-scrollbar" id="bannerCarousel">
+                    <!-- Slide 1 -->
+                    <div class="w-full flex-shrink-0 snap-center p-6 md:p-12 flex flex-col md:flex-row items-center gap-6">
+                        <div class="flex-1 text-center md:text-left text-white">
+                            <div class="inline-block px-3 py-1 bg-highlight text-orange-800 text-sm font-bold rounded-full mb-3 uppercase tracking-wide">
+                                <i class="fa-solid fa-trophy mr-1"></i> Bảng Vàng Tháng 9
+                            </div>
+                            <h2 class="text-2xl md:text-4xl font-extrabold mb-2">Vinh danh Top 10 Thi Thử</h2>
+                            <p class="text-blue-100 text-sm md:text-base mb-5">Chúc mừng bạn Nguyễn Văn A (THPT Chuyên KHTN) đã đạt điểm tuyệt đối khối A00.</p>
+                            <button class="bg-white text-primary font-bold py-2.5 px-6 rounded-full hover:bg-slate-100 transition shadow-lg">Xem Bảng Xếp Hạng</button>
+                        </div>
+                        <div class="w-32 md:w-48 h-32 md:h-48 rounded-full border-4 border-highlight overflow-hidden shadow-2xl relative">
+                            <img src="https://placehold.co/200x200/FACC15/FFF?text=Học+Sinh+A" alt="Top 1" class="w-full h-full object-cover">
+                            <div class="absolute bottom-0 left-0 right-0 bg-accent text-white text-center font-bold text-xs py-1">Khối A00: 30đ</div>
+                        </div>
+                    </div>
+                    <!-- Slide 2 (Mock) -->
+                    <div class="w-full flex-shrink-0 snap-center p-6 md:p-12 flex flex-col md:flex-row items-center gap-6 bg-gradient-to-r from-pink-500 to-rose-500">
+                        <div class="flex-1 text-center md:text-left text-white">
+                            <div class="inline-block px-3 py-1 bg-white text-rose-600 text-sm font-bold rounded-full mb-3 uppercase tracking-wide">
+                                <i class="fa-solid fa-star mr-1"></i> Tài liệu mới
+                            </div>
+                            <h2 class="text-2xl md:text-4xl font-extrabold mb-2">Bộ Đề Tinh Túy Ngữ Văn 2026</h2>
+                            <p class="text-pink-100 text-sm md:text-base mb-5">Đã cập nhật theo cấu trúc đề thi mới nhất của Bộ GD&ĐT.</p>
+                            <button class="bg-white text-rose-600 font-bold py-2.5 px-6 rounded-full hover:bg-slate-100 transition shadow-lg">Tải Ngay</button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Carousel Dots -->
+                <div class="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
+                    <button class="w-2.5 h-2.5 rounded-full bg-white"></button>
+                    <button class="w-2.5 h-2.5 rounded-full bg-white/50"></button>
+                </div>
+            </div>
+        </section>
+
+        <section class="max-w-7xl mx-auto px-4 mt-8 md:mt-12">
+            <h3 class="text-xl font-bold mb-4 md:mb-6">Chọn Môn Học <i class="fa-solid fa-book-open text-primary ml-1"></i></h3>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-5">
+                <!-- Toán -->
+                <a href="#" class="flex items-center p-3 rounded-2xl bg-white dark:bg-darkCard shadow-sm hover:shadow-md border border-slate-100 dark:border-slate-800 transition group">
+                    <div class="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xl group-hover:scale-110 transition">
+                        <i class="fa-solid fa-calculator"></i>
+                    </div>
+                    <span class="ml-3 font-bold text-slate-700 dark:text-slate-200">Toán</span>
+                </a>
+                <!-- Lý -->
+                <a href="#" class="flex items-center p-3 rounded-2xl bg-white dark:bg-darkCard shadow-sm hover:shadow-md border border-slate-100 dark:border-slate-800 transition group">
+                    <div class="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400 flex items-center justify-center text-xl group-hover:scale-110 transition">
+                        <i class="fa-solid fa-magnet"></i>
+                    </div>
+                    <span class="ml-3 font-bold text-slate-700 dark:text-slate-200">Vật Lý</span>
+                </a>
+                <!-- Hóa -->
+                <a href="#" class="flex items-center p-3 rounded-2xl bg-white dark:bg-darkCard shadow-sm hover:shadow-md border border-slate-100 dark:border-slate-800 transition group">
+                    <div class="w-12 h-12 rounded-xl bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400 flex items-center justify-center text-xl group-hover:scale-110 transition">
+                        <i class="fa-solid fa-flask"></i>
+                    </div>
+                    <span class="ml-3 font-bold text-slate-700 dark:text-slate-200">Hóa Học</span>
+                </a>
+                <!-- Sinh -->
+                <a href="#" class="flex items-center p-3 rounded-2xl bg-white dark:bg-darkCard shadow-sm hover:shadow-md border border-slate-100 dark:border-slate-800 transition group">
+                    <div class="w-12 h-12 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xl group-hover:scale-110 transition">
+                        <i class="fa-solid fa-dna"></i>
+                    </div>
+                    <span class="ml-3 font-bold text-slate-700 dark:text-slate-200">Sinh Học</span>
+                </a>
+                <!-- Văn -->
+                <a href="#" class="flex items-center p-3 rounded-2xl bg-white dark:bg-darkCard shadow-sm hover:shadow-md border border-slate-100 dark:border-slate-800 transition group">
+                    <div class="w-12 h-12 rounded-xl bg-pink-100 dark:bg-pink-900/40 text-pink-600 dark:text-pink-400 flex items-center justify-center text-xl group-hover:scale-110 transition">
+                        <i class="fa-solid fa-feather-pointed"></i>
+                    </div>
+                    <span class="ml-3 font-bold text-slate-700 dark:text-slate-200">Ngữ Văn</span>
+                </a>
+                <!-- Sử -->
+                <a href="#" class="flex items-center p-3 rounded-2xl bg-white dark:bg-darkCard shadow-sm hover:shadow-md border border-slate-100 dark:border-slate-800 transition group">
+                    <div class="w-12 h-12 rounded-xl bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400 flex items-center justify-center text-xl group-hover:scale-110 transition">
+                        <i class="fa-solid fa-landmark"></i>
+                    </div>
+                    <span class="ml-3 font-bold text-slate-700 dark:text-slate-200">Lịch Sử</span>
+                </a>
+                <!-- Địa -->
+                <a href="#" class="flex items-center p-3 rounded-2xl bg-white dark:bg-darkCard shadow-sm hover:shadow-md border border-slate-100 dark:border-slate-800 transition group">
+                    <div class="w-12 h-12 rounded-xl bg-teal-100 dark:bg-teal-900/40 text-teal-600 dark:text-teal-400 flex items-center justify-center text-xl group-hover:scale-110 transition">
+                        <i class="fa-solid fa-earth-asia"></i>
+                    </div>
+                    <span class="ml-3 font-bold text-slate-700 dark:text-slate-200">Địa Lý</span>
+                </a>
+                <!-- KTPL -->
+                <a href="#" class="flex items-center p-3 rounded-2xl bg-white dark:bg-darkCard shadow-sm hover:shadow-md border border-slate-100 dark:border-slate-800 transition group">
+                    <div class="w-12 h-12 rounded-xl bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-xl group-hover:scale-110 transition">
+                        <i class="fa-solid fa-scale-balanced"></i>
+                    </div>
+                    <span class="ml-3 font-bold text-slate-700 dark:text-slate-200">KTPL</span>
+                </a>
+                <!-- Anh -->
+                <a href="#" class="flex items-center p-3 rounded-2xl bg-white dark:bg-darkCard shadow-sm hover:shadow-md border border-slate-100 dark:border-slate-800 transition group">
+                    <div class="w-12 h-12 rounded-xl bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 flex items-center justify-center text-xl group-hover:scale-110 transition">
+                        <i class="fa-solid fa-language"></i>
+                    </div>
+                    <span class="ml-3 font-bold text-slate-700 dark:text-slate-200">Tiếng Anh</span>
+                </a>
+                <!-- Tin -->
+                <a href="#" class="flex items-center p-3 rounded-2xl bg-white dark:bg-darkCard shadow-sm hover:shadow-md border border-slate-100 dark:border-slate-800 transition group">
+                    <div class="w-12 h-12 rounded-xl bg-cyan-100 dark:bg-cyan-900/40 text-cyan-600 dark:text-cyan-400 flex items-center justify-center text-xl group-hover:scale-110 transition">
+                        <i class="fa-solid fa-desktop"></i>
+                    </div>
+                    <span class="ml-3 font-bold text-slate-700 dark:text-slate-200">Tin Học</span>
+                </a>
+            </div>
+        </section>
+
+        <section class="max-w-7xl mx-auto px-4 mt-12">
+            <div class="bg-gradient-to-br from-orange-100 to-red-50 dark:from-orange-950/30 dark:to-red-950/20 rounded-3xl p-4 md:p-6 border border-orange-200 dark:border-orange-900/50 relative overflow-hidden">
+                <!-- Header Flash Sale -->
+                <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4 relative z-10">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-bolt text-3xl text-accent animate-pulse"></i>
+                        <h2 class="text-2xl font-extrabold text-orange-600 dark:text-orange-500 italic">FLASH SALE</h2>
+                        <!-- Countdown -->
+                        <div class="flex gap-1 ml-2 text-white font-bold text-sm">
+                            <span class="bg-slate-800 dark:bg-black px-2 py-1 rounded">02</span><span class="text-slate-800 dark:text-slate-200">:</span>
+                            <span class="bg-slate-800 dark:bg-black px-2 py-1 rounded">45</span><span class="text-slate-800 dark:text-slate-200">:</span>
+                            <span class="bg-slate-800 dark:bg-black px-2 py-1 rounded" id="sec">12</span>
+                        </div>
+                    </div>
+                    <a href="#" class="text-orange-600 dark:text-orange-500 font-bold hover:underline text-sm md:text-base">Xem tất cả <i class="fa-solid fa-angle-right"></i></a>
+                </div>
+
+                <!-- Products Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 relative z-10">
+                    <!-- Tài liệu Item -->
+                    <div class="bg-white dark:bg-darkCard rounded-2xl p-3 flex flex-row md:flex-col gap-4 shadow-sm hover:shadow-md border border-slate-100 dark:border-slate-800 transition">
+                        <div class="w-24 h-32 md:w-full md:h-48 rounded-xl overflow-hidden relative flex-shrink-0">
+                            <img src="https://placehold.co/300x400/3B82F6/FFF?text=TOAN+12" alt="Sách" class="w-full h-full object-cover">
+                            <div class="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-lg">-50%</div>
+                        </div>
+                        <div class="flex flex-col justify-between flex-1">
+                            <div>
+                                <span class="text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded-md mb-2 inline-block">Môn Toán</span>
+                                <h4 class="font-bold text-sm md:text-base line-clamp-2 leading-snug">Bộ 50 đề thi thử THPT QG Môn Toán 2026 (Có đáp án chi tiết)</h4>
+                                <div class="flex items-center text-xs text-slate-500 dark:text-slate-400 mt-2 gap-3">
+                                    <span><i class="fa-regular fa-file-pdf"></i> 250 trang</span>
+                                    <span><i class="fa-solid fa-star text-highlight"></i> 4.9 (120)</span>
+                                </div>
+                            </div>
+                            <div class="mt-3 flex items-center justify-between">
+                                <div>
+                                    <div class="text-accent font-extrabold text-lg">99.000đ</div>
+                                    <div class="text-xs text-slate-400 line-through">199.000đ</div>
+                                </div>
+                                <button class="w-10 h-10 rounded-full bg-orange-100 text-orange-600 dark:bg-orange-900/40 dark:text-orange-400 hover:bg-accent hover:text-white transition flex items-center justify-center">
+                                    <i class="fa-solid fa-cart-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Tài liệu Item 2 -->
+                    <div class="bg-white dark:bg-darkCard rounded-2xl p-3 flex flex-row md:flex-col gap-4 shadow-sm hover:shadow-md border border-slate-100 dark:border-slate-800 transition">
+                        <div class="w-24 h-32 md:w-full md:h-48 rounded-xl overflow-hidden relative flex-shrink-0">
+                            <img src="https://placehold.co/300x400/10B981/FFF?text=HOA+HOC" alt="Sách" class="w-full h-full object-cover">
+                            <div class="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-lg">-30%</div>
+                        </div>
+                        <div class="flex flex-col justify-between flex-1">
+                            <div>
+                                <span class="text-xs font-bold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded-md mb-2 inline-block">Môn Hóa</span>
+                                <h4 class="font-bold text-sm md:text-base line-clamp-2 leading-snug">Tổng ôn lý thuyết Hóa học lớp 12 chặn điểm 8+</h4>
+                                <div class="flex items-center text-xs text-slate-500 dark:text-slate-400 mt-2 gap-3">
+                                    <span><i class="fa-regular fa-file-pdf"></i> 120 trang</span>
+                                    <span><i class="fa-solid fa-star text-highlight"></i> 4.8 (85)</span>
+                                </div>
+                            </div>
+                            <div class="mt-3 flex items-center justify-between">
+                                <div>
+                                    <div class="text-accent font-extrabold text-lg">49.000đ</div>
+                                    <div class="text-xs text-slate-400 line-through">70.000đ</div>
+                                </div>
+                                <button class="w-10 h-10 rounded-full bg-orange-100 text-orange-600 dark:bg-orange-900/40 dark:text-orange-400 hover:bg-accent hover:text-white transition flex items-center justify-center">
+                                    <i class="fa-solid fa-cart-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="max-w-7xl mx-auto px-4 mt-12">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl md:text-2xl font-extrabold flex items-center gap-2">
+                    Tài liệu Nổi Bật <i class="fa-solid fa-fire text-red-500"></i>
+                </h3>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Cột: Miễn phí nổi bật -->
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="font-bold text-lg text-green-600 flex items-center gap-2">
+                            <i class="fa-solid fa-gift"></i> Miễn Phí Mới Nhất
+                        </h4>
+                        <a href="#" class="text-sm text-primary hover:underline">Xem tất cả</a>
+                    </div>
+                    <div class="flex flex-col gap-4">
+                        <!-- Item -->
+                        <div class="flex gap-4 p-3 bg-white dark:bg-darkCard rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-primary transition">
+                            <div class="w-20 h-24 rounded-lg overflow-hidden flex-shrink-0">
+                                <img src="https://placehold.co/150x200/F43F5E/FFF?text=ENG" class="w-full h-full object-cover" alt="Doc">
+                            </div>
+                            <div class="flex-1 flex flex-col justify-center">
+                                <h5 class="font-bold text-sm line-clamp-2 mb-1">2000 Từ vựng Tiếng Anh cốt lõi thi THPT QG</h5>
+                                <div class="text-xs text-slate-500 mb-2">150 trang • 12K lượt tải</div>
+                                <span class="inline-block px-2 py-1 bg-green-100 text-green-700 text-xs font-bold rounded w-max">Miễn Phí</span>
+                            </div>
+                            <div class="flex items-center pr-2">
+                                <button class="text-primary bg-blue-50 dark:bg-blue-900/30 p-2 rounded-full hover:bg-primary hover:text-white transition">
+                                    <i class="fa-solid fa-download"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <!-- Item -->
+                        <div class="flex gap-4 p-3 bg-white dark:bg-darkCard rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-primary transition">
+                            <div class="w-20 h-24 rounded-lg overflow-hidden flex-shrink-0">
+                                <img src="https://placehold.co/150x200/8B5CF6/FFF?text=LY" class="w-full h-full object-cover" alt="Doc">
+                            </div>
+                            <div class="flex-1 flex flex-col justify-center">
+                                <h5 class="font-bold text-sm line-clamp-2 mb-1">Công thức Vật Lý lớp 12 tóm tắt dễ nhớ</h5>
+                                <div class="text-xs text-slate-500 mb-2">15 trang • 8K lượt tải</div>
+                                <span class="inline-block px-2 py-1 bg-green-100 text-green-700 text-xs font-bold rounded w-max">Miễn Phí</span>
+                            </div>
+                            <div class="flex items-center pr-2">
+                                <button class="text-primary bg-blue-50 dark:bg-blue-900/30 p-2 rounded-full hover:bg-primary hover:text-white transition">
+                                    <i class="fa-solid fa-download"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cột: Bán chạy nhất -->
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="font-bold text-lg text-primary flex items-center gap-2">
+                            <i class="fa-solid fa-chart-line"></i> Bán Chạy Nhất
+                        </h4>
+                        <a href="#" class="text-sm text-primary hover:underline">Xem tất cả</a>
+                    </div>
+                    <div class="flex flex-col gap-4">
+                        <!-- Item -->
+                        <div class="flex gap-4 p-3 bg-white dark:bg-darkCard rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-primary transition relative overflow-hidden">
+                            <div class="absolute top-0 right-0 bg-highlight text-orange-800 text-xs font-bold px-2 py-1 rounded-bl-lg z-10">Top 1</div>
+                            <div class="w-20 h-24 rounded-lg overflow-hidden flex-shrink-0">
+                                <img src="https://placehold.co/150x200/06B6D4/FFF?text=VAN" class="w-full h-full object-cover" alt="Doc">
+                            </div>
+                            <div class="flex-1 flex flex-col justify-center">
+                                <h5 class="font-bold text-sm line-clamp-2 mb-1">Sơ đồ tư duy 12 Tác phẩm Ngữ Văn trọng tâm</h5>
+                                <div class="flex items-center gap-2 text-xs text-slate-500 mb-2">
+                                    <span><i class="fa-solid fa-star text-highlight"></i> 5.0</span>
+                                    <span>• Đã bán: 3.2K</span>
+                                </div>
+                                <div class="font-extrabold text-primary">39.000đ</div>
+                            </div>
+                            <div class="flex items-center pr-2">
+                                <button class="bg-primary text-white w-8 h-8 flex items-center justify-center rounded-full hover:bg-primaryHover transition">
+                                    <i class="fa-solid fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <!-- Item -->
+                        <div class="flex gap-4 p-3 bg-white dark:bg-darkCard rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-primary transition relative overflow-hidden">
+                            <div class="absolute top-0 right-0 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold px-2 py-1 rounded-bl-lg z-10">Top 2</div>
+                            <div class="w-20 h-24 rounded-lg overflow-hidden flex-shrink-0">
+                                <img src="https://placehold.co/150x200/F97316/FFF?text=SU" class="w-full h-full object-cover" alt="Doc">
+                            </div>
+                            <div class="flex-1 flex flex-col justify-center">
+                                <h5 class="font-bold text-sm line-clamp-2 mb-1">Lịch sử Thế Giới & VN giai đoạn 1919-2000</h5>
+                                <div class="flex items-center gap-2 text-xs text-slate-500 mb-2">
+                                    <span><i class="fa-solid fa-star text-highlight"></i> 4.9</span>
+                                    <span>• Đã bán: 2.8K</span>
+                                </div>
+                                <div class="font-extrabold text-primary">29.000đ</div>
+                            </div>
+                            <div class="flex items-center pr-2">
+                                <button class="bg-primary text-white w-8 h-8 flex items-center justify-center rounded-full hover:bg-primaryHover transition">
+                                    <i class="fa-solid fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <div class="fixed bottom-6 right-4 md:right-8 flex flex-col gap-3 z-50">
+        <a href="#" class="w-12 h-12 rounded-full bg-blue-500 text-white flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition animate-bounce" title="Chat Zalo">
+            <!-- Icon Zalo (Using FontAwesome Comment as placeholder, normally use custom SVG) -->
+            <div class="font-bold text-sm">Zalo</div>
+        </a>
+        <a href="#" class="w-12 h-12 rounded-full bg-gradient-to-tr from-blue-500 to-rose-500 text-white flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition" title="Chat Messenger">
+            <i class="fa-brands fa-facebook-messenger"></i>
+        </a>
+    </div>
+
+    <footer class="bg-white dark:bg-darkCard pt-12 pb-6 border-t border-slate-200 dark:border-slate-800 mt-10">
+        <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+            <div class="col-span-1 md:col-span-1">
+                <a href="#" class="flex items-center gap-2 mb-4">
+                    <div class="w-8 h-8 bg-primary text-white rounded-lg flex items-center justify-center font-bold shadow-lg">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </div>
+                    <span class="font-extrabold text-xl text-primary">ÔnThiPro</span>
+                </a>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Nền tảng chia sẻ và mua bán tài liệu luyện thi THPT Quốc Gia uy tín, chất lượng hàng đầu Việt Nam.</p>
+                <div class="flex gap-4">
+                    <a href="#" class="text-slate-400 hover:text-primary transition"><i class="fa-brands fa-facebook text-xl"></i></a>
+                    <a href="#" class="text-slate-400 hover:text-red-500 transition"><i class="fa-brands fa-youtube text-xl"></i></a>
+                    <a href="#" class="text-slate-400 hover:text-slate-900 dark:hover:text-white transition"><i class="fa-brands fa-tiktok text-xl"></i></a>
+                </div>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4 text-slate-800 dark:text-slate-200">Về chúng tôi</h4>
+                <ul class="text-sm text-slate-500 dark:text-slate-400 space-y-2">
+                    <li><a href="#" class="hover:text-primary transition">Giới thiệu</a></li>
+                    <li><a href="#" class="hover:text-primary transition">Điều khoản sử dụng</a></li>
+                    <li><a href="#" class="hover:text-primary transition">Chính sách bảo mật</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4 text-slate-800 dark:text-slate-200">Hỗ trợ học sinh</h4>
+                <ul class="text-sm text-slate-500 dark:text-slate-400 space-y-2">
+                    <li><a href="#" class="hover:text-primary transition">Hướng dẫn thanh toán</a></li>
+                    <li><a href="#" class="hover:text-primary transition">Câu hỏi thường gặp</a></li>
+                    <li><a href="#" class="hover:text-primary transition">Gói Premium <span class="bg-highlight text-orange-800 text-[10px] font-bold px-1.5 py-0.5 rounded ml-1">HOT</span></a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4 text-slate-800 dark:text-slate-200">Liên hệ</h4>
+                <ul class="text-sm text-slate-500 dark:text-slate-400 space-y-2">
+                    <li><i class="fa-solid fa-phone mr-2"></i> 0123.456.789</li>
+                    <li><i class="fa-solid fa-envelope mr-2"></i> hotro@onthipro.vn</li>
+                    <li><i class="fa-solid fa-location-dot mr-2"></i> Quận 1, TP. Hồ Chí Minh</li>
+                </ul>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto px-4 text-center text-sm text-slate-500 border-t border-slate-100 dark:border-slate-800 pt-6">
+            &copy; 2026 ÔnThiPro. All rights reserved.
+        </div>
+    </footer>
+
+    <script>
+        // Toggle Dark Mode
+        const themeToggleBtn = document.getElementById('themeToggle');
+        const html = document.documentElement;
+
+        themeToggleBtn.addEventListener('click', () => {
+            html.classList.toggle('dark');
+        });
+
+        // Flash Sale Countdown Mock (Giảm giây liên tục)
+        const secElement = document.getElementById('sec');
+        let sec = parseInt(secElement.innerText);
+        
+        setInterval(() => {
+            sec--;
+            if (sec < 0) sec = 59; // Reset về 59 giây khi hết
+            secElement.innerText = sec < 10 ? '0' + sec : sec;
+        }, 1000);
+    </script>
+</body>
+</html>
