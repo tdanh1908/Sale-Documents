@@ -9,7 +9,7 @@ Ngân sách vận hành: 500k-2 triệu VNĐ/tháng. Ưu tiên dịch vụ miễ
 - Next.js (App Router) + TypeScript + Tailwind CSS
 - Supabase: PostgreSQL, Auth (email + mật khẩu), Storage (bucket private), Realtime (chat)
 - Deploy: Vercel; DNS + chống tấn công: Cloudflare; captcha: Cloudflare Turnstile
-- Thanh toán: SePay (webhook) + VietQR, ngân hàng Techcombank
+- Thanh toán: SePay (webhook) + VietQR, ngân hàng MB (MBBank), tài khoản cá nhân của chủ web
 - Email giao dịch (reset mật khẩu, xác nhận): SMTP tùy chỉnh (Resend hoặc Brevo)
 - Thông báo cho admin: Telegram Bot
 - PDF: pdf-lib (watermark, cắt trang demo), pdf.js (xem online)
