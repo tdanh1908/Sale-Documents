@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="vi" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Kỳ thi - Admin ÔnThiPro</title>
+    
+    <!-- Google Fonts: Nunito -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Nunito', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#2563EB', 
+                        primaryHover: '#1D4ED8',
+                        accent: '#F97316', 
+                        highlight: '#FACC15', 
+                        darkBg: '#0F172A',
+                        darkCard: '#1E293B',
+                        bio: {
+                            50: '#f7fee7',
+                            100: '#ecfccb',
+                            600: '#65a30d', // Lime for Sinh
+                            900: '#365314',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Chart.js cho phần Thống kê -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        /* Scrollbar styles */
+        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .dark .custom-scroll::-webkit-scrollbar-thumb { background: #475569; }
+
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Custom UI Elements */
+        .admin-nav-item.active { background-color: #2563EB; color: #ffffff; font-weight: 700; }
+        .admin-nav-item.active i { color: #ffffff; }
+
+        .custom-checkbox input:checked + div { background-color: #2563EB; border-color: #2563EB; }
+        .custom-checkbox input:checked + div svg { display: block; }
+
+        .toggle-checkbox:checked { right: 0; border-color: #2563EB; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #2563EB; }
+
+        .radio-card input:checked + div { border-color: #2563EB; background-color: #eff6ff; }
+        .dark .radio-card input:checked + div { background-color: rgba(37, 99, 235, 0.1); }
+        .radio-card input:checked + div .radio-dot { background-color: #2563EB; }
+
+        /* Dropzone */
+        .dropzone { border: 2px dashed #cbd5e1; transition: all 0.2s ease; }
+        .dark .dropzone { border-color: #475569; }
+        .dropzone:hover { border-color: #2563EB; background-color: #eff6ff; }
+        .dark .dropzone:hover { background-color: rgba(37, 99, 235, 0.1); }
+
+        /* Views Transitions */
+        .view-section { display: none; animation: fadeIn 0.3s ease; }
+        .view-section.active { display: block; }
+        
+        .list-view-mode { display: none; }
+        .list-view-mode.active { display: block; animation: fadeIn 0.3s ease; }
+
+        /* Form Steps Navigation */
+        .step-nav-item.active { border-left-color: #2563EB; color: #2563EB; font-weight: 700; background-color: #eff6ff; }
+        .dark .step-nav-item.active { background-color: rgba(37, 99, 235, 0.1); border-left-color: #3B82F6; color: #60A5FA; }
+
+        @media (max-width: 1023px) {
+            .step-nav-item.active { border-left-color: transparent; border-bottom-color: #2563EB; }
+            .dark .step-nav-item.active { border-bottom-color: #3B82F6; }
+        }
+
+        /* Modals */
+        .modal-overlay { opacity: 0; visibility: hidden; transition: all 0.3s ease; }
+        .modal-overlay.open { opacity: 1; visibility: visible; }
+        .modal-content { transform: translateY(20px) scale(0.95); transition: all 0.3s ease; }
+        .modal-overlay.open .modal-content { transform: translateY(0) scale(1); }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Toast Notifications */
+        .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .toast {
+            min-width: 250px; background: white; border-radius: 12px; padding: 16px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            display: flex; align-items: start; gap: 12px; transform: translateX(120%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .dark .toast { background: #1E293B; border: 1px solid #334155; }
+        .toast.show { transform: translateX(0); }
+
+        /* Calendar Grid Mockup */
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background-color: #e2e8f0; border: 1px solid #e2e8f0; }
+        .dark .cal-grid { background-color: #334155; border-color: #334155; }
+        .cal-cell { background-color: #ffffff; min-h: 100px; padding: 4px; position: relative; }
+        .dark .cal-cell { background-color: #1e293b; }
+        .cal-event { margin-bottom: 2px; padding: 2px 4px; border-radius: 4px; font-size: 10px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-darkBg text-slate-800 dark:text-slate-100 font-sans transition-colors duration-300 flex overflow-hidden h-screen">
+
+    <!-- Lớp phủ Mobile Sidebar -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/50 dark:bg-black/60 z-40 hidden xl:hidden transition-opacity opacity-0" onclick="toggleSidebar()"></div>
+
+    <!-- SIDEBAR -->
+    <aside id="adminSidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-darkCard border-r border-slate-200 dark:border-slate-800 shadow-xl xl:shadow-none transform -translate-x-full xl:translate-x-0 flex flex-col h-full transition-transform duration-300">
+        <!-- Logo -->
+        <div class="h-16 flex items-center px-6 border-b border-slate-100 dark:border-slate-800 flex-shrink-0">
+            <a href="#" class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-primary text-white rounded-lg flex items-center justify-center font-bold text-lg shadow-md shadow-blue-200 dark:shadow-none">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <span class="font-extrabold text-xl tracking-tight text-primary">Admin Panel</span>
+            </a>
+            <button class="xl:hidden ml-auto w-8 h-8 flex items-center justify-center text-slate-500 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" onclick="toggleSidebar()">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <!-- Menu Navigation -->
+        <nav class="flex-1 overflow-y-auto custom-scroll py-4 px-3 space-y-1">
+            <a href="#" class="admin-nav-item flex items-center gap-3 w-full h-11 px-4 rounded-xl text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                <i class="fa-solid fa-border-all w-5 text-center text-slate-400"></i> Tổng quan
+            </a>
+            <a href="#" class="admin-nav-item flex items-center gap-3 w-full h-11 px-4 rounded-xl text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                <i class="fa-solid fa-book w-5 text-center text-slate-400"></i> Tài liệu
+            </a>
+            <a href="#" class="admin-nav-item flex items-center gap-3 w-full h-11 px-4 rounded-xl text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                <i class="fa-solid fa-file-signature w-5 text-center text-slate-400"></i> Đề thi
+            </a>
+            <a href="#" class="admin-nav-item active flex items-center gap-3 w-full h-11 px-4 rounded-xl text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                <i class="fa-solid fa-trophy w-5 text-center text-slate-400"></i> Kỳ thi
+            </a>
+            <a href="#" class="admin-nav-item flex items-center gap-3 w-full h-11 px-4 rounded-xl text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                <i class="fa-solid fa-receipt w-5 text-center text-slate-400"></i> Đơn hàng
+            </a>
+            <a href="#" class="admin-nav-item flex items-center gap-3 w-full h-11 px-4 rounded-xl text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                <i class="fa-solid fa-ticket w-5 text-center text-slate-400"></i> Mã giảm giá
+            </a>
+            
+            <div class="h-px bg-slate-100 dark:bg-slate-800 my-2 mx-2"></div>
+            
+            <a href="#" class="admin-nav-item flex items-center gap-3 w-full h-11 px-4 rounded-xl text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                <i class="fa-solid fa-clipboard-check w-5 text-center text-slate-400"></i> Chờ duyệt
+                <span class="ml-auto bg-orange-100 text-orange-600 dark:bg-orange-900/40 dark:text-orange-400 text-[10px] font-bold px-2 py-0.5 rounded-full">5</span>
+            </a>
+            <a href="#" class="admin-nav-item flex items-center gap-3 w-full h-11 px-4 rounded-xl text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                <i class="fa-solid fa-users w-5 text-center text-slate-400"></i> Người dùng
+            </a>
+            <a href="#" class="admin-nav-item flex items-center gap-3 w-full h-11 px-4 rounded-xl text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                <i class="fa-solid fa-gear w-5 text-center text-slate-400"></i> Cài đặt
+            </a>
+        </nav>
+
+        <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+            <div class="flex items-center gap-3 bg-slate-50 dark:bg-slate-900/50 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 cursor-pointer hover:border-primary transition">
+                <img src="https://placehold.co/100x100/3B82F6/FFF?text=AD" alt="Admin" class="w-9 h-9 rounded-full">
+                <div class="flex-1 min-w-0">
+                    <div class="font-bold text-sm text-slate-800 dark:text-slate-100 truncate">Admin System</div>
+                    <div class="text-[10px] text-green-500 font-bold flex items-center gap-1"><div class="w-1.5 h-1.5 rounded-full bg-green-500"></div> Online</div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN WRAPPER -->
+    <div class="flex-1 flex flex-col min-w-0 xl:ml-64 h-screen bg-slate-50 dark:bg-darkBg transition-all duration-300 relative">
+        
+        <!-- Header Top -->
+        <header class="h-16 bg-white dark:bg-darkCard border-b border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between px-4 md:px-6 flex-shrink-0 z-30">
+            <div class="flex items-center gap-3">
+                <button class="xl:hidden w-11 h-11 flex items-center justify-center text-slate-600 dark:text-slate-300 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition -ml-2" onclick="toggleSidebar()">
+                    <i class="fa-solid fa-bars text-lg"></i>
+                </button>
+                <div class="hidden sm:flex relative w-64 lg:w-96">
+                    <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" placeholder="Tìm kiếm nhanh toàn hệ thống..." class="w-full h-11 pl-10 pr-4 bg-slate-100 dark:bg-slate-800 border-none rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary text-slate-700 dark:text-slate-200">
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 md:gap-4">
+                <button id="themeToggle" class="w-11 h-11 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition" aria-label="Đổi giao diện">
+                    <i class="fa-solid fa-moon dark:hidden text-lg"></i>
+                    <i class="fa-solid fa-sun hidden dark:block text-highlight text-lg"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Container cho các View -->
+        <main class="flex-1 overflow-y-auto custom-scroll p-4 md:p-6 lg:p-8 relative">
+            
+            <!-- ================= VIEW 1: DANH SÁCH KỲ THI ================= -->
+            <div id="view-list" class="view-section active h-full flex flex-col min-h-0">
+                
+                <!-- Page Header -->
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                    <div>
+                        <h1 class="text-2xl font-extrabold text-slate-800 dark:text-white">Quản lý Kỳ thi</h1>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Tổ chức các sự kiện thi thử tập trung quy mô lớn.</p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-3">
+                        <button class="h-11 px-4 bg-white dark:bg-darkCard border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition shadow-sm flex items-center gap-2" onclick="openModal('topicMappingModal')">
+                            <i class="fa-solid fa-link"></i> Gán chủ đề tài liệu
+                        </button>
+                        <button class="h-11 px-5 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primaryHover transition shadow-md shadow-blue-200 dark:shadow-none flex items-center gap-2" onclick="switchView('view-add')">
+                            <i class="fa-solid fa-plus"></i> Tạo kỳ thi
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filters & Controls -->
+                <div class="bg-white dark:bg-darkCard p-4 rounded-t-2xl border border-slate-200 dark:border-slate-700 border-b-0 flex flex-col lg:flex-row gap-4 justify-between items-center">
+                    <div class="flex flex-1 w-full lg:w-auto gap-3 flex-col sm:flex-row">
+                        <div class="relative flex-1 max-w-md">
+                            <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <input type="text" placeholder="Tìm tên kỳ thi..." class="w-full h-11 pl-10 pr-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-primary text-slate-800 dark:text-slate-100">
+                        </div>
+                        <select class="h-11 px-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-xl text-sm font-bold outline-none cursor-pointer w-full sm:w-40">
+                            <option value="">Trạng thái</option>
+                            <option value="Đang diễn ra">Đang diễn ra</option>
+                            <option value="Đã hẹn giờ">Đã hẹn giờ</option>
+                            <option value="Đã kết thúc">Đã kết thúc</option>
+                            <option value="Nháp">Bản nháp</option>
+                        </select>
+                    </div>
+                    <!-- View Toggles -->
+                    <div class="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl w-full lg:w-auto">
+                        <button class="flex-1 lg:flex-none h-9 px-4 rounded-lg text-sm font-bold transition bg-white dark:bg-darkCard shadow-sm text-primary" id="btnViewTable" onclick="switchListView('table')"><i class="fa-solid fa-table-list mr-1"></i> Bảng</button>
+                        <button class="flex-1 lg:flex-none h-9 px-4 rounded-lg text-sm font-bold transition text-slate-500 hover:text-slate-800 dark:hover:text-slate-200" id="btnViewCalendar" onclick="switchListView('calendar')"><i class="fa-regular fa-calendar mr-1"></i> Lịch tháng</button>
+                    </div>
+                </div>
+
+                <!-- SUB VIEW: TABLE -->
+                <div id="subview-table" class="list-view-mode active bg-white dark:bg-darkCard border border-slate-200 dark:border-slate-700 rounded-b-2xl shadow-sm overflow-hidden flex-1 flex flex-col min-h-0">
+                    <div class="overflow-x-auto custom-scroll w-full">
+                        <table class="w-full text-left min-w-[1000px]">
+                            <thead class="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-500 uppercase tracking-wider sticky top-0 z-10">
+                                <tr>
+                                    <th class="p-4 w-12 text-center">ID</th>
+                                    <th class="p-4 w-72">Tên kỳ thi</th>
+                                    <th class="p-4 w-32 text-center">Trạng thái</th>
+                                    <th class="p-4">Thời gian mở - đóng</th>
+                                    <th class="p-4 w-20 text-center">Số đề</th>
+                                    <th class="p-4 w-24 text-center">Người tham gia</th>
+                                    <th class="p-4 w-24 text-center">Lượt thi</th>
+                                    <th class="p-4 w-36 text-center">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-sm font-medium">
+                                <!-- Đang diễn ra -->
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/30 transition group">
+                                    <td class="p-4 text-center text-slate-400 font-mono text-xs">#12</td>
+                                    <td class="p-4 font-bold text-slate-800 dark:text-slate-100">Kỳ thi Đánh Giá Năng Lực Đợt 1</td>
+                                    <td class="p-4 text-center">
+                                        <span class="inline-flex items-center gap-1.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-xs font-bold px-2.5 py-1 rounded-full border border-red-200 dark:border-red-800/50">
+                                            <div class="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div> Đang diễn ra
+                                        </span>
+                                    </td>
+                                    <td class="p-4 text-xs text-slate-600 dark:text-slate-400">
+                                        <div class="font-mono">14:00 - 04/10/2026</div>
+                                        <div class="font-mono">23:59 - 05/10/2026</div>
+                                    </td>
+                                    <td class="p-4 text-center">3</td>
+                                    <td class="p-4 text-center font-bold text-slate-800 dark:text-slate-100">3,245</td>
+                                    <td class="p-4 text-center font-bold text-primary">4,120</td>
+                                    <td class="p-4 text-center">
+                                        <div class="flex items-center justify-center gap-1 xl:opacity-0 xl:group-hover:opacity-100 transition-opacity">
+                                            <button class="w-8 h-8 rounded-lg text-slate-500 hover:bg-blue-50 hover:text-primary transition" title="Sửa" onclick="switchView('view-add')"><i class="fa-solid fa-pen"></i></button>
+                                            <button class="w-8 h-8 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Thống kê" onclick="switchView('view-stats')"><i class="fa-solid fa-chart-pie"></i></button>
+                                            <button class="w-8 h-8 rounded-lg text-slate-500 hover:bg-orange-50 hover:text-accent transition" title="Đóng ngay" onclick="showToast('Đã đóng kỳ thi sớm!', 'success')"><i class="fa-solid fa-lock"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Đã hẹn giờ -->
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/30 transition group">
+                                    <td class="p-4 text-center text-slate-400 font-mono text-xs">#13</td>
+                                    <td class="p-4 font-bold text-slate-800 dark:text-slate-100">Thi thử THPT QG Môn Toán Lần 3</td>
+                                    <td class="p-4 text-center">
+                                        <span class="inline-block bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs font-bold px-2.5 py-1 rounded-full border border-blue-200 dark:border-blue-800/50">Đã hẹn giờ</span>
+                                    </td>
+                                    <td class="p-4 text-xs text-slate-600 dark:text-slate-400">
+                                        <div class="font-mono">20:00 - 15/10/2026</div>
+                                        <div class="font-mono">23:00 - 15/10/2026</div>
+                                    </td>
+                                    <td class="p-4 text-center">1</td>
+                                    <td class="p-4 text-center font-bold text-slate-400">0</td>
+                                    <td class="p-4 text-center font-bold text-slate-400">0</td>
+                                    <td class="p-4 text-center">
+                                        <div class="flex items-center justify-center gap-1 xl:opacity-0 xl:group-hover:opacity-100 transition-opacity">
+                                            <button class="w-8 h-8 rounded-lg text-slate-500 hover:bg-blue-50 hover:text-primary transition" title="Sửa" onclick="switchView('view-add')"><i class="fa-solid fa-pen"></i></button>
+                                            <button class="w-8 h-8 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Nhân bản"><i class="fa-regular fa-copy"></i></button>
+                                            <button class="w-8 h-8 rounded-lg text-slate-500 hover:bg-green-50 hover:text-green-600 transition" title="Mở ngay" onclick="showToast('Đã mở kỳ thi!', 'success')"><i class="fa-solid fa-play"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <!-- Đã kết thúc -->
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/30 transition group bg-slate-50/50 dark:bg-slate-900/20">
+                                    <td class="p-4 text-center text-slate-400 font-mono text-xs">#11</td>
+                                    <td class="p-4 font-bold text-slate-600 dark:text-slate-400">Thi thử Sở GD Hà Nội - Khối A00</td>
+                                    <td class="p-4 text-center">
+                                        <span class="inline-block bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold px-2.5 py-1 rounded-full border border-slate-300 dark:border-slate-600/50">Đã kết thúc</span>
+                                    </td>
+                                    <td class="p-4 text-xs text-slate-500">
+                                        <div class="font-mono">15/09/2026</div>
+                                        <div class="font-mono">17/09/2026</div>
+                                    </td>
+                                    <td class="p-4 text-center text-slate-500">3</td>
+                                    <td class="p-4 text-center font-bold text-slate-600 dark:text-slate-400">5,102</td>
+                                    <td class="p-4 text-center font-bold text-slate-600 dark:text-slate-400">5,890</td>
+                                    <td class="p-4 text-center">
+                                        <div class="flex items-center justify-center gap-1 xl:opacity-0 xl:group-hover:opacity-100 transition-opacity">
+                                            <button class="w-8 h-8 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Thống kê" onclick="switchView('view-stats')"><i class="fa-solid fa-chart-pie"></i></button>
+                                            <button class="w-8 h-8 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Nhân bản"><i class="fa-regular fa-copy"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Nháp -->
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/30 transition group">
+                                    <td class="p-4 text-center text-slate-400 font-mono text-xs">#14</td>
+                                    <td class="p-4 font-bold text-slate-500 dark:text-slate-400">Kỳ thi chuyên Hóa Sinh (Demo)</td>
+                                    <td class="p-4 text-center">
+                                        <span class="inline-block bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs font-bold px-2.5 py-1 rounded-full border border-slate-200 dark:border-slate-700">Bản nháp</span>
+                                    </td>
+                                    <td class="p-4 text-xs text-slate-400 italic">Chưa thiết lập</td>
+                                    <td class="p-4 text-center text-slate-400">0</td>
+                                    <td class="p-4 text-center font-bold text-slate-400">-</td>
+                                    <td class="p-4 text-center font-bold text-slate-400">-</td>
+                                    <td class="p-4 text-center">
+                                        <div class="flex items-center justify-center gap-1 xl:opacity-0 xl:group-hover:opacity-100 transition-opacity">
+                                            <button class="w-8 h-8 rounded-lg text-slate-500 hover:bg-blue-50 hover:text-primary transition" title="Sửa tiếp" onclick="switchView('view-add')"><i class="fa-solid fa-pen"></i></button>
+                                            <button class="w-8 h-8 rounded-lg text-red-400 hover:bg-red-50 hover:text-red-600 transition" title="Xóa"><i class="fa-solid fa-trash-can"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- SUB VIEW: CALENDAR MOCKUP -->
+                <div id="subview-calendar" class="list-view-mode flex-1 bg-white dark:bg-darkCard border border-slate-200 dark:border-slate-700 rounded-b-2xl shadow-sm p-4 overflow-x-auto hide-scrollbar">
+                    <div class="min-w-[800px]">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-lg">Tháng 10, 2026</h3>
+                            <div class="flex gap-2">
+                                <button class="w-8 h-8 rounded bg-slate-100 dark:bg-slate-800 flex items-center justify-center"><i class="fa-solid fa-chevron-left"></i></button>
+                                <button class="w-8 h-8 rounded bg-slate-100 dark:bg-slate-800 flex items-center justify-center"><i class="fa-solid fa-chevron-right"></i></button>
+                            </div>
+                        </div>
+                        <div class="cal-grid rounded-xl overflow-hidden">
+                            <!-- Header -->
+                            <div class="bg-slate-50 dark:bg-slate-900 p-2 text-center text-xs font-bold text-slate-500 uppercase">T2</div>
+                            <div class="bg-slate-50 dark:bg-slate-900 p-2 text-center text-xs font-bold text-slate-500 uppercase">T3</div>
+                            <div class="bg-slate-50 dark:bg-slate-900 p-2 text-center text-xs font-bold text-slate-500 uppercase">T4</div>
+                            <div class="bg-slate-50 dark:bg-slate-900 p-2 text-center text-xs font-bold text-slate-500 uppercase">T5</div>
+                            <div class="bg-slate-50 dark:bg-slate-900 p-2 text-center text-xs font-bold text-slate-500 uppercase">T6</div>
+                            <div class="bg-slate-50 dark:bg-slate-900 p-2 text-center text-xs font-bold text-slate-500 uppercase">T7</div>
+                            <div class="bg-slate-50 dark:bg-slate-900 p-2 text-center text-xs font-bold text-slate-500 uppercase">CN</div>
+                            
+                            <!-- Cells (Simplified Mockup for current week) -->
+                            <!-- Row 1 -->
+                            <div class="cal-cell text-slate-400 text-xs p-1">28</div>
+                            <div class="cal-cell text-slate-400 text-xs p-1">29</div>
+                            <div class="cal-cell text-slate-400 text-xs p-1">30</div>
+                            <div class="cal-cell text-xs p-1 font-bold">1</div>
+                            <div class="cal-cell text-xs p-1 font-bold">2</div>
+                            <div class="cal-cell text-xs p-1 font-bold">3</div>
+                            <div class="cal-cell text-xs p-1 font-bold bg-blue-50/30 dark:bg-blue-900/10">4 <span class="text-[8px] font-normal text-slate-400 ml-1">Hôm nay</span>
+                                <!-- Event Ongoing spanning 2 days -->
+                                <div class="cal-event bg-red-500 text-white mt-4 relative z-10 w-[200%]">ĐGNL Đợt 1</div>
+                            </div>
+                            <!-- Row 2 -->
+                            <div class="cal-cell text-xs p-1 font-bold">5</div>
+                            <div class="cal-cell text-xs p-1 font-bold">6</div>
+                            <div class="cal-cell text-xs p-1 font-bold">7</div>
+                            <div class="cal-cell text-xs p-1 font-bold">8</div>
+                            <div class="cal-cell text-xs p-1 font-bold">9</div>
+                            <div class="cal-cell text-xs p-1 font-bold">10</div>
+                            <div class="cal-cell text-xs p-1 font-bold">11</div>
+                            <!-- Row 3 -->
+                            <div class="cal-cell text-xs p-1 font-bold">12</div>
+                            <div class="cal-cell text-xs p-1 font-bold">13</div>
+                            <div class="cal-cell text-xs p-1 font-bold">14</div>
+                            <div class="cal-cell text-xs p-1 font-bold">15
+                                <div class="cal-event bg-blue-500 text-white mt-1">Toán Lần 3</div>
+                            </div>
+                            <div class="cal-cell text-xs p-1 font-bold">16</div>
+                            <div class="cal-cell text-xs p-1 font-bold">17</div>
+                            <div class="cal-cell text-xs p-1 font-bold">18</div>
+                            <!-- Row 4 & 5 Omitted for brevity in mockup -->
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ================= VIEW 2: THÊM / SỬA KỲ THI ================= -->
+            <div id="view-add" class="view-section pb-20">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                    <div class="flex items-center gap-3">
+                        <button class="w-11 h-11 rounded-xl bg-white dark:bg-darkCard border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-primary transition flex items-center justify-center shadow-sm" onclick="switchView('view-list')" title="Quay lại">
+                            <i class="fa-solid fa-arrow-left"></i>
+                        </button>
+                        <h1 class="text-xl md:text-2xl font-extrabold text-slate-800 dark:text-white">Tạo Kỳ thi mới</h1>
+                    </div>
+                    <div class="hidden lg:flex gap-3">
+                        <button class="h-11 px-5 bg-white dark:bg-darkCard border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition shadow-sm" onclick="showToast('Đã lưu nháp', 'success')">Lưu nháp</button>
+                        <button class="h-11 px-5 bg-white dark:bg-darkCard border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition shadow-sm" onclick="showToast('Xem trước...', 'success')"><i class="fa-regular fa-eye"></i> Xem trước</button>
+                        <button class="h-11 px-6 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primaryHover transition shadow-md shadow-blue-200 dark:shadow-none" onclick="showToast('Đã hẹn giờ đăng', 'success'); switchView('view-list')">Hẹn giờ đăng</button>
+                        <button class="h-11 px-6 bg-green-500 text-white rounded-xl text-sm font-bold hover:bg-green-600 transition shadow-md shadow-green-200 dark:shadow-none" onclick="showToast('Đã mở kỳ thi', 'success'); switchView('view-list')">Mở ngay</button>
+                    </div>
+                </div>
+
+                <!-- Form Layout (2 Cols on Desktop, Stacked on Mobile) -->
+                <div class="flex flex-col lg:flex-row gap-6 lg:gap-8 items-start">
+                    
+                    <!-- Form Navigation (Sticky Sidebar on Desktop, Horizontal Scroll on Mobile) -->
+                    <div class="w-full lg:w-56 flex-shrink-0 lg:sticky lg:top-4 z-20 bg-slate-50 dark:bg-darkBg pt-1">
+                        <div class="flex lg:flex-col overflow-x-auto hide-scrollbar border-b lg:border-b-0 lg:border-l border-slate-200 dark:border-slate-700">
+                            <button type="button" class="step-nav-item active px-4 py-3 lg:py-4 text-sm text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 text-left transition whitespace-nowrap lg:border-l-4 lg:border-b-0 border-b-4 border-transparent" onclick="scrollToSection('sec-info', this)">1. Thông tin chung</button>
+                            <button type="button" class="step-nav-item px-4 py-3 lg:py-4 text-sm text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 text-left transition whitespace-nowrap lg:border-l-4 lg:border-b-0 border-b-4 border-transparent" onclick="scrollToSection('sec-exams', this)">2. Chọn Đề thi</button>
+                            <button type="button" class="step-nav-item px-4 py-3 lg:py-4 text-sm text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 text-left transition whitespace-nowrap lg:border-l-4 lg:border-b-0 border-b-4 border-transparent" onclick="scrollToSection('sec-time', this)">3. Thời gian</button>
+                            <button type="button" class="step-nav-item px-4 py-3 lg:py-4 text-sm text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 text-left transition whitespace-nowrap lg:border-l-4 lg:border-b-0 border-b-4 border-transparent" onclick="scrollToSection('sec-rules', this)">4. Quy tắc</button>
+                            <button type="button" class="step-nav-item px-4 py-3 lg:py-4 text-sm text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 text-left transition whitespace-nowrap lg:border-l-4 lg:border-b-0 border-b-4 border-transparent" onclick="scrollToSection('sec-rewards', this)">5. Phần thưởng</button>
+                        </div>
+                    </div>
+
+                    <!-- Form Content Sections -->
+                    <form class="flex-1 min-w-0 w-full space-y-8" style="scroll-behavior: smooth;" onsubmit="event.preventDefault(); showToast('Đã lưu kỳ thi', 'success'); switchView('view-list');">
+                        
+                        <!-- Sec 1: Thông tin -->
+                        <div id="sec-info" class="bg-white dark:bg-darkCard rounded-3xl p-5 md:p-8 border border-slate-200 dark:border-slate-700 shadow-sm scroll-mt-24">
+                            <h3 class="font-extrabold text-lg mb-6 border-b border-slate-100 dark:border-slate-800 pb-2">1. Thông tin chung</h3>
+                            <div class="space-y-5">
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Tên kỳ thi</label>
+                                    <input type="text" placeholder="Ví dụ: Thi thử THPT QG Môn Toán Lần 3" class="w-full h-11 px-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-primary transition text-slate-800 dark:text-slate-100">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Mô tả và Thể lệ (Sẽ hiện ở trang chi tiết)</label>
+                                    <div class="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
+                                        <div class="bg-slate-100 dark:bg-slate-800 p-2 flex gap-1 border-b border-slate-200 dark:border-slate-700 text-slate-500">
+                                            <button class="w-8 h-8 rounded hover:bg-slate-200 dark:hover:bg-slate-700"><i class="fa-solid fa-bold"></i></button>
+                                            <button class="w-8 h-8 rounded hover:bg-slate-200 dark:hover:bg-slate-700"><i class="fa-solid fa-italic"></i></button>
+                                            <button class="w-8 h-8 rounded hover:bg-slate-200 dark:hover:bg-slate-700"><i class="fa-solid fa-list-ul"></i></button>
+                                        </div>
+                                        <textarea rows="4" placeholder="Nhập nội dung..." class="w-full p-4 bg-slate-50 dark:bg-slate-900 border-none text-sm outline-none resize-y text-slate-800 dark:text-slate-100"></textarea>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Ảnh Banner (Khuyên dùng 1200x630)</label>
+                                    <div class="dropzone rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-800 min-h-[140px]">
+                                        <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 text-primary rounded-full flex items-center justify-center text-xl mb-3"><i class="fa-regular fa-image"></i></div>
+                                        <p class="font-bold text-sm text-slate-700 dark:text-slate-200 mb-1">Kéo thả ảnh vào đây</p>
+                                        <p class="text-xs text-slate-500">JPG, PNG. Tối đa 2MB.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sec 2: Chọn Đề -->
+                        <div id="sec-exams" class="bg-white dark:bg-darkCard rounded-3xl p-5 md:p-8 border border-slate-200 dark:border-slate-700 shadow-sm scroll-mt-24">
+                            <div class="flex justify-between items-center mb-6 border-b border-slate-100 dark:border-slate-800 pb-2">
+                                <h3 class="font-extrabold text-lg">2. Chọn Đề thi</h3>
+                                <button class="text-sm font-bold text-primary hover:underline"><i class="fa-solid fa-plus"></i> Chọn từ Kho</button>
+                            </div>
+                            
+                            <p class="text-sm text-slate-500 mb-4">Kéo thả để sắp xếp thứ tự hiển thị. Bạn đã chọn 2 đề.</p>
+                            
+                            <div class="space-y-3">
+                                <!-- Đề 1 -->
+                                <div class="border border-slate-200 dark:border-slate-700 rounded-xl p-3 flex flex-col sm:flex-row gap-4 items-center bg-slate-50 dark:bg-slate-900/30 group">
+                                    <div class="text-slate-400 cursor-move hidden sm:block"><i class="fa-solid fa-grip-vertical"></i></div>
+                                    <div class="flex-1 min-w-0 w-full text-center sm:text-left">
+                                        <div class="font-bold text-sm text-slate-800 dark:text-slate-100 truncate">Đề Toán Khảo Sát Lần 1</div>
+                                        <div class="text-[10px] text-slate-500">Môn: Toán • ID: EXAM-001</div>
+                                    </div>
+                                    <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end border-t border-slate-200 dark:border-slate-700 sm:border-0 pt-3 sm:pt-0">
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-xs font-bold text-slate-600 dark:text-slate-400">Luôn mở</span>
+                                            <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+                                                <input type="checkbox" name="toggle1" id="toggleE1" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
+                                                <label for="toggleE1" class="toggle-label block overflow-hidden h-5 rounded-full bg-slate-300 dark:bg-slate-600 cursor-pointer"></label>
+                                            </div>
+                                            <span class="text-xs font-bold text-primary ml-1 hidden sm:inline" title="Chỉ mở trong thời gian kỳ thi diễn ra">Chỉ trong kỳ thi</span>
+                                        </div>
+                                        <button class="w-8 h-8 rounded-lg text-red-400 hover:bg-red-50 hover:text-red-600 transition flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+                                    </div>
+                                </div>
+                                <!-- Đề 2 -->
+                                <div class="border border-slate-200 dark:border-slate-700 rounded-xl p-3 flex flex-col sm:flex-row gap-4 items-center bg-slate-50 dark:bg-slate-900/30 group">
+                                    <div class="text-slate-400 cursor-move hidden sm:block"><i class="fa-solid fa-grip-vertical"></i></div>
+                                    <div class="flex-1 min-w-0 w-full text-center sm:text-left">
+                                        <div class="font-bold text-sm text-slate-800 dark:text-slate-100 truncate">Đề Toán Khảo Sát Lần 2 (Khó)</div>
+                                        <div class="text-[10px] text-slate-500">Môn: Toán • ID: EXAM-002</div>
+                                    </div>
+                                    <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end border-t border-slate-200 dark:border-slate-700 sm:border-0 pt-3 sm:pt-0">
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-xs font-bold text-slate-600 dark:text-slate-400 hidden sm:inline">Luôn mở</span>
+                                            <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+                                                <input type="checkbox" name="toggle2" id="toggleE2" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer" checked/>
+                                                <label for="toggleE2" class="toggle-label block overflow-hidden h-5 rounded-full bg-slate-300 dark:bg-slate-600 cursor-pointer"></label>
+                                            </div>
+                                            <span class="text-xs font-bold text-primary ml-1" title="Chỉ mở trong thời gian kỳ thi diễn ra">Chỉ trong kỳ thi</span>
+                                        </div>
+                                        <button class="w-8 h-8 rounded-lg text-red-400 hover:bg-red-50 hover:text-red-600 transition flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sec 3: Thời gian -->
+                        <div id="sec-time" class="bg-white dark:bg-darkCard rounded-3xl p-5 md:p-8 border border-slate-200 dark:border-slate-700 shadow-sm scroll-mt-24">
+                            <h3 class="font-extrabold text-lg mb-6 border-b border-slate-100 dark:border-slate-800 pb-2">3. Thời gian</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Bắt đầu</label>
+                                    <input type="datetime-local" class="w-full h-11 px-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-primary transition text-slate-800 dark:text-slate-100 cursor-pointer">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Kết thúc</label>
+                                    <input type="datetime-local" class="w-full h-11 px-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-primary transition text-slate-800 dark:text-slate-100 cursor-pointer">
+                                </div>
+                            </div>
+                            <p class="text-[10px] text-slate-500 mt-3 font-medium"><i class="fa-solid fa-circle-info text-primary"></i> Ghi chú: Web sẽ tự động Mở/Đóng kỳ thi đúng theo thời gian đã cài đặt (Múi giờ Việt Nam GMT+7).</p>
+                        </div>
+
+                        <!-- Sec 4: Quy tắc -->
+                        <div id="sec-rules" class="bg-white dark:bg-darkCard rounded-3xl p-5 md:p-8 border border-slate-200 dark:border-slate-700 shadow-sm scroll-mt-24">
+                            <h3 class="font-extrabold text-lg mb-6 border-b border-slate-100 dark:border-slate-800 pb-2">4. Quy tắc & Đối tượng</h3>
+                            <div class="space-y-6">
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-3">Đối tượng được tham gia</label>
+                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                        <label class="radio-card relative cursor-pointer group">
+                                            <input type="radio" name="audience" value="all" class="absolute opacity-0" checked>
+                                            <div class="border-2 border-slate-200 dark:border-slate-700 rounded-xl p-3 text-center transition hover:border-blue-300">
+                                                <div class="font-bold text-sm">Mọi tài khoản</div>
+                                                <div class="text-[10px] text-slate-500 mt-1">Đăng nhập là thi được</div>
+                                            </div>
+                                        </label>
+                                        <label class="radio-card relative cursor-pointer group">
+                                            <input type="radio" name="audience" value="premium" class="absolute opacity-0">
+                                            <div class="border-2 border-slate-200 dark:border-slate-700 rounded-xl p-3 text-center transition hover:border-blue-300">
+                                                <div class="font-bold text-sm text-highlight">Chỉ Premium</div>
+                                                <div class="text-[10px] text-slate-500 mt-1">Yêu cầu gói VIP</div>
+                                            </div>
+                                        </label>
+                                        <label class="radio-card relative cursor-pointer group">
+                                            <input type="radio" name="audience" value="buyers" class="absolute opacity-0">
+                                            <div class="border-2 border-slate-200 dark:border-slate-700 rounded-xl p-3 text-center transition hover:border-blue-300">
+                                                <div class="font-bold text-sm text-green-600">Chỉ người mua</div>
+                                                <div class="text-[10px] text-slate-500 mt-1">Yêu cầu đã mua đề thi</div>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                    <div>
+                                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Số lần thi tối đa / 1 người</label>
+                                        <input type="number" value="2" min="1" class="w-full h-11 px-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-primary transition text-slate-800 dark:text-slate-100">
+                                        <div class="text-[10px] text-slate-500 mt-1">Hệ thống sẽ lấy điểm của lần thi cao nhất.</div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Cách tính Xếp hạng</label>
+                                        <select class="w-full h-11 px-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold outline-none cursor-pointer text-slate-800 dark:text-slate-100">
+                                            <option>Chỉ tính bảng xếp hạng của kỳ thi này</option>
+                                            <option>Tính cả BXH kỳ thi và BXH Chung hệ thống</option>
+                                        </select>
+                                    </div>
+                                    <div class="sm:col-span-2">
+                                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Thời điểm hiển thị Đáp án & Lời giải</label>
+                                        <select class="w-full h-11 px-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold outline-none cursor-pointer text-slate-800 dark:text-slate-100">
+                                            <option>Ngay sau khi học sinh nộp bài</option>
+                                            <option>Sau khi Kỳ thi kết thúc hoàn toàn</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sec 5: Phần thưởng -->
+                        <div id="sec-rewards" class="bg-white dark:bg-darkCard rounded-3xl p-5 md:p-8 border border-slate-200 dark:border-slate-700 shadow-sm scroll-mt-24">
+                            <h3 class="font-extrabold text-lg mb-6 border-b border-slate-100 dark:border-slate-800 pb-2">5. Phần thưởng</h3>
+                            <div class="space-y-6">
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Văn bản vinh danh Top (Nhập tay sau khi kết thúc)</label>
+                                    <textarea rows="3" placeholder="Ví dụ: Chúc mừng 10 bạn có điểm số cao nhất..." class="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-primary resize-y text-slate-800 dark:text-slate-100"></textarea>
+                                </div>
+                                
+                                <div class="bg-orange-50 dark:bg-orange-900/10 border border-orange-200 dark:border-orange-800/50 rounded-2xl p-4 sm:p-5">
+                                    <div class="flex items-center gap-2 mb-4">
+                                        <i class="fa-solid fa-gift text-accent text-xl"></i>
+                                        <h4 class="font-bold text-slate-800 dark:text-slate-100">Mã giảm giá tự động tặng người tham gia</h4>
+                                    </div>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-xs font-bold text-slate-500 mb-1">Giảm giá (%)</label>
+                                            <input type="number" value="20" placeholder="%" class="w-full h-11 px-4 bg-white dark:bg-darkCard border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-accent transition text-slate-800 dark:text-slate-100">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-bold text-slate-500 mb-1">Thời hạn tính từ lúc nộp bài (Giờ)</label>
+                                            <input type="number" value="48" class="w-full h-11 px-4 bg-white dark:bg-darkCard border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-accent transition text-slate-800 dark:text-slate-100">
+                                        </div>
+                                        <div class="sm:col-span-2">
+                                            <label class="block text-xs font-bold text-slate-500 mb-1">Phạm vi áp dụng</label>
+                                            <select class="w-full h-11 px-4 bg-white dark:bg-darkCard border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold outline-none cursor-pointer text-slate-800 dark:text-slate-100">
+                                                <option>Tất cả tài liệu môn Toán</option>
+                                                <option>Tất cả tài liệu trên hệ thống</option>
+                                                <option>Chỉ các tài liệu chọn lọc...</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+                
+                <!-- Action bar for Mobile (Sticky bottom) -->
+                <div class="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-darkCard border-t border-slate-200 dark:border-slate-700 p-3 flex gap-2 z-30 shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.1)]">
+                    <button class="flex-1 h-11 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-sm" onclick="showToast('Đã lưu nháp', 'success')">Nháp</button>
+                    <button class="flex-1 h-11 bg-primary text-white font-bold rounded-xl text-sm shadow-md" onclick="switchView('view-list')">Hẹn giờ</button>
+                    <button class="flex-1 h-11 bg-green-500 text-white font-bold rounded-xl text-sm shadow-md" onclick="switchView('view-list')">Mở ngay</button>
+                </div>
+            </div>
+
+            <!-- ================= VIEW 3: THỐNG KÊ ================= -->
+            <div id="view-stats" class="view-section h-full flex flex-col min-h-0">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 flex-shrink-0">
+                    <div class="flex items-center gap-3">
+                        <button class="w-11 h-11 rounded-xl bg-white dark:bg-darkCard border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-primary transition flex items-center justify-center shadow-sm" onclick="switchView('view-list')" title="Quay lại">
+                            <i class="fa-solid fa-arrow-left"></i>
+                        </button>
+                        <div>
+                            <h1 class="text-xl md:text-2xl font-extrabold text-slate-800 dark:text-white">Báo cáo: Kỳ thi ĐGNL Đợt 1</h1>
+                            <p class="text-xs text-slate-500">Kết thúc lúc 23:59 - 05/10/2026</p>
+                        </div>
+                    </div>
+                    <button class="h-11 px-5 bg-white dark:bg-darkCard border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition shadow-sm flex items-center gap-2 w-full sm:w-auto justify-center">
+                        <i class="fa-solid fa-download"></i> Xuất CSV Bảng điểm
+                    </button>
+                </div>
+
+                <div class="flex-1 overflow-y-auto custom-scroll space-y-6">
+                    <!-- Cards -->
+                    <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                        <div class="bg-white dark:bg-darkCard rounded-2xl p-4 border border-slate-200 dark:border-slate-700 shadow-sm text-center">
+                            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Người tham gia</div>
+                            <div class="text-2xl font-black text-slate-800 dark:text-white">3,245</div>
+                        </div>
+                        <div class="bg-white dark:bg-darkCard rounded-2xl p-4 border border-slate-200 dark:border-slate-700 shadow-sm text-center">
+                            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Lượt nộp bài</div>
+                            <div class="text-2xl font-black text-primary">4,120</div>
+                        </div>
+                        <div class="bg-white dark:bg-darkCard rounded-2xl p-4 border border-slate-200 dark:border-slate-700 shadow-sm text-center">
+                            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Điểm trung bình</div>
+                            <div class="text-2xl font-black text-green-500">6.8</div>
+                        </div>
+                        <div class="bg-white dark:bg-darkCard rounded-2xl p-4 border border-slate-200 dark:border-slate-700 shadow-sm text-center">
+                            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Tỷ lệ hoàn thành</div>
+                            <div class="text-2xl font-black text-slate-800 dark:text-white">92%</div>
+                        </div>
+                        <div class="col-span-2 lg:col-span-1 bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-900/40 rounded-2xl p-4 border border-orange-200 dark:border-orange-800 shadow-sm text-center">
+                            <div class="text-[10px] font-bold text-orange-600 dark:text-orange-500 uppercase tracking-wider mb-1">Mua tài liệu sau thi</div>
+                            <div class="text-2xl font-black text-accent">145 <span class="text-xs font-medium text-slate-500">người</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Row -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Score Distribution -->
+                        <div class="lg:col-span-2 bg-white dark:bg-darkCard rounded-3xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm">
+                            <h3 class="font-extrabold text-lg mb-4">Phân bố điểm số</h3>
+                            <div class="w-full h-64 relative">
+                                <canvas id="scoreChart"></canvas>
+                            </div>
+                        </div>
+                        <!-- Traffic Source -->
+                        <div class="bg-white dark:bg-darkCard rounded-3xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm">
+                            <h3 class="font-extrabold text-lg mb-4">Nguồn người tham gia</h3>
+                            <div class="w-full h-48 relative flex items-center justify-center">
+                                <canvas id="trafficChart"></canvas>
+                            </div>
+                            <div class="mt-4 grid grid-cols-2 gap-2 text-xs font-bold text-slate-600 dark:text-slate-300">
+                                <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded bg-[#1877F2]"></div> Facebook (50%)</div>
+                                <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded bg-slate-900 dark:bg-slate-100"></div> TikTok (25%)</div>
+                                <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded bg-[#FF0000]"></div> YouTube (15%)</div>
+                                <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded bg-primary"></div> Trực tiếp (10%)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Local Leaderboard -->
+                    <div class="bg-white dark:bg-darkCard rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+                        <div class="p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+                            <h3 class="font-extrabold text-lg">Bảng xếp hạng (Top 10)</h3>
+                        </div>
+                        <div class="overflow-x-auto hide-scrollbar">
+                            <table class="w-full text-left min-w-[600px]">
+                                <thead class="bg-slate-50 dark:bg-slate-900 text-xs font-bold text-slate-500 uppercase">
+                                    <tr>
+                                        <th class="p-4 w-16 text-center">Hạng</th>
+                                        <th class="p-4">Học sinh</th>
+                                        <th class="p-4 text-center">Thời gian làm</th>
+                                        <th class="p-4 text-right">Điểm số</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-sm font-medium">
+                                    <tr>
+                                        <td class="p-4 text-center font-black text-highlight text-lg">1</td>
+                                        <td class="p-4">
+                                            <div class="font-bold text-slate-800 dark:text-slate-100">Cậu Bé Vàng</div>
+                                            <div class="text-[10px] text-slate-500">THPT Chuyên KHTN</div>
+                                        </td>
+                                        <td class="p-4 text-center text-slate-500">45p 12s</td>
+                                        <td class="p-4 text-right font-black text-lg text-slate-800 dark:text-white">10.0</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-4 text-center font-bold text-slate-400 text-lg">2</td>
+                                        <td class="p-4">
+                                            <div class="font-bold text-slate-800 dark:text-slate-100">Ngọc Mai</div>
+                                            <div class="text-[10px] text-slate-500">THPT Ams</div>
+                                        </td>
+                                        <td class="p-4 text-center text-slate-500">50p 00s</td>
+                                        <td class="p-4 text-right font-black text-lg text-slate-800 dark:text-white">9.8</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- ================= MODAL: GÁN CHỦ ĐỀ VỚI TÀI LIỆU ================= -->
+    <div id="topicMappingModal" class="fixed inset-0 bg-slate-900/60 dark:bg-black/70 z-50 flex items-center justify-center modal-overlay p-2 sm:p-4">
+        <div class="bg-white dark:bg-darkCard w-full max-w-4xl rounded-3xl shadow-2xl modal-content flex flex-col overflow-hidden max-h-full">
+            <div class="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-900/50 flex-shrink-0">
+                <h3 class="font-extrabold text-base sm:text-lg flex items-center gap-2"><i class="fa-solid fa-link text-primary"></i> Gán Chủ đề với Tài liệu</h3>
+                <button class="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-500 hover:text-slate-800 dark:hover:text-white transition flex-shrink-0" onclick="closeModal('topicMappingModal')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div class="flex flex-col md:flex-row flex-1 overflow-hidden min-h-0">
+                <!-- Cột trái: DS Chủ đề -->
+                <div class="w-full md:w-1/3 border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-700 flex flex-col h-40 md:h-auto flex-shrink-0 bg-slate-50/50 dark:bg-slate-900/20">
+                    <div class="p-3 border-b border-slate-100 dark:border-slate-800">
+                        <select class="w-full h-9 px-3 bg-white dark:bg-darkCard border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold outline-none cursor-pointer">
+                            <option>Môn Toán</option>
+                            <option>Môn Hóa</option>
+                        </select>
+                    </div>
+                    <div class="flex-1 overflow-y-auto custom-scroll p-2 space-y-1">
+                        <button class="w-full text-left px-3 py-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-primary font-bold text-sm transition border border-blue-100 dark:border-blue-800/50">Hàm số (Đã gán 2)</button>
+                        <button class="w-full text-left px-3 py-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium text-sm transition">Tích phân (Đã gán 1)</button>
+                        <button class="w-full text-left px-3 py-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium text-sm transition">Hình học Oxyz (0)</button>
+                    </div>
+                </div>
+
+                <!-- Cột phải: Chọn Tài liệu -->
+                <div class="w-full md:w-2/3 flex flex-col flex-1 min-h-[300px] md:min-h-0">
+                    <div class="p-4 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-darkCard flex-shrink-0">
+                        <div class="font-bold text-sm mb-2 text-slate-800 dark:text-slate-100">Gợi ý cho chủ đề: <span class="text-primary text-base">Hàm số</span></div>
+                        <div class="relative">
+                            <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                            <input type="text" placeholder="Tìm tên tài liệu để gán..." class="w-full h-10 pl-9 pr-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-primary text-slate-800 dark:text-slate-100">
+                        </div>
+                    </div>
+                    
+                    <div class="flex-1 overflow-y-auto custom-scroll p-4 space-y-2">
+                        <!-- Doc Item Checked -->
+                        <label class="custom-checkbox flex items-center gap-3 cursor-pointer p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+                            <input type="checkbox" class="hidden" checked>
+                            <div class="w-5 h-5 rounded border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center bg-white dark:bg-darkCard transition flex-shrink-0"><svg class="w-3 h-3 text-white hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg></div>
+                            <div class="w-10 h-14 bg-blue-50 rounded flex-shrink-0 overflow-hidden"><img src="https://placehold.co/50x70/3B82F6/FFF?text=T" class="w-full h-full object-cover"></div>
+                            <div class="flex-1 min-w-0">
+                                <div class="font-bold text-sm text-slate-800 dark:text-slate-100 line-clamp-1">Chuyên đề Hàm số 12 Vận dụng cao</div>
+                                <div class="text-[10px] text-slate-500">Giá: 29.000đ</div>
+                            </div>
+                        </label>
+                        <!-- Doc Item Unchecked -->
+                        <label class="custom-checkbox flex items-center gap-3 cursor-pointer p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+                            <input type="checkbox" class="hidden">
+                            <div class="w-5 h-5 rounded border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center bg-white dark:bg-darkCard transition flex-shrink-0"><svg class="w-3 h-3 text-white hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg></div>
+                            <div class="w-10 h-14 bg-blue-50 rounded flex-shrink-0 overflow-hidden"><img src="https://placehold.co/50x70/3B82F6/FFF?text=T" class="w-full h-full object-cover"></div>
+                            <div class="flex-1 min-w-0">
+                                <div class="font-bold text-sm text-slate-800 dark:text-slate-100 line-clamp-1">Trắc nghiệm lý thuyết Hàm số chống sai ngu</div>
+                                <div class="text-[10px] text-slate-500">Miễn phí</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3 bg-slate-50 dark:bg-slate-900/50">
+                <button class="h-11 px-5 rounded-xl font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition" onclick="closeModal('topicMappingModal')">Đóng</button>
+                <button class="h-11 px-6 rounded-xl font-bold bg-primary text-white hover:bg-primaryHover transition shadow-md" onclick="showToast('Đã lưu cấu hình chủ đề', 'success'); closeModal('topicMappingModal')">Lưu cài đặt</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script>
+        // --- Dark Mode ---
+        const themeToggleBtn = document.getElementById('themeToggle');
+        themeToggleBtn.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+            // Re-render charts for color update if needed in real app
+            if (document.getElementById('view-stats').classList.contains('active')) {
+                initCharts();
+            }
+        });
+
+        // --- Sidebar (Mobile) ---
+        const sidebar = document.getElementById('adminSidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        function toggleSidebar() {
+            const isClosed = sidebar.classList.contains('-translate-x-full');
+            if (isClosed) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+                requestAnimationFrame(() => overlay.classList.remove('opacity-0'));
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('opacity-0');
+                setTimeout(() => overlay.classList.add('hidden'), 300);
+            }
+        }
+
+        // --- View Switching ---
+        function switchView(viewId) {
+            document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+            
+            if (viewId === 'view-stats') {
+                initCharts(); // Initialize charts when entering stats view
+            }
+            window.scrollTo(0, 0);
+        }
+
+        // --- List View Toggle (Table vs Calendar) ---
+        function switchListView(type) {
+            document.querySelectorAll('.list-view-mode').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById('btnViewTable').classList.remove('bg-white', 'dark:bg-darkCard', 'shadow-sm', 'text-primary');
+            document.getElementById('btnViewTable').classList.add('text-slate-500');
+            
+            document.getElementById('btnViewCalendar').classList.remove('bg-white', 'dark:bg-darkCard', 'shadow-sm', 'text-primary');
+            document.getElementById('btnViewCalendar').classList.add('text-slate-500');
+
+            if (type === 'table') {
+                document.getElementById('subview-table').classList.add('active');
+                document.getElementById('btnViewTable').classList.add('bg-white', 'dark:bg-darkCard', 'shadow-sm', 'text-primary');
+                document.getElementById('btnViewTable').classList.remove('text-slate-500');
+            } else {
+                document.getElementById('subview-calendar').classList.add('active');
+                document.getElementById('btnViewCalendar').classList.add('bg-white', 'dark:bg-darkCard', 'shadow-sm', 'text-primary');
+                document.getElementById('btnViewCalendar').classList.remove('text-slate-500');
+            }
+        }
+
+        // --- Form Scrollspy Simple ---
+        function scrollToSection(id, btn) {
+            document.querySelectorAll('.step-nav-item').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // --- Modals & Toasts ---
+        function openModal(id) { document.getElementById(id).classList.add('open'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            
+            let icon = type === 'success' ? '<i class="fa-solid fa-circle-check text-green-500 text-xl mt-0.5"></i>' : '<i class="fa-solid fa-circle-exclamation text-red-500 text-xl mt-0.5"></i>';
+            
+            toast.innerHTML = `
+                ${icon}
+                <div class="flex-1">
+                    <div class="font-bold text-sm text-slate-800 dark:text-slate-100">${type === 'success' ? 'Thành công' : 'Thông báo'}</div>
+                    <div class="text-xs text-slate-500 mt-0.5">${message}</div>
+                </div>
+            `;
+            
+            container.appendChild(toast);
+            requestAnimationFrame(() => toast.classList.add('show'));
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // --- Chart.js Initialization ---
+        let scoreChartInst = null;
+        let trafficChartInst = null;
+
+        function initCharts() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const textColor = isDark ? '#94A3B8' : '#64748B'; 
+            const gridColor = isDark ? '#334155' : '#E2E8F0';
+
+            // 1. Score Bar Chart
+            const ctxScore = document.getElementById('scoreChart');
+            if(scoreChartInst) scoreChartInst.destroy();
+            
+            scoreChartInst = new Chart(ctxScore, {
+                type: 'bar',
+                data: {
+                    labels: ['<4', '4-5', '5-6', '6-7', '7-8', '8-9', '9-10'],
+                    datasets: [{
+                        label: 'Số lượng học sinh',
+                        data: [120, 250, 450, 800, 1100, 400, 125],
+                        backgroundColor: '#3B82F6',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { color: textColor } },
+                        y: { grid: { color: gridColor }, ticks: { color: textColor } }
+                    }
+                }
+            });
+
+            // 2. Traffic Doughnut Chart
+            const ctxTraffic = document.getElementById('trafficChart');
+            if(trafficChartInst) trafficChartInst.destroy();
+
+            trafficChartInst = new Chart(ctxTraffic, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Facebook', 'TikTok', 'YouTube', 'Trực tiếp'],
+                    datasets: [{
+                        data: [50, 25, 15, 10],
+                        backgroundColor: ['#1877F2', isDark ? '#FFFFFF' : '#0F172A', '#FF0000', '#2563EB'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false, cutout: '70%',
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

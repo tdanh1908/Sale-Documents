@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="vi" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giỏ hàng & Thanh toán - ÔnThiPro</title>
+    
+    <!-- Google Fonts: Nunito -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Nunito', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#2563EB', // Đã cập nhật màu tương phản tốt hơn
+                        primaryHover: '#1D4ED8',
+                        accent: '#F97316', 
+                        highlight: '#FACC15', 
+                        darkBg: '#0F172A',
+                        darkCard: '#1E293B',
+                        bio: {
+                            50: '#f7fee7',
+                            100: '#ecfccb',
+                            600: '#65a30d', // Lime
+                            900: '#365314',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Hiệu ứng nảy Zalo 1 lần */
+        @keyframes bounce-intro {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-15px); }
+            60% { transform: translateY(-7px); }
+        }
+        .animate-bounce-intro {
+            animation: bounce-intro 2s ease-in-out 1;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .animate-bounce-intro { animation: none; }
+            .animate-spin-slow { animation: none; }
+        }
+
+        /* Ẩn thanh cuộn */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Custom Radio Button cho Option Mua */
+        .buy-option-radio:checked + div {
+            border-color: #2563EB;
+            background-color: #eff6ff; /* blue-50 */
+        }
+        .dark .buy-option-radio:checked + div {
+            border-color: #2563EB;
+            background-color: rgba(37, 99, 235, 0.1);
+        }
+        .buy-option-radio:checked + div .radio-dot {
+            background-color: #2563EB;
+            border-color: #2563EB;
+        }
+        
+        /* Spinner */
+        .spinner {
+            border: 3px solid rgba(37, 99, 235, 0.2);
+            border-left-color: #2563EB;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Step Transitions */
+        .step-container { display: none; animation: fadeIn 0.3s ease-in-out; }
+        .step-container.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-darkBg text-slate-800 dark:text-slate-100 font-sans transition-colors duration-300 pb-24 md:pb-0 relative">
+
+    <header class="sticky top-0 z-40 bg-white dark:bg-darkCard shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <a href="#" class="flex items-center gap-2 h-11">
+                <div class="w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center font-bold text-xl shadow-lg shadow-blue-200 dark:shadow-none">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <span class="font-extrabold text-2xl tracking-tight text-primary hidden sm:block">ÔnThiPro</span>
+            </a>
+
+            <!-- Progress Bar (Desktop) -->
+            <div class="hidden md:flex flex-1 max-w-lg mx-auto items-center justify-center">
+                <div class="flex items-center w-full justify-between relative">
+                    <!-- Line -->
+                    <div class="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-slate-200 dark:bg-slate-700 -z-10 rounded-full overflow-hidden">
+                        <div id="progressLine" class="h-full bg-primary transition-all duration-500 w-0"></div>
+                    </div>
+                    
+                    <!-- Nodes -->
+                    <div class="step-node flex flex-col items-center gap-1 active" data-step="1">
+                        <div class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm shadow ring-4 ring-slate-50 dark:ring-darkBg transition-colors duration-300 node-indicator">1</div>
+                        <span class="text-xs font-bold text-primary node-text">Giỏ hàng</span>
+                    </div>
+                    <div class="step-node flex flex-col items-center gap-1" data-step="2">
+                        <div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 flex items-center justify-center font-bold text-sm ring-4 ring-slate-50 dark:ring-darkBg transition-colors duration-300 node-indicator">2</div>
+                        <span class="text-xs font-bold text-slate-500 dark:text-slate-400 node-text">Thanh toán</span>
+                    </div>
+                    <div class="step-node flex flex-col items-center gap-1" data-step="3">
+                        <div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 flex items-center justify-center font-bold text-sm ring-4 ring-slate-50 dark:ring-darkBg transition-colors duration-300 node-indicator"><i class="fa-solid fa-check"></i></div>
+                        <span class="text-xs font-bold text-slate-500 dark:text-slate-400 node-text">Hoàn tất</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 md:gap-4">
+                <button id="themeToggle" class="w-11 h-11 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition" aria-label="Đổi giao diện">
+                    <i class="fa-solid fa-moon dark:hidden text-lg"></i>
+                    <i class="fa-solid fa-sun hidden dark:block text-highlight text-lg"></i>
+                </button>
+                <div class="hidden md:flex items-center h-11 cursor-pointer">
+                    <img src="https://placehold.co/100x100/3B82F6/FFF?text=US" alt="User" class="w-9 h-9 rounded-full border-2 border-slate-200 dark:border-slate-700">
+                    <span class="ml-2 font-bold text-sm">Học sinh A</span>
+                </div>
+                <button class="md:hidden w-11 h-11 flex items-center justify-center text-slate-600 dark:text-slate-300 text-xl rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Progress Bar (Mobile) -->
+    <div class="md:hidden bg-white dark:bg-darkCard px-4 py-3 border-b border-slate-200 dark:border-slate-800 sticky top-16 z-30">
+        <div class="flex items-center w-full justify-between relative">
+            <div class="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-slate-200 dark:bg-slate-700 -z-10 rounded-full overflow-hidden">
+                <div id="progressLineMobile" class="h-full bg-primary transition-all duration-500 w-0"></div>
+            </div>
+            <div class="step-node-mobile w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs ring-2 ring-white dark:ring-darkCard active" data-step="1">1</div>
+            <div class="step-node-mobile w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 flex items-center justify-center font-bold text-xs ring-2 ring-white dark:ring-darkCard" data-step="2">2</div>
+            <div class="step-node-mobile w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 flex items-center justify-center font-bold text-xs ring-2 ring-white dark:ring-darkCard" data-step="3"><i class="fa-solid fa-check text-[10px]"></i></div>
+        </div>
+        <div class="text-center font-bold text-primary mt-2 text-sm" id="mobileStepText">Giỏ hàng của bạn</div>
+    </div>
+
+    <main class="max-w-7xl mx-auto px-4 py-6 md:py-8 min-h-[60vh]">
+        
+        <!-- ==================== BƯỚC 1: GIỎ HÀNG ==================== -->
+        <div id="step1" class="step-container active">
+            <h1 class="text-2xl md:text-3xl font-extrabold mb-6 hidden md:block">Giỏ hàng của bạn</h1>
+            
+            <div class="flex flex-col lg:flex-row gap-8 items-start">
+                <!-- Cột trái: Danh sách item -->
+                <div class="flex-1 w-full space-y-4">
+                    
+                    <!-- Block cảnh báo đơn dưới 2k (Mặc định ẩn) -->
+                    <div id="minOrderWarning" class="hidden bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl p-4 flex items-start gap-3">
+                        <i class="fa-solid fa-triangle-exclamation text-red-500 mt-1"></i>
+                        <div>
+                            <div class="font-bold text-red-700 dark:text-red-400">Giá trị thanh toán tối thiểu là 2.000đ</div>
+                            <div class="text-sm text-red-600 dark:text-red-300 mt-1">Hệ thống ngân hàng không hỗ trợ chuyển khoản dưới 2.000đ. Vui lòng thêm tài liệu khác vào giỏ để tiếp tục.</div>
+                        </div>
+                    </div>
+
+                    <!-- Giỏ hàng trống (Mặc định ẩn) -->
+                    <div id="emptyCartMsg" class="hidden flex-col items-center justify-center py-12 text-center bg-white dark:bg-darkCard rounded-3xl border border-slate-200 dark:border-slate-800">
+                        <div class="w-24 h-24 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-400 text-4xl mb-4"><i class="fa-solid fa-basket-shopping"></i></div>
+                        <h3 class="font-bold text-lg mb-2">Giỏ hàng trống</h3>
+                        <p class="text-slate-500 text-sm mb-6">Bạn chưa có tài liệu nào trong giỏ.</p>
+                        <button class="h-11 px-6 bg-primary text-white font-bold rounded-xl hover:bg-primaryHover transition">Đi tìm tài liệu</button>
+                    </div>
+
+                    <!-- Container Danh sách -->
+                    <div id="cartItemsContainer" class="space-y-4">
+                        
+                        <!-- Item 1 -->
+                        <div class="cart-item bg-white dark:bg-darkCard rounded-2xl p-4 border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row gap-4 relative">
+                            <!-- Ảnh bìa -->
+                            <div class="w-20 h-28 sm:w-24 sm:h-32 flex-shrink-0 rounded-xl overflow-hidden bg-blue-50">
+                                <img src="https://placehold.co/200x266/3B82F6/FFF?text=TOAN+12" alt="Bìa sách" class="w-full h-full object-cover">
+                            </div>
+                            
+                            <!-- Thông tin & Tùy chọn -->
+                            <div class="flex-1 flex flex-col justify-between">
+                                <div class="pr-8 sm:pr-0">
+                                    <span class="text-[10px] sm:text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded-md mb-2 inline-block">Môn Toán</span>
+                                    <h3 class="font-bold text-sm sm:text-base leading-snug line-clamp-2 mb-2">Bộ 50 đề thi thử THPT QG Môn Toán 2026 (Có đáp án chi tiết)</h3>
+                                </div>
+                                
+                                <!-- Chọn gói (Chỉ hiện nếu tài liệu có phí) -->
+                                <div class="flex flex-wrap gap-2 mt-2">
+                                    <label class="relative cursor-pointer">
+                                        <input type="radio" name="pkg_1" value="49000" class="buy-option-radio absolute opacity-0 w-0 h-0" checked onchange="updateCartTotal()">
+                                        <div class="flex items-center gap-2 px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl transition text-sm">
+                                            <div class="w-4 h-4 rounded-full border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center radio-dot transition"><div class="w-1.5 h-1.5 bg-white rounded-full"></div></div>
+                                            <span class="font-medium text-slate-700 dark:text-slate-300">Xem Online</span>
+                                        </div>
+                                    </label>
+                                    <label class="relative cursor-pointer">
+                                        <input type="radio" name="pkg_1" value="59000" class="buy-option-radio absolute opacity-0 w-0 h-0" onchange="updateCartTotal()">
+                                        <div class="flex items-center gap-2 px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl transition text-sm">
+                                            <div class="w-4 h-4 rounded-full border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center radio-dot transition"><div class="w-1.5 h-1.5 bg-white rounded-full"></div></div>
+                                            <span class="font-medium text-slate-700 dark:text-slate-300">Xem + Tải về</span>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Giá & Xóa -->
+                            <div class="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-between border-t border-slate-100 sm:border-0 pt-3 sm:pt-0 mt-3 sm:mt-0">
+                                <div class="font-extrabold text-primary text-lg item-price">49.000đ</div>
+                                <button class="w-11 h-11 rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition flex items-center justify-center" aria-label="Xóa" onclick="removeItem(this)">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </div>
+                            
+                            <!-- Nút xóa tuyệt đối trên mobile (Tùy chọn thiết kế) -->
+                            <button class="absolute top-2 right-2 w-8 h-8 sm:hidden rounded-full text-slate-400 bg-slate-100/50 hover:bg-slate-200 flex items-center justify-center" onclick="removeItem(this.parentElement)">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+
+                        <!-- Item 2 -->
+                        <div class="cart-item bg-white dark:bg-darkCard rounded-2xl p-4 border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row gap-4 relative">
+                            <div class="w-20 h-28 sm:w-24 sm:h-32 flex-shrink-0 rounded-xl overflow-hidden bg-green-50">
+                                <img src="https://placehold.co/200x266/10B981/FFF?text=HOA+HOC" alt="Bìa sách" class="w-full h-full object-cover">
+                            </div>
+                            <div class="flex-1 flex flex-col justify-between">
+                                <div>
+                                    <span class="text-[10px] sm:text-xs font-bold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded-md mb-2 inline-block">Môn Hóa</span>
+                                    <h3 class="font-bold text-sm sm:text-base leading-snug line-clamp-2 mb-2">Chuyên đề Vận dụng cao Hóa học vô cơ</h3>
+                                </div>
+                                <div class="flex flex-wrap gap-2 mt-2">
+                                    <label class="relative cursor-pointer">
+                                        <input type="radio" name="pkg_2" value="35000" class="buy-option-radio absolute opacity-0 w-0 h-0" checked onchange="updateCartTotal()">
+                                        <div class="flex items-center gap-2 px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl transition text-sm">
+                                            <div class="w-4 h-4 rounded-full border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center radio-dot transition"><div class="w-1.5 h-1.5 bg-white rounded-full"></div></div>
+                                            <span class="font-medium text-slate-700 dark:text-slate-300">Xem Online</span>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-between border-t border-slate-100 sm:border-0 pt-3 sm:pt-0 mt-3 sm:mt-0">
+                                <div class="font-extrabold text-primary text-lg item-price">35.000đ</div>
+                                <button class="w-11 h-11 rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition flex items-center justify-center" aria-label="Xóa" onclick="removeItem(this)">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Gợi ý mua thêm (Hiển thị khi thiếu tiền) -->
+                    <div id="suggestedItems" class="hidden mt-8 pt-6 border-t border-slate-200 dark:border-slate-800">
+                        <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-lightbulb text-highlight"></i> Gợi ý tài liệu giá rẻ để đủ điều kiện
+                        </h3>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                            <!-- Card Mini -->
+                            <div class="bg-white dark:bg-darkCard rounded-xl p-2 border border-slate-100 dark:border-slate-800 flex flex-col cursor-pointer hover:border-primary transition">
+                                <div class="aspect-[3/4] w-full rounded-lg overflow-hidden bg-purple-50 mb-2">
+                                    <img src="https://placehold.co/150x200/8B5CF6/FFF?text=LY" class="w-full h-full object-cover">
+                                </div>
+                                <div class="font-bold text-xs line-clamp-2 mb-1">Công thức Lý 12</div>
+                                <div class="mt-auto flex items-center justify-between">
+                                    <span class="text-primary font-extrabold text-sm">5.000đ</span>
+                                    <button class="w-8 h-8 rounded-lg bg-blue-50 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition" onclick="addMockItem(5000, 'Công thức Lý 12')"><i class="fa-solid fa-plus text-xs"></i></button>
+                                </div>
+                            </div>
+                             <!-- Card Mini 2 -->
+                             <div class="bg-white dark:bg-darkCard rounded-xl p-2 border border-slate-100 dark:border-slate-800 flex flex-col cursor-pointer hover:border-primary transition">
+                                <div class="aspect-[3/4] w-full rounded-lg overflow-hidden bg-pink-50 mb-2">
+                                    <img src="https://placehold.co/150x200/EC4899/FFF?text=VAN" class="w-full h-full object-cover">
+                                </div>
+                                <div class="font-bold text-xs line-clamp-2 mb-1">Sơ đồ tư duy Văn</div>
+                                <div class="mt-auto flex items-center justify-between">
+                                    <span class="text-primary font-extrabold text-sm">9.000đ</span>
+                                    <button class="w-8 h-8 rounded-lg bg-blue-50 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition" onclick="addMockItem(9000, 'Sơ đồ tư duy Văn')"><i class="fa-solid fa-plus text-xs"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Cột phải: Tổng kết (Sticky) -->
+                <div class="w-full lg:w-[380px] flex-shrink-0">
+                    <div class="sticky top-24 bg-white dark:bg-darkCard rounded-3xl p-5 border border-slate-200 dark:border-slate-700 shadow-xl lg:shadow-md">
+                        <h3 class="font-extrabold text-xl mb-4 border-b border-slate-100 dark:border-slate-800 pb-3">Tóm tắt đơn hàng</h3>
+                        
+                        <!-- Mã giảm giá -->
+                        <div class="mb-4">
+                            <div class="relative flex gap-2">
+                                <div class="relative flex-1">
+                                    <i class="fa-solid fa-ticket absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                    <input type="text" id="promoInput" placeholder="Nhập mã giảm giá..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 h-11 rounded-xl pl-9 pr-4 text-sm focus:border-primary outline-none text-slate-800 dark:text-slate-200 uppercase transition">
+                                </div>
+                                <button id="applyPromoBtn" class="h-11 px-4 bg-slate-800 text-white dark:bg-slate-700 font-bold text-sm rounded-xl hover:bg-slate-900 dark:hover:bg-slate-600 transition disabled:opacity-50" onclick="applyPromo()">Áp dụng</button>
+                            </div>
+                            <!-- Msg mã giảm giá -->
+                            <div id="promoMsg" class="text-xs font-bold mt-2 hidden transition-all"></div>
+                        </div>
+
+                        <!-- Các dòng tiền -->
+                        <div class="space-y-3 mb-4 text-sm text-slate-600 dark:text-slate-300">
+                            <div class="flex justify-between">
+                                <span>Tổng tiền hàng (<span id="itemCount">2</span>)</span>
+                                <span class="font-bold text-slate-800 dark:text-slate-100" id="subTotalTxt">84.000đ</span>
+                            </div>
+                            <div class="flex justify-between text-green-600 dark:text-green-400 hidden" id="discountRow">
+                                <span>Giảm giá</span>
+                                <span class="font-bold" id="discountTxt">-0đ</span>
+                            </div>
+                        </div>
+
+                        <!-- Thành tiền -->
+                        <div class="border-t border-slate-100 dark:border-slate-800 pt-4 mb-6">
+                            <div class="flex justify-between items-end">
+                                <span class="font-bold text-slate-800 dark:text-slate-100">Thành tiền</span>
+                                <div class="text-right">
+                                    <div class="font-black text-2xl text-accent" id="finalTotalTxt">84.000đ</div>
+                                    <div class="text-[10px] text-slate-400">(Đã bao gồm VAT)</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Buttons -->
+                        <button id="checkoutBtn" class="w-full h-12 bg-primary text-white font-extrabold text-base rounded-2xl hover:bg-primaryHover transition shadow-lg shadow-blue-200 dark:shadow-none flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed" onclick="goToStep(2)">
+                            Thanh toán ngay <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                        
+                        <p class="text-center text-xs text-slate-500 mt-4"><i class="fa-solid fa-shield-halved text-green-500 mr-1"></i> Giao dịch an toàn & bảo mật</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== BƯỚC 2: THANH TOÁN ==================== -->
+        <div id="step2" class="step-container max-w-3xl mx-auto">
+            
+            <div class="bg-white dark:bg-darkCard rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden">
+                <div class="bg-blue-50 dark:bg-blue-900/20 p-4 border-b border-blue-100 dark:border-blue-800 text-center relative">
+                    <button class="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full hover:bg-blue-100 dark:hover:bg-blue-800 flex items-center justify-center text-primary transition" onclick="goToStep(1)">
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </button>
+                    <h2 class="font-extrabold text-lg text-primary">Thanh toán chuyển khoản</h2>
+                </div>
+
+                <div class="p-6 md:p-8 flex flex-col md:flex-row gap-8 items-center md:items-start">
+                    <!-- Trái: QR Code -->
+                    <div class="flex-shrink-0 flex flex-col items-center w-full md:w-auto">
+                        <div class="w-56 h-56 md:w-64 md:h-64 rounded-2xl border-4 border-primary p-2 bg-white shadow-lg relative">
+                            <!-- Placeholder QR -->
+                            <img src="https://placehold.co/400x400/FFF/000?text=QR+CODE" alt="Mã QR" class="w-full h-full object-contain rounded-xl">
+                            <!-- Logo Bank Mini -->
+                            <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-white rounded-lg p-1 shadow-md">
+                                <div class="w-full h-full bg-blue-600 rounded flex items-center justify-center text-white font-black text-[10px]">MB</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Status -->
+                        <div class="mt-6 flex items-center gap-3 bg-blue-50 dark:bg-blue-900/30 px-4 py-2 rounded-full border border-blue-100 dark:border-blue-800">
+                            <div class="spinner"></div>
+                            <span class="font-bold text-sm text-primary">Đang chờ thanh toán...</span>
+                        </div>
+                    </div>
+
+                    <!-- Phải: Thông tin CK -->
+                    <div class="flex-1 w-full space-y-4">
+                        <div class="bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-4 md:p-5 border border-slate-100 dark:border-slate-800">
+                            
+                            <div class="flex items-center justify-between mb-4 pb-4 border-b border-slate-200 dark:border-slate-700">
+                                <div>
+                                    <div class="text-xs text-slate-500 mb-1">Ngân hàng thụ hưởng</div>
+                                    <div class="font-bold text-slate-800 dark:text-slate-100">MB Bank (Ngân hàng Quân Đội)</div>
+                                </div>
+                                <div class="w-12 h-8 bg-blue-600 text-white rounded font-black text-xs flex items-center justify-center">MB</div>
+                            </div>
+
+                            <div class="space-y-4">
+                                <div>
+                                    <div class="text-xs text-slate-500 mb-1">Tên tài khoản</div>
+                                    <div class="font-bold text-slate-800 dark:text-slate-100 uppercase">CTY TNHH GIAO DUC ONTHIPRO</div>
+                                </div>
+                                
+                                <div class="flex items-end justify-between">
+                                    <div>
+                                        <div class="text-xs text-slate-500 mb-1">Số tài khoản</div>
+                                        <div class="font-extrabold text-lg font-mono tracking-wider text-slate-800 dark:text-slate-100">8888 6666 9999</div>
+                                    </div>
+                                    <button class="h-10 px-4 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 rounded-xl text-sm font-bold transition flex items-center gap-2 text-slate-700 dark:text-slate-200" onclick="copyToClipboard('888866669999', this)">
+                                        <i class="fa-regular fa-copy"></i> Sao chép
+                                    </button>
+                                </div>
+
+                                <div class="flex items-end justify-between">
+                                    <div>
+                                        <div class="text-xs text-slate-500 mb-1">Số tiền</div>
+                                        <div class="font-extrabold text-2xl text-accent" id="paymentAmountTxt">84.000đ</div>
+                                    </div>
+                                    <button class="h-10 px-4 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 rounded-xl text-sm font-bold transition flex items-center gap-2 text-slate-700 dark:text-slate-200" onclick="copyToClipboard(currentTotal, this)">
+                                        <i class="fa-regular fa-copy"></i> Sao chép
+                                    </button>
+                                </div>
+                                
+                                <div class="pt-2">
+                                    <div class="text-xs text-slate-500 mb-1">Nội dung chuyển khoản (BẮT BUỘC)</div>
+                                    <div class="flex items-center gap-2">
+                                        <div class="flex-1 bg-white dark:bg-darkCard h-11 border border-primary/30 rounded-xl flex items-center px-4 font-mono font-bold text-primary tracking-widest text-lg">
+                                            OTP2026A
+                                        </div>
+                                        <button class="h-11 px-4 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primaryHover transition flex items-center gap-2 flex-shrink-0 shadow-md shadow-blue-200 dark:shadow-none" onclick="copyToClipboard('OTP2026A', this)">
+                                            <i class="fa-regular fa-copy"></i> Sao chép
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Cảnh báo & Đếm ngược -->
+                        <div class="flex items-start gap-3 mt-4 text-sm text-slate-600 dark:text-slate-400">
+                            <i class="fa-solid fa-circle-info text-primary mt-0.5 text-lg"></i>
+                            <div>
+                                LƯU Ý: Vui lòng chuyển <span class="font-bold text-accent">ĐÚNG SỐ TIỀN</span> và ghi <span class="font-bold text-primary">ĐÚNG NỘI DUNG</span> để hệ thống mở khóa tài liệu tự động ngay lập tức.
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-4 mt-4">
+                            <div class="text-sm font-medium">Thời gian giữ đơn:</div>
+                            <div class="font-mono font-bold text-lg text-red-500 bg-red-50 dark:bg-red-900/20 px-3 py-1 rounded-lg" id="countdownTimer">15:00</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer Box -->
+                <div class="bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 p-4 text-center">
+                    <button class="h-11 px-6 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition text-sm flex items-center justify-center gap-2 mx-auto">
+                        <i class="fa-solid fa-headset"></i> Tôi gặp vấn đề khi chuyển khoản
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== BƯỚC 3: HOÀN TẤT ==================== -->
+        <div id="step3" class="step-container max-w-2xl mx-auto text-center py-8">
+            
+            <!-- State 1: Success Auto -->
+            <div id="successStateAuto" class="bg-white dark:bg-darkCard rounded-3xl p-8 md:p-12 border border-slate-200 dark:border-slate-700 shadow-xl">
+                <div class="w-24 h-24 bg-green-100 dark:bg-green-900/40 text-green-500 rounded-full flex items-center justify-center text-5xl mx-auto mb-6 shadow-inner ring-8 ring-green-50 dark:ring-green-900/10">
+                    <i class="fa-solid fa-check"></i>
+                </div>
+                <h2 class="text-2xl md:text-3xl font-extrabold text-slate-800 dark:text-white mb-2">Thanh toán thành công!</h2>
+                <p class="text-slate-500 dark:text-slate-400 mb-8">Cảm ơn bạn đã tin tưởng. Tài liệu đã được thêm vào tủ sách của bạn.</p>
+                
+                <div class="bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-5 mb-8 text-left border border-slate-100 dark:border-slate-800 inline-block w-full max-w-sm">
+                    <div class="flex justify-between mb-3 text-sm">
+                        <span class="text-slate-500">Mã đơn hàng:</span>
+                        <span class="font-bold">OTP2026A</span>
+                    </div>
+                    <div class="flex justify-between mb-3 text-sm">
+                        <span class="text-slate-500">Số tài liệu:</span>
+                        <span class="font-bold"><span id="successItemCount">2</span> cuốn</span>
+                    </div>
+                    <div class="flex justify-between text-sm border-t border-slate-200 dark:border-slate-700 pt-3 mt-3">
+                        <span class="text-slate-500">Tổng thanh toán:</span>
+                        <span class="font-black text-accent text-lg" id="successTotal">84.000đ</span>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                    <button class="h-12 w-full sm:w-auto px-8 rounded-full border-2 border-primary text-primary font-bold hover:bg-blue-50 dark:hover:bg-blue-900/20 transition flex items-center justify-center gap-2">
+                        Về trang chủ
+                    </button>
+                    <button class="h-12 w-full sm:w-auto px-8 bg-primary text-white font-extrabold rounded-full hover:bg-primaryHover transition shadow-lg shadow-blue-200 dark:shadow-none flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-book-open"></i> Đọc tài liệu ngay
+                    </button>
+                </div>
+            </div>
+
+            <!-- State 2: Manual Check (Mặc định ẩn) -->
+            <div id="successStateManual" class="hidden bg-white dark:bg-darkCard rounded-3xl p-8 md:p-12 border border-slate-200 dark:border-slate-700 shadow-xl">
+                <div class="w-24 h-24 bg-orange-100 dark:bg-orange-900/40 text-orange-500 rounded-full flex items-center justify-center text-5xl mx-auto mb-6 shadow-inner ring-8 ring-orange-50 dark:ring-orange-900/10">
+                    <i class="fa-regular fa-clock"></i>
+                </div>
+                <h2 class="text-2xl md:text-3xl font-extrabold text-slate-800 dark:text-white mb-2">Đơn đang được xử lý!</h2>
+                <p class="text-slate-500 dark:text-slate-400 mb-6">Chúng tôi đã ghi nhận giao dịch của bạn. Do số tiền chuyển khoản có sai lệch hoặc sai nội dung, Admin sẽ kiểm tra thủ công và mở khóa trong vòng 5-15 phút.</p>
+                
+                <div class="flex flex-col sm:flex-row gap-3 justify-center mt-8">
+                    <button class="h-12 w-full sm:w-auto px-8 rounded-full border-2 border-slate-300 text-slate-600 dark:border-slate-600 dark:text-slate-300 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+                        Về trang chủ
+                    </button>
+                    <button class="h-12 w-full sm:w-auto px-8 bg-[#0068FF] text-white font-bold rounded-full hover:bg-blue-700 transition shadow-lg flex items-center justify-center gap-2">
+                        Chat Zalo với Admin
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- FAB -->
+    <div class="fixed bottom-6 right-4 md:right-8 flex flex-col gap-3 z-50">
+        <a href="#" class="w-12 h-12 md:w-14 md:h-14 rounded-full bg-blue-500 text-white flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition animate-bounce-intro" title="Chat Zalo">
+            <div class="font-bold text-sm">Zalo</div>
+        </a>
+        <a href="#" class="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-tr from-blue-500 to-rose-500 text-white flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition" title="Chat Messenger">
+            <i class="fa-brands fa-facebook-messenger"></i>
+        </a>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white dark:bg-darkCard pt-12 pb-6 border-t border-slate-200 dark:border-slate-800 mt-10">
+        <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+            <div class="col-span-1 md:col-span-1">
+                <a href="#" class="flex items-center gap-2 mb-4 h-11">
+                    <div class="w-8 h-8 bg-primary text-white rounded-lg flex items-center justify-center font-bold shadow-lg">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </div>
+                    <span class="font-extrabold text-xl text-primary">ÔnThiPro</span>
+                </a>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Nền tảng chia sẻ và mua bán tài liệu luyện thi THPT Quốc Gia uy tín, chất lượng hàng đầu Việt Nam.</p>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4 text-slate-800 dark:text-slate-200">Về chúng tôi</h4>
+                <ul class="text-sm text-slate-500 dark:text-slate-400 space-y-3">
+                    <li><a href="#" class="hover:text-primary transition block py-1">Giới thiệu</a></li>
+                    <li><a href="#" class="hover:text-primary transition block py-1">Chính sách bảo mật</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4 text-slate-800 dark:text-slate-200">Hỗ trợ học sinh</h4>
+                <ul class="text-sm text-slate-500 dark:text-slate-400 space-y-3">
+                    <li><a href="#" class="hover:text-primary transition block py-1">Hướng dẫn thanh toán</a></li>
+                    <li><a href="#" class="hover:text-primary transition block py-1 flex items-center">Gói Premium <span class="bg-highlight text-slate-900 text-[10px] font-bold px-1.5 py-0.5 rounded ml-2">HOT</span></a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4 text-slate-800 dark:text-slate-200">Liên hệ</h4>
+                <ul class="text-sm text-slate-500 dark:text-slate-400 space-y-3">
+                    <li class="flex items-center py-1"><i class="fa-solid fa-phone mr-3 w-4 text-center"></i> 0123.456.789</li>
+                    <li class="flex items-center py-1"><i class="fa-solid fa-envelope mr-3 w-4 text-center"></i> hotro@onthipro.vn</li>
+                </ul>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto px-4 text-center text-sm text-slate-500 border-t border-slate-100 dark:border-slate-800 pt-6">
+            &copy; 2026 ÔnThiPro. All rights reserved.
+        </div>
+    </footer>
+
+    <!-- WIDGET ĐIỀU KHIỂN (Chỉ dùng cho Demo) -->
+    <div class="fixed top-20 left-4 z-[60] bg-slate-900/95 text-white p-4 rounded-xl shadow-2xl backdrop-blur-md border border-slate-700 w-72 text-xs font-mono">
+        <div class="font-bold mb-3 flex items-center justify-between border-b border-slate-700 pb-2 text-sm text-highlight">
+            <span>⚙️ DEMO CONTROLLER</span>
+            <button onclick="this.parentElement.parentElement.style.display='none'" class="text-slate-400 hover:text-white" title="Đóng panel"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+        
+        <div class="space-y-2">
+            <div class="text-slate-400 mb-1">Chuyển Bước:</div>
+            <div class="grid grid-cols-3 gap-2">
+                <button class="bg-slate-700 hover:bg-primary py-1.5 rounded transition font-bold" onclick="goToStep(1)">1. Giỏ hàng</button>
+                <button class="bg-slate-700 hover:bg-primary py-1.5 rounded transition font-bold" onclick="goToStep(2)">2. Thanh toán</button>
+                <button class="bg-slate-700 hover:bg-primary py-1.5 rounded transition font-bold" onclick="goToStep(3)">3. Hoàn tất</button>
+            </div>
+            
+            <div class="border-t border-slate-700 pt-2 mt-2">
+                <div class="text-slate-400 mb-1">Test Case Bước 1 (Giỏ hàng):</div>
+                <button class="w-full text-left px-2 py-1.5 bg-slate-800 hover:bg-slate-700 rounded mb-1 transition text-red-300" onclick="simulateMinOrder()">
+                    Giả lập tổng &lt; 2.000đ
+                </button>
+                <button class="w-full text-left px-2 py-1.5 bg-slate-800 hover:bg-slate-700 rounded mb-1 transition text-green-300" onclick="simulateFreeOrder()">
+                    Nhập mã FREE100 (Giảm 100%)
+                </button>
+                <button class="w-full text-left px-2 py-1.5 bg-slate-800 hover:bg-slate-700 rounded transition text-blue-300" onclick="resetCart()">
+                    Reset Giỏ Hàng (Mặc định)
+                </button>
+            </div>
+
+            <div class="border-t border-slate-700 pt-2 mt-2">
+                <div class="text-slate-400 mb-1">Test Case Bước 3 (Hoàn tất):</div>
+                <button class="w-full text-left px-2 py-1.5 bg-slate-800 hover:bg-slate-700 rounded mb-1 transition text-green-400" onclick="showSuccessState('auto')">
+                    Thành công tự động
+                </button>
+                <button class="w-full text-left px-2 py-1.5 bg-slate-800 hover:bg-slate-700 rounded transition text-orange-400" onclick="showSuccessState('manual')">
+                    Đang kiểm tra thủ công (Sai tiền)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Dark Mode ---
+        const themeToggleBtn = document.getElementById('themeToggle');
+        themeToggleBtn.addEventListener('click', () => document.documentElement.classList.toggle('dark'));
+
+        // --- Core Variables ---
+        let currentStep = 1;
+        let originalTotal = 84000;
+        let currentTotal = 84000;
+        let isFreeOrder = false;
+
+        // --- Format Currency ---
+        function formatMoney(amount) {
+            return amount.toLocaleString('vi-VN') + 'đ';
+        }
+
+        // --- Navigation Logic ---
+        function goToStep(step) {
+            // Hide all steps
+            document.querySelectorAll('.step-container').forEach(el => el.classList.remove('active'));
+            // Show target step
+            document.getElementById(`step${step}`).classList.add('active');
+            
+            // Update Progress Bar
+            const nodes = document.querySelectorAll('.step-node');
+            const nodesMobile = document.querySelectorAll('.step-node-mobile');
+            const line = document.getElementById('progressLine');
+            const lineMobile = document.getElementById('progressLineMobile');
+            
+            // Calc width for line (0%, 50%, 100%)
+            const progressPercent = (step - 1) * 50;
+            line.style.width = `${progressPercent}%`;
+            lineMobile.style.width = `${progressPercent}%`;
+
+            // Update Nodes styling
+            nodes.forEach((node, index) => {
+                const indicator = node.querySelector('.node-indicator');
+                const text = node.querySelector('.node-text');
+                
+                if (index < step) {
+                    // Active or Passed
+                    node.classList.add('active');
+                    indicator.className = 'w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm shadow ring-4 ring-slate-50 dark:ring-darkBg transition-colors duration-300 node-indicator';
+                    text.className = 'text-xs font-bold text-primary node-text';
+                    // Tick mark for passed steps
+                    if (index < step - 1) indicator.innerHTML = '<i class="fa-solid fa-check"></i>';
+                    else indicator.innerHTML = (index + 1); // Current step number
+                } else {
+                    // Upcoming
+                    node.classList.remove('active');
+                    indicator.className = 'w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 flex items-center justify-center font-bold text-sm ring-4 ring-slate-50 dark:ring-darkBg transition-colors duration-300 node-indicator';
+                    text.className = 'text-xs font-bold text-slate-500 dark:text-slate-400 node-text';
+                    indicator.innerHTML = index === 2 ? '<i class="fa-solid fa-check"></i>' : (index + 1);
+                }
+            });
+
+            // Mobile specific update
+            nodesMobile.forEach((node, index) => {
+                if (index < step) {
+                    node.className = 'step-node-mobile w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs ring-2 ring-white dark:ring-darkCard active';
+                } else {
+                    node.className = 'step-node-mobile w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 flex items-center justify-center font-bold text-xs ring-2 ring-white dark:ring-darkCard';
+                }
+            });
+            const mobileTexts = ['Giỏ hàng của bạn', 'Thanh toán chuyển khoản', 'Hoàn tất đơn hàng'];
+            document.getElementById('mobileStepText').innerText = mobileTexts[step-1];
+
+            // Scroll to top smoothly
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            currentStep = step;
+
+            // Trigger animations/timers if entering specific steps
+            if(step === 2) startTimer();
+            if(step === 3) {
+                // Update final summary based on state
+                document.getElementById('successTotal').innerText = formatMoney(currentTotal);
+            }
+        }
+
+        // --- Cart Logic ---
+        function updateCartTotal() {
+            let total = 0;
+            const radios = document.querySelectorAll('.buy-option-radio:checked');
+            radios.forEach(r => {
+                total += parseInt(r.value);
+            });
+            
+            // Cập nhật giá từng item trên UI (Demo đơn giản)
+            const items = document.querySelectorAll('.cart-item');
+            items.forEach((item, index) => {
+                if(radios[index]) {
+                    item.querySelector('.item-price').innerText = formatMoney(parseInt(radios[index].value));
+                }
+            });
+
+            originalTotal = total;
+            calculateFinal();
+        }
+
+        function calculateFinal() {
+            let discount = 0;
+            if (isFreeOrder) discount = originalTotal; // 100% off
+
+            currentTotal = originalTotal - discount;
+            const itemCount = document.querySelectorAll('.cart-item').length;
+
+            // Update UI
+            document.getElementById('itemCount').innerText = itemCount;
+            document.getElementById('subTotalTxt').innerText = formatMoney(originalTotal);
+            document.getElementById('finalTotalTxt').innerText = formatMoney(currentTotal);
+            document.getElementById('paymentAmountTxt').innerText = formatMoney(currentTotal);
+            document.getElementById('successItemCount').innerText = itemCount;
+
+            const btn = document.getElementById('checkoutBtn');
+            const minWarn = document.getElementById('minOrderWarning');
+            const suggests = document.getElementById('suggestedItems');
+
+            // Handle States
+            if (itemCount === 0) {
+                document.getElementById('cartItemsContainer').classList.add('hidden');
+                document.getElementById('emptyCartMsg').classList.remove('hidden');
+                document.getElementById('emptyCartMsg').classList.add('flex');
+                btn.disabled = true;
+                minWarn.classList.add('hidden');
+                suggests.classList.add('hidden');
+            } else {
+                document.getElementById('cartItemsContainer').classList.remove('hidden');
+                document.getElementById('emptyCartMsg').classList.add('hidden');
+                document.getElementById('emptyCartMsg').classList.remove('flex');
+                
+                if (isFreeOrder) {
+                    btn.disabled = false;
+                    btn.innerHTML = 'Nhận tài liệu miễn phí <i class="fa-solid fa-gift"></i>';
+                    btn.onclick = () => { showSuccessState('auto'); goToStep(3); };
+                    minWarn.classList.add('hidden');
+                    suggests.classList.add('hidden');
+                } else if (currentTotal < 2000) {
+                    btn.disabled = true;
+                    btn.innerHTML = 'Thanh toán ngay <i class="fa-solid fa-arrow-right"></i>';
+                    minWarn.classList.remove('hidden');
+                    suggests.classList.remove('hidden');
+                } else {
+                    btn.disabled = false;
+                    btn.innerHTML = 'Thanh toán ngay <i class="fa-solid fa-arrow-right"></i>';
+                    btn.onclick = () => goToStep(2);
+                    minWarn.classList.add('hidden');
+                    suggests.classList.add('hidden');
+                }
+            }
+        }
+
+        function removeItem(btn) {
+            // Traverse up to find .cart-item
+            const item = btn.closest('.cart-item');
+            if(item) {
+                item.remove();
+                updateCartTotal();
+            }
+        }
+
+        // --- Promo Code Logic ---
+        function applyPromo() {
+            const input = document.getElementById('promoInput').value.trim().toUpperCase();
+            const msgObj = document.getElementById('promoMsg');
+            const rowObj = document.getElementById('discountRow');
+            const txtObj = document.getElementById('discountTxt');
+            
+            msgObj.classList.remove('hidden');
+
+            if (input === 'FREE100') {
+                isFreeOrder = true;
+                msgObj.innerText = 'Áp dụng mã giảm 100% thành công!';
+                msgObj.className = 'text-xs font-bold mt-2 text-green-600 dark:text-green-400 transition-all';
+                rowObj.classList.remove('hidden');
+                txtObj.innerText = `-${formatMoney(originalTotal)}`;
+            } else if (input !== '') {
+                isFreeOrder = false;
+                msgObj.innerText = 'Mã giảm giá không hợp lệ hoặc đã hết hạn.';
+                msgObj.className = 'text-xs font-bold mt-2 text-red-500 transition-all';
+                rowObj.classList.add('hidden');
+            } else {
+                isFreeOrder = false;
+                msgObj.classList.add('hidden');
+                rowObj.classList.add('hidden');
+            }
+            calculateFinal();
+        }
+
+        // --- Copy to Clipboard ---
+        function copyToClipboard(text, btn) {
+            navigator.clipboard.writeText(text).then(() => {
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML = '<i class="fa-solid fa-check text-green-500"></i> Đã chép';
+                setTimeout(() => { btn.innerHTML = originalHtml; }, 2000);
+            }).catch(err => {
+                console.error('Không thể copy: ', err);
+                // Fallback for older browsers not strictly needed in modern demo, but good practice
+            });
+        }
+
+        // --- Timer Logic (Step 2) ---
+        let timerInterval;
+        function startTimer() {
+            clearInterval(timerInterval);
+            let time = 15 * 60; // 15 minutes
+            const display = document.getElementById('countdownTimer');
+            
+            timerInterval = setInterval(() => {
+                let minutes = parseInt(time / 60, 10);
+                let seconds = parseInt(time % 60, 10);
+
+                minutes = minutes < 10 ? "0" + minutes : minutes;
+                seconds = seconds < 10 ? "0" + seconds : seconds;
+
+                display.textContent = minutes + ":" + seconds;
+
+                if (--time < 0) {
+                    clearInterval(timerInterval);
+                    display.textContent = "Hết hạn";
+                    display.classList.replace('text-red-500', 'text-slate-500');
+                    display.classList.replace('bg-red-50', 'bg-slate-100');
+                }
+            }, 1000);
+        }
+
+        // --- Demo Controller Functions ---
+        function simulateMinOrder() {
+            goToStep(1);
+            isFreeOrder = false;
+            // Xóa mã giảm giá
+            document.getElementById('promoInput').value = '';
+            document.getElementById('promoMsg').classList.add('hidden');
+            document.getElementById('discountRow').classList.add('hidden');
+            
+            // Xóa item 2, force item 1 giá 1000đ để tạo state < 2000
+            const items = document.querySelectorAll('.cart-item');
+            if(items.length > 1) items[1].remove();
+            
+            // Force value in JS (không đổi HTML input radio để demo nhanh)
+            originalTotal = 1000;
+            if(items.length > 0) items[0].querySelector('.item-price').innerText = '1.000đ';
+            calculateFinal();
+        }
+
+        function simulateFreeOrder() {
+            goToStep(1);
+            document.getElementById('promoInput').value = 'FREE100';
+            applyPromo();
+        }
+
+        function addMockItem(price, name) {
+            // Hàm helper để thêm item từ phần gợi ý (không cần code logic render full item cho demo này, 
+            // chỉ cần tăng tổng tiền để thoát state warning)
+            originalTotal += price;
+            calculateFinal();
+            document.getElementById('itemCount').innerText = parseInt(document.getElementById('itemCount').innerText) + 1;
+            // Fake animation by slightly flashing cart
+        }
+
+        function resetCart() {
+            location.reload(); // Cách nhanh nhất để reset full DOM state cho bản demo
+        }
+
+        function showSuccessState(type) {
+            if (type === 'auto') {
+                document.getElementById('successStateAuto').classList.remove('hidden');
+                document.getElementById('successStateManual').classList.add('hidden');
+            } else {
+                document.getElementById('successStateAuto').classList.add('hidden');
+                document.getElementById('successStateManual').classList.remove('hidden');
+                document.getElementById('successStateManual').classList.add('block');
+            }
+            goToStep(3);
+        }
+
+        // Init
+        updateCartTotal();
+
+    </script>
+</body>
+</html>

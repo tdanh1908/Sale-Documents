@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="vi" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Đề thi - Admin ÔnThiPro</title>
+    
+    <!-- Google Fonts: Nunito -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Nunito', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#2563EB', 
+                        primaryHover: '#1D4ED8',
+                        accent: '#F97316', 
+                        highlight: '#FACC15', 
+                        darkBg: '#0F172A',
+                        darkCard: '#1E293B',
+                        bio: {
+                            50: '#f7fee7',
+                            100: '#ecfccb',
+                            600: '#65a30d', // Lime for Sinh
+                            900: '#365314',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Scrollbar styles */
+        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .dark .custom-scroll::-webkit-scrollbar-thumb { background: #475569; }
+
+        /* Hide scrollbar completely */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Active Menu Item */
+        .admin-nav-item.active { background-color: #2563EB; color: #ffffff; font-weight: 700; }
+        .admin-nav-item.active i { color: #ffffff; }
+
+        /* Custom Checkbox */
+        .custom-checkbox input:checked + div { background-color: #2563EB; border-color: #2563EB; }
+        .custom-checkbox input:checked + div svg { display: block; }
+
+        /* Radio Card Selection */
+        .radio-card input:checked + div {
+            border-color: #2563EB;
+            background-color: #eff6ff;
+        }
+        .dark .radio-card input:checked + div {
+            border-color: #2563EB;
+            background-color: rgba(37, 99, 235, 0.1);
+        }
+        .radio-card input:checked + div .radio-indicator {
+            border-color: #2563EB;
+            background-color: #2563EB;
+        }
+        .radio-card input:checked + div .radio-indicator div {
+            display: block;
+        }
+
+        /* Modals & Views Transitions */
+        .view-section { display: none; animation: fadeIn 0.3s ease; }
+        .view-section.active { display: block; }
+
+        .modal-overlay { opacity: 0; visibility: hidden; transition: all 0.3s ease; }
+        .modal-overlay.open { opacity: 1; visibility: visible; }
+        .modal-content { transform: translateY(20px) scale(0.95); transition: all 0.3s ease; }
+        .modal-overlay.open .modal-content { transform: translateY(0) scale(1); }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Toast Notifications */
+        .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .toast {
+            min-width: 250px; background: white; border-radius: 12px; padding: 16px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            display: flex; align-items: start; gap: 12px; transform: translateX(120%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .dark .toast { background: #1E293B; border: 1px solid #334155; }
+        .toast.show { transform: translateX(0); }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-darkBg text-slate-800 dark:text-slate-100 font-sans transition-colors duration-300 flex overflow-hidden h-screen">
+
+    <!-- Lớp phủ Mobile Sidebar -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/50 dark:bg-black/60 z-40 hidden xl:hidden transition-opacity opacity-0" onclick="toggleSidebar()"></div>
+
+    <!-- SIDEBAR -->
+    <aside id="adminSidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-darkCard border-r border-slate-200 dark:border-slate-800 shadow-xl xl:shadow-none transform -translate-x-full xl:translate-x-0 flex flex-col h-full transition-transform duration-300">
+        <!-- Logo -->
+        <div class="h-16 flex items-center px-6 border-b border-slate-100 dark:border-slate-800 flex-shrink-0">
+            <a href="#" class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-primary text-white rounded-lg flex items-center justify-center font-bold text-lg shadow-md shadow-blue-200 dark:shadow-none">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <span class="font-extrabold text-xl tracking-tight text-primary">Admin Panel</span>
+            </a>
+            <button class="xl:hidden ml-auto w-8 h-8 flex items-center justify-center text-slate-500 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" onclick="toggleSidebar()">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <!-- Menu Navigation -->
+        <nav class="flex-1 overflow-y-auto custom-scroll py-4 px-3 space-y-1">
+            <a href="#" class="admin-nav-item flex items-center gap-3 w-full h-11 px-4 rounded-xl text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                <i class="fa-solid fa-border-all w-5 text-center text-slate-400"></i> Tổng quan
+            </a>
+            <a href="#" class="admin-nav-item flex items-center gap-3 w-full h-11 px-4 rounded-xl text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                <i class="fa-solid fa-book w-5 text-center text-slate-400"></i> Tài liệu
+            </a>
+            <a href="#" class="admin-nav-item active flex items-center gap-3 w-full h-11 px-4 rounded-xl text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                <i class="fa-solid fa-file-signature w-5 text-center text-slate-400"></i> Đề thi
+            </a>
+            <a href="#" class="admin-nav-item flex items-center gap-3 w-full h-11 px-4 rounded-xl text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                <i class="fa-solid fa-trophy w-5 text-center text-slate-400"></i> Kỳ thi
+            </a>
+            <a href="#" class="admin-nav-item flex items-center gap-3 w-full h-11 px-4 rounded-xl text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                <i class="fa-solid fa-receipt w-5 text-center text-slate-400"></i> Đơn hàng
+            </a>
+            <a href="#" class="admin-nav-item flex items-center gap-3 w-full h-11 px-4 rounded-xl text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                <i class="fa-solid fa-ticket w-5 text-center text-slate-400"></i> Mã giảm giá
+            </a>
+            
+            <div class="h-px bg-slate-100 dark:bg-slate-800 my-2 mx-2"></div>
+            
+            <a href="#" class="admin-nav-item flex items-center gap-3 w-full h-11 px-4 rounded-xl text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                <i class="fa-solid fa-clipboard-check w-5 text-center text-slate-400"></i> Chờ duyệt
+            </a>
+            <a href="#" class="admin-nav-item flex items-center gap-3 w-full h-11 px-4 rounded-xl text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                <i class="fa-solid fa-users w-5 text-center text-slate-400"></i> Người dùng
+            </a>
+            <a href="#" class="admin-nav-item flex items-center gap-3 w-full h-11 px-4 rounded-xl text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                <i class="fa-solid fa-gear w-5 text-center text-slate-400"></i> Cài đặt
+            </a>
+        </nav>
+
+        <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+            <div class="flex items-center gap-3 bg-slate-50 dark:bg-slate-900/50 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 cursor-pointer hover:border-primary transition">
+                <img src="https://placehold.co/100x100/3B82F6/FFF?text=AD" alt="Admin" class="w-9 h-9 rounded-full">
+                <div class="flex-1 min-w-0">
+                    <div class="font-bold text-sm text-slate-800 dark:text-slate-100 truncate">Admin System</div>
+                    <div class="text-[10px] text-green-500 font-bold flex items-center gap-1"><div class="w-1.5 h-1.5 rounded-full bg-green-500"></div> Online</div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN WRAPPER -->
+    <div class="flex-1 flex flex-col min-w-0 xl:ml-64 h-screen bg-slate-50 dark:bg-darkBg transition-all duration-300 relative">
+        
+        <!-- Header Top -->
+        <header class="h-16 bg-white dark:bg-darkCard border-b border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between px-4 md:px-6 flex-shrink-0 z-30">
+            <div class="flex items-center gap-3">
+                <button class="xl:hidden w-11 h-11 flex items-center justify-center text-slate-600 dark:text-slate-300 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition -ml-2" onclick="toggleSidebar()">
+                    <i class="fa-solid fa-bars text-lg"></i>
+                </button>
+                <div class="hidden sm:flex relative w-64 lg:w-96">
+                    <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" placeholder="Tìm kiếm nhanh toàn hệ thống..." class="w-full h-11 pl-10 pr-4 bg-slate-100 dark:bg-slate-800 border-none rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary text-slate-700 dark:text-slate-200">
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 md:gap-4">
+                <button id="themeToggle" class="w-11 h-11 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition" aria-label="Đổi giao diện">
+                    <i class="fa-solid fa-moon dark:hidden text-lg"></i>
+                    <i class="fa-solid fa-sun hidden dark:block text-highlight text-lg"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Container for different views -->
+        <main class="flex-1 overflow-y-auto custom-scroll p-4 md:p-6 lg:p-8 relative">
+            
+            <!-- VIEW LIST (DANH SÁCH) -->
+            <div id="view-list" class="view-section active h-full flex flex-col">
+                <!-- Page Header -->
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                    <div>
+                        <h1 class="text-2xl font-extrabold text-slate-800 dark:text-white">Quản lý Đề thi</h1>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Tổng số: 850 đề thi trên hệ thống</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button class="h-11 px-5 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primaryHover transition shadow-md shadow-blue-200 dark:shadow-none flex items-center gap-2" onclick="switchView('view-add')">
+                            <i class="fa-solid fa-plus"></i> Thêm đề thi
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filters & Controls -->
+                <div class="bg-white dark:bg-darkCard p-4 rounded-t-2xl border border-slate-200 dark:border-slate-700 border-b-0 flex flex-col lg:flex-row gap-4 justify-between items-center">
+                    <div class="flex flex-1 w-full lg:w-auto gap-4 flex-col sm:flex-row">
+                        <div class="relative flex-1 max-w-md">
+                            <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <input type="text" placeholder="Tìm theo tên đề thi..." class="w-full h-11 pl-10 pr-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-primary text-slate-800 dark:text-slate-100">
+                        </div>
+                        <select class="h-11 px-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-xl text-sm font-bold outline-none cursor-pointer w-full sm:w-40">
+                            <option value="">Tất cả môn</option>
+                            <option value="Toán">Toán học</option>
+                            <option value="Lý">Vật lý</option>
+                            <option value="Hóa">Hóa học</option>
+                        </select>
+                        <select class="h-11 px-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-xl text-sm font-bold outline-none cursor-pointer w-full sm:w-40">
+                            <option value="">Loại đề</option>
+                            <option value="Web">Làm trên Web</option>
+                            <option value="Azota">Đề Azota</option>
+                        </select>
+                        <select class="h-11 px-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-xl text-sm font-bold outline-none cursor-pointer w-full sm:w-40">
+                            <option value="">Trạng thái</option>
+                            <option value="Active">Đang mở</option>
+                            <option value="Draft">Nháp</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Data Table -->
+                <div class="bg-white dark:bg-darkCard border border-slate-200 dark:border-slate-700 rounded-b-2xl shadow-sm overflow-hidden flex-1 flex flex-col">
+                    <div class="overflow-x-auto custom-scroll flex-1">
+                        <table class="w-full text-left min-w-[1000px]">
+                            <thead class="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-500 uppercase tracking-wider sticky top-0 z-10">
+                                <tr>
+                                    <th class="p-4 w-12 text-center">
+                                        <label class="custom-checkbox flex items-center justify-center cursor-pointer">
+                                            <input type="checkbox" class="hidden">
+                                            <div class="w-5 h-5 rounded border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center bg-white dark:bg-darkCard transition"><svg class="w-3 h-3 text-white hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg></div>
+                                        </label>
+                                    </th>
+                                    <th class="p-4 cursor-pointer hover:text-primary transition">Tên đề thi <i class="fa-solid fa-sort ml-1"></i></th>
+                                    <th class="p-4 w-28">Môn</th>
+                                    <th class="p-4 w-32 text-center">Nền tảng</th>
+                                    <th class="p-4 w-24 text-center">Số câu</th>
+                                    <th class="p-4 w-28 text-center cursor-pointer hover:text-primary transition">Lượt thi <i class="fa-solid fa-sort-down ml-1"></i></th>
+                                    <th class="p-4 w-32 text-center">Quyền truy cập</th>
+                                    <th class="p-4 w-32 text-center">Trạng thái</th>
+                                    <th class="p-4 w-28 text-center">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-sm font-medium">
+                                <!-- Row 1: Web, Premium -->
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/30 transition group">
+                                    <td class="p-4 text-center">
+                                        <label class="custom-checkbox flex items-center justify-center cursor-pointer">
+                                            <input type="checkbox" class="hidden">
+                                            <div class="w-5 h-5 rounded border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center bg-white dark:bg-darkCard transition"><svg class="w-3 h-3 text-white hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg></div>
+                                        </label>
+                                    </td>
+                                    <td class="p-4">
+                                        <div class="font-bold text-slate-800 dark:text-slate-100 line-clamp-2">Đề thi thử THPT QG Môn Toán Lần 3</div>
+                                        <div class="text-[10px] text-slate-500 font-mono mt-1">ID: EXAM-001 • 90 phút</div>
+                                    </td>
+                                    <td class="p-4"><span class="bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 text-xs px-2 py-1 rounded font-bold">Toán học</span></td>
+                                    <td class="p-4 text-center">
+                                        <span class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-300 font-bold bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700"><i class="fa-solid fa-laptop-code text-primary"></i> Web</span>
+                                    </td>
+                                    <td class="p-4 text-center">50</td>
+                                    <td class="p-4 text-center font-bold">1,245</td>
+                                    <td class="p-4 text-center"><span class="bg-gradient-to-r from-highlight to-accent text-slate-900 text-xs font-bold px-2 py-1 rounded shadow-sm">Premium</span></td>
+                                    <td class="p-4 text-center"><span class="inline-block bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-bold px-2.5 py-1 rounded-full border border-green-200 dark:border-green-800/50">Đang mở</span></td>
+                                    <td class="p-4 text-center">
+                                        <div class="flex items-center justify-center gap-1 xl:opacity-0 xl:group-hover:opacity-100 transition-opacity">
+                                            <button class="w-8 h-8 rounded-lg text-slate-500 hover:bg-blue-50 hover:text-primary transition" title="Chỉnh sửa"><i class="fa-solid fa-pen"></i></button>
+                                            <button class="w-8 h-8 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Thống kê"><i class="fa-solid fa-chart-simple"></i></button>
+                                            <button class="w-8 h-8 rounded-lg text-slate-500 hover:bg-orange-50 hover:text-accent transition" title="Đóng đề"><i class="fa-solid fa-lock"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <!-- Row 2: Azota, Free -->
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/30 transition group">
+                                    <td class="p-4 text-center">
+                                        <label class="custom-checkbox flex items-center justify-center cursor-pointer">
+                                            <input type="checkbox" class="hidden">
+                                            <div class="w-5 h-5 rounded border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center bg-white dark:bg-darkCard transition"><svg class="w-3 h-3 text-white hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg></div>
+                                        </label>
+                                    </td>
+                                    <td class="p-4">
+                                        <div class="font-bold text-slate-800 dark:text-slate-100 line-clamp-2">Đề thi thử Sở Hà Nội môn Vật Lý</div>
+                                        <div class="text-[10px] text-slate-500 font-mono mt-1">ID: EXAM-002 • 50 phút</div>
+                                    </td>
+                                    <td class="p-4"><span class="bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-400 text-xs px-2 py-1 rounded font-bold">Vật lý</span></td>
+                                    <td class="p-4 text-center">
+                                        <span class="inline-flex items-center gap-1.5 text-[#00A3FF] font-bold bg-[#00A3FF]/10 px-2.5 py-1 rounded-lg border border-[#00A3FF]/20"><i class="fa-solid fa-cloud"></i> Azota</span>
+                                    </td>
+                                    <td class="p-4 text-center">40</td>
+                                    <td class="p-4 text-center font-bold">850</td>
+                                    <td class="p-4 text-center"><span class="bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 text-xs font-bold px-2 py-1 rounded">Miễn phí</span></td>
+                                    <td class="p-4 text-center"><span class="inline-block bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-bold px-2.5 py-1 rounded-full border border-green-200 dark:border-green-800/50">Đang mở</span></td>
+                                    <td class="p-4 text-center">
+                                        <div class="flex items-center justify-center gap-1 xl:opacity-0 xl:group-hover:opacity-100 transition-opacity">
+                                            <button class="w-8 h-8 rounded-lg text-slate-500 hover:bg-blue-50 hover:text-primary transition" title="Chỉnh sửa"><i class="fa-solid fa-pen"></i></button>
+                                            <button class="w-8 h-8 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Mở link"><i class="fa-solid fa-arrow-up-right-from-square"></i></button>
+                                            <button class="w-8 h-8 rounded-lg text-slate-500 hover:bg-orange-50 hover:text-accent transition" title="Đóng đề"><i class="fa-solid fa-lock"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <!-- Row 3: Web, Draft -->
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/30 transition group">
+                                    <td class="p-4 text-center">
+                                        <label class="custom-checkbox flex items-center justify-center cursor-pointer">
+                                            <input type="checkbox" class="hidden">
+                                            <div class="w-5 h-5 rounded border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center bg-white dark:bg-darkCard transition"><svg class="w-3 h-3 text-white hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg></div>
+                                        </label>
+                                    </td>
+                                    <td class="p-4">
+                                        <div class="font-bold text-slate-500 dark:text-slate-400 line-clamp-2">Kiểm tra 15p Hóa Hữu Cơ</div>
+                                        <div class="text-[10px] text-slate-400 font-mono mt-1">ID: EXAM-003 • 15 phút</div>
+                                    </td>
+                                    <td class="p-4"><span class="bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 text-xs px-2 py-1 rounded font-bold">Hóa học</span></td>
+                                    <td class="p-4 text-center">
+                                        <span class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-300 font-bold bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700"><i class="fa-solid fa-laptop-code text-primary"></i> Web</span>
+                                    </td>
+                                    <td class="p-4 text-center text-slate-500">20</td>
+                                    <td class="p-4 text-center font-bold text-slate-400">0</td>
+                                    <td class="p-4 text-center"><span class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-bold px-2 py-1 rounded border border-slate-200 dark:border-slate-700">Có phí (10k)</span></td>
+                                    <td class="p-4 text-center"><span class="inline-block bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold px-2.5 py-1 rounded-full border border-slate-300 dark:border-slate-600/50">Bản nháp</span></td>
+                                    <td class="p-4 text-center">
+                                        <div class="flex items-center justify-center gap-1 xl:opacity-0 xl:group-hover:opacity-100 transition-opacity">
+                                            <button class="w-8 h-8 rounded-lg text-slate-500 hover:bg-blue-50 hover:text-primary transition" title="Tiếp tục sửa"><i class="fa-solid fa-pen"></i></button>
+                                            <button class="w-8 h-8 rounded-lg text-red-400 hover:bg-red-50 hover:text-red-600 transition" title="Xóa"><i class="fa-solid fa-trash-can"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    <div class="p-4 border-t border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row items-center justify-between text-sm gap-4 bg-white dark:bg-darkCard rounded-b-2xl">
+                        <div class="text-slate-500">Hiển thị 1-10 của 850</div>
+                        <div class="flex items-center gap-1">
+                            <button class="w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 transition"><i class="fa-solid fa-chevron-left"></i></button>
+                            <button class="w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg bg-primary text-white font-bold shadow-sm transition">1</button>
+                            <button class="w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 font-bold transition">2</button>
+                            <button class="w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition"><i class="fa-solid fa-chevron-right"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW ADD (THÊM / SỬA ĐỀ THI) -->
+            <div id="view-add" class="view-section h-full flex flex-col pb-10">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                    <div class="flex items-center gap-3">
+                        <button class="w-11 h-11 rounded-xl bg-white dark:bg-darkCard border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-primary transition flex items-center justify-center shadow-sm" onclick="switchView('view-list')" title="Quay lại">
+                            <i class="fa-solid fa-arrow-left"></i>
+                        </button>
+                        <h1 class="text-xl md:text-2xl font-extrabold text-slate-800 dark:text-white">Thêm đề thi mới</h1>
+                    </div>
+                    <div class="flex gap-3">
+                        <button class="flex-1 sm:flex-none h-11 px-6 bg-white dark:bg-darkCard border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition shadow-sm" onclick="showToast('Đã lưu nháp!', 'success')">Lưu nháp</button>
+                        <button class="flex-1 sm:flex-none h-11 px-8 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primaryHover transition shadow-md shadow-blue-200 dark:shadow-none" onclick="showToast('Xuất bản đề thi thành công!', 'success'); switchView('view-list')">Đăng ngay</button>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-darkCard rounded-3xl p-5 md:p-8 border border-slate-200 dark:border-slate-700 shadow-sm max-w-5xl mx-auto w-full">
+                    
+                    <h3 class="font-extrabold text-lg mb-4 border-b border-slate-100 dark:border-slate-800 pb-2">Thông tin cơ bản</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Tên đề thi</label>
+                            <input type="text" placeholder="Ví dụ: Đề thi thử THPT QG Môn Toán Sở Hà Nội..." class="w-full h-11 px-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-primary transition text-slate-800 dark:text-slate-100">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Môn học</label>
+                            <select class="w-full h-11 px-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold outline-none focus:border-primary transition cursor-pointer text-slate-800 dark:text-slate-100">
+                                <option>Toán học</option>
+                                <option>Vật lý</option>
+                                <option>Hóa học</option>
+                                <option>Sinh học</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Thời gian làm bài (Phút)</label>
+                            <input type="number" value="90" class="w-full h-11 px-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-primary transition text-slate-800 dark:text-slate-100">
+                        </div>
+                    </div>
+
+                    <h3 class="font-extrabold text-lg mb-4 border-b border-slate-100 dark:border-slate-800 pb-2 mt-8">Nền tảng thi & Nội dung</h3>
+                    
+                    <!-- Selection Nền tảng -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                        <label class="radio-card relative cursor-pointer group">
+                            <input type="radio" name="platformType" value="web" class="absolute opacity-0" checked onchange="togglePlatformType()">
+                            <div class="border-2 border-slate-200 dark:border-slate-700 rounded-2xl p-4 transition hover:border-blue-300 dark:hover:border-blue-800 flex items-start gap-3 h-full">
+                                <div class="w-5 h-5 rounded-full border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center radio-indicator flex-shrink-0 mt-0.5">
+                                    <div class="w-2 h-2 bg-white rounded-full hidden"></div>
+                                </div>
+                                <div>
+                                    <div class="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2"><i class="fa-solid fa-laptop-code text-primary"></i> Đề làm trên Web</div>
+                                    <div class="text-xs text-slate-500 mt-1">Đồng bộ câu hỏi lên hệ thống ÔnThiPro. Có tính điểm vào Bảng xếp hạng chung.</div>
+                                </div>
+                            </div>
+                        </label>
+
+                        <label class="radio-card relative cursor-pointer group">
+                            <input type="radio" name="platformType" value="azota" class="absolute opacity-0" onchange="togglePlatformType()">
+                            <div class="border-2 border-slate-200 dark:border-slate-700 rounded-2xl p-4 transition hover:border-blue-300 dark:hover:border-blue-800 flex items-start gap-3 h-full">
+                                <div class="w-5 h-5 rounded-full border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center radio-indicator flex-shrink-0 mt-0.5">
+                                    <div class="w-2 h-2 bg-white rounded-full hidden"></div>
+                                </div>
+                                <div>
+                                    <div class="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2"><i class="fa-solid fa-cloud text-[#00A3FF]"></i> Đề Azota</div>
+                                    <div class="text-xs text-slate-500 mt-1">Chuyển hướng học sinh sang link Azota để làm bài. Không tính vào Bảng xếp hạng.</div>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- Khu vực WEB -->
+                    <div id="sectionWeb" class="space-y-4 bg-slate-50 dark:bg-slate-900/50 p-5 rounded-2xl border border-slate-100 dark:border-slate-800">
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300">Nhập dữ liệu JSON đề thi</label>
+                            <button type="button" class="text-xs font-bold text-primary hover:underline flex items-center gap-1" onclick="openModal('aiPromptModal')">
+                                <i class="fa-solid fa-robot"></i> Xem prompt mẫu nhờ AI chuyển Word sang JSON
+                            </button>
+                        </div>
+                        <textarea id="jsonInput" rows="10" placeholder='[{ "id": 1, "question": "Nội dung câu 1", "options": ["A", "B", "C", "D"], "answer": 0 }]' class="w-full p-4 bg-white dark:bg-darkCard border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-primary transition font-mono text-slate-800 dark:text-slate-100 resize-y"></textarea>
+                        
+                        <div class="flex items-center gap-3">
+                            <button type="button" class="h-10 px-5 bg-white dark:bg-darkCard border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition text-sm flex items-center gap-2" onclick="validateJSON()">
+                                <i class="fa-solid fa-code"></i> Kiểm tra JSON
+                            </button>
+                            <span id="jsonErrorMsg" class="text-sm font-bold text-red-500 hidden"><i class="fa-solid fa-triangle-exclamation"></i> Lỗi: Câu 12 thiếu đáp án đúng (answer field missing).</span>
+                            <span id="jsonSuccessMsg" class="text-sm font-bold text-green-500 hidden"><i class="fa-solid fa-check"></i> JSON hợp lệ (50 câu hỏi).</span>
+                        </div>
+
+                        <!-- Khung xem trước (Mô phỏng) -->
+                        <div class="mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
+                            <h4 class="font-bold text-sm text-slate-600 dark:text-slate-400 mb-3">Xem trước nhanh (Preview)</h4>
+                            <div class="bg-white dark:bg-darkCard p-4 rounded-xl border border-slate-200 dark:border-slate-700 opacity-60">
+                                <div class="font-bold mb-2">Câu 1: Cho hàm số y = f(x)...</div>
+                                <div class="grid grid-cols-2 gap-2 text-sm ml-4">
+                                    <div>A. (0; 2)</div>
+                                    <div>B. (-1; 0)</div>
+                                    <div class="text-green-500 font-bold">C. (2; +∞) <i class="fa-solid fa-check"></i></div>
+                                    <div>D. (-∞; -1)</div>
+                                </div>
+                                <div class="text-xs text-slate-400 mt-2 text-center border-dashed border-t border-slate-200 dark:border-slate-700 pt-2">(Mô phỏng hiển thị từ JSON)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Khu vực AZOTA -->
+                    <div id="sectionAzota" class="space-y-4 bg-slate-50 dark:bg-slate-900/50 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 hidden">
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Link Đề thi Azota</label>
+                            <div class="relative">
+                                <i class="fa-solid fa-link absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                <input type="url" placeholder="https://azota.vn/en/bai-tap/..." class="w-full h-11 pl-10 pr-4 bg-white dark:bg-darkCard border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-[#00A3FF] transition text-slate-800 dark:text-slate-100">
+                            </div>
+                            <p class="text-[10px] text-slate-500 mt-1">Học sinh bấm "Làm bài" sẽ được chuyển hướng thẳng tới link này.</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Tổng số câu (Để hiển thị thông tin)</label>
+                            <input type="number" value="40" class="w-full h-11 px-4 bg-white dark:bg-darkCard border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-primary transition text-slate-800 dark:text-slate-100">
+                        </div>
+                    </div>
+
+                    <h3 class="font-extrabold text-lg mb-4 border-b border-slate-100 dark:border-slate-800 pb-2 mt-8">Cấu hình Quyền truy cập & Giá</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <label class="radio-card relative cursor-pointer group">
+                            <input type="radio" name="accessType" value="free" class="absolute opacity-0" checked onchange="togglePriceInput()">
+                            <div class="border-2 border-slate-200 dark:border-slate-700 rounded-2xl p-4 transition hover:border-blue-300 dark:hover:border-blue-800 flex items-center justify-center gap-2 h-14">
+                                <div class="font-bold text-green-600 dark:text-green-500">Miễn phí</div>
+                            </div>
+                        </label>
+                        <label class="radio-card relative cursor-pointer group">
+                            <input type="radio" name="accessType" value="premium" class="absolute opacity-0" onchange="togglePriceInput()">
+                            <div class="border-2 border-slate-200 dark:border-slate-700 rounded-2xl p-4 transition hover:border-blue-300 dark:hover:border-blue-800 flex items-center justify-center gap-2 h-14 bg-gradient-to-r hover:from-highlight/10 hover:to-accent/10">
+                                <div class="font-bold text-transparent bg-clip-text bg-gradient-to-r from-highlight to-accent"><i class="fa-solid fa-crown text-highlight"></i> Gói Premium</div>
+                            </div>
+                        </label>
+                        <label class="radio-card relative cursor-pointer group">
+                            <input type="radio" name="accessType" value="paid" class="absolute opacity-0" onchange="togglePriceInput()">
+                            <div class="border-2 border-slate-200 dark:border-slate-700 rounded-2xl p-4 transition hover:border-blue-300 dark:hover:border-blue-800 flex items-center justify-center gap-2 h-14">
+                                <div class="font-bold text-slate-700 dark:text-slate-200">Có phí (Mua lẻ)</div>
+                            </div>
+                        </label>
+                    </div>
+                    
+                    <!-- Khung nhập giá (chỉ hiện khi chọn Có phí) -->
+                    <div id="priceInputArea" class="mt-4 bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700 hidden">
+                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Giá bán lẻ (VNĐ)</label>
+                        <input type="number" placeholder="Ví dụ: 15000" class="w-full max-w-xs h-11 px-4 bg-white dark:bg-darkCard border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-primary outline-none focus:border-primary transition">
+                    </div>
+
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal: Prompt AI -->
+    <div id="aiPromptModal" class="fixed inset-0 bg-slate-900/60 dark:bg-black/70 z-50 flex items-center justify-center modal-overlay">
+        <div class="bg-white dark:bg-darkCard w-[95%] max-w-2xl rounded-3xl shadow-2xl modal-content flex flex-col overflow-hidden max-h-[90vh]">
+            <div class="p-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-900/50">
+                <h3 class="font-extrabold text-lg flex items-center gap-2"><i class="fa-solid fa-robot text-primary"></i> Prompt mẫu chuyển Word sang JSON</h3>
+                <button class="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-500 hover:text-slate-800 dark:hover:text-white transition" onclick="closeModal('aiPromptModal')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div class="p-5 overflow-y-auto custom-scroll flex-1">
+                <p class="text-sm text-slate-600 dark:text-slate-300 mb-4">Copy đoạn prompt dưới đây, dán vào ChatGPT hoặc Gemini kèm theo nội dung đề thi Word/PDF của bạn để AI tự động tạo ra file JSON chuẩn cấu trúc hệ thống.</p>
+                
+                <div class="relative bg-slate-900 text-slate-300 p-4 rounded-xl text-sm font-mono whitespace-pre-wrap overflow-x-auto shadow-inner">
+<button class="absolute top-2 right-2 h-8 px-3 bg-white/10 hover:bg-white/20 text-white rounded-lg text-xs font-bold transition flex items-center gap-1" onclick="copyPrompt(this)">
+    <i class="fa-regular fa-copy"></i> Copy
+</button>Hãy đóng vai một chuyên gia xử lý dữ liệu. Tôi sẽ cung cấp cho bạn một đề thi trắc nghiệm (dạng văn bản). 
+Nhiệm vụ của bạn là chuyển đổi toàn bộ đề thi này thành định dạng JSON chuẩn xác theo đúng cấu trúc mẫu sau đây.
+
+CẤU TRÚC MẪU (JSON Array of Objects):
+[
+  {
+    "id": 1,
+    "question": "Nội dung câu hỏi số 1 (bao gồm cả LaTeX nếu có toán học, định dạng $...$ hoặc $$...$$)",
+    "options": [
+      "Nội dung đáp án A",
+      "Nội dung đáp án B",
+      "Nội dung đáp án C",
+      "Nội dung đáp án D"
+    ],
+    "answer": 0, // Chỉ mục của đáp án đúng (0=A, 1=B, 2=C, 3=D). NẾU KHÔNG CÓ ĐÁP ÁN ĐÚNG TRONG ĐỀ, ĐỂ null.
+    "explanation": "Lời giải chi tiết (nếu có trong đề, nếu không để chuỗi rỗng \"\")"
+  }
+]
+
+YÊU CẦU QUAN TRỌNG:
+1. Trả về DUY NHẤT mã JSON hợp lệ, không bọc trong markdown code block (```json), không giải thích thêm gì khác.
+2. Đảm bảo escape các ký tự đặc biệt (như dấu ngoặc kép ") trong chuỗi JSON.
+3. Nếu câu hỏi có hình ảnh, hãy mô tả hình ảnh trong ngoặc vuông, ví dụ: [Hình ảnh đồ thị hàm số].
+4. Đây là nội dung đề thi:
+[DÁN ĐỀ THI CỦA BẠN VÀO ĐÂY]
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script>
+        // --- Dark Mode ---
+        const themeToggleBtn = document.getElementById('themeToggle');
+        themeToggleBtn.addEventListener('click', () => document.documentElement.classList.toggle('dark'));
+
+        // --- Sidebar (Mobile) ---
+        const sidebar = document.getElementById('adminSidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        function toggleSidebar() {
+            const isClosed = sidebar.classList.contains('-translate-x-full');
+            if (isClosed) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+                requestAnimationFrame(() => overlay.classList.remove('opacity-0'));
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('opacity-0');
+                setTimeout(() => overlay.classList.add('hidden'), 300);
+            }
+        }
+
+        // --- View Switching ---
+        function switchView(viewId) {
+            document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+            window.scrollTo(0, 0);
+        }
+
+        // --- Form Logic ---
+        function togglePlatformType() {
+            const type = document.querySelector('input[name="platformType"]:checked').value;
+            const secWeb = document.getElementById('sectionWeb');
+            const secAzota = document.getElementById('sectionAzota');
+
+            if (type === 'web') {
+                secWeb.classList.remove('hidden');
+                secAzota.classList.add('hidden');
+            } else {
+                secWeb.classList.add('hidden');
+                secAzota.classList.remove('hidden');
+            }
+        }
+
+        function togglePriceInput() {
+            const type = document.querySelector('input[name="accessType"]:checked').value;
+            const priceArea = document.getElementById('priceInputArea');
+            if (type === 'paid') {
+                priceArea.classList.remove('hidden');
+            } else {
+                priceArea.classList.add('hidden');
+            }
+        }
+
+        // --- JSON Validation Mock ---
+        function validateJSON() {
+            const input = document.getElementById('jsonInput').value;
+            const errorMsg = document.getElementById('jsonErrorMsg');
+            const successMsg = document.getElementById('jsonSuccessMsg');
+            
+            errorMsg.classList.add('hidden');
+            successMsg.classList.add('hidden');
+
+            if (input.trim() === '') {
+                errorMsg.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Lỗi: Dữ liệu trống.';
+                errorMsg.classList.remove('hidden');
+                return;
+            }
+
+            // Mock logic: Nếu chứa chữ "lỗi" thì báo lỗi, ngược lại báo thành công
+            if (input.toLowerCase().includes('lỗi') || input.length < 20) {
+                errorMsg.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Lỗi cú pháp JSON: Câu 12 thiếu mảng options hoặc định dạng sai.';
+                errorMsg.classList.remove('hidden');
+            } else {
+                successMsg.innerHTML = '<i class="fa-solid fa-check"></i> JSON hợp lệ (Đã tìm thấy cấu trúc chuẩn).';
+                successMsg.classList.remove('hidden');
+            }
+        }
+
+        // --- Modals & Toasts ---
+        function openModal(id) {
+            document.getElementById(id).classList.add('open');
+        }
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('open');
+        }
+
+        function copyPrompt(btn) {
+            const preContent = btn.parentElement.textContent.replace('Copy', '').trim();
+            navigator.clipboard.writeText(preContent).then(() => {
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML = '<i class="fa-solid fa-check text-green-400"></i> Đã Copy';
+                setTimeout(() => { btn.innerHTML = originalHtml; }, 2000);
+            });
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            
+            let icon = type === 'success' ? '<i class="fa-solid fa-circle-check text-green-500 text-xl mt-0.5"></i>' : '<i class="fa-solid fa-circle-exclamation text-red-500 text-xl mt-0.5"></i>';
+            
+            toast.innerHTML = `
+                ${icon}
+                <div class="flex-1">
+                    <div class="font-bold text-sm text-slate-800 dark:text-slate-100">${type === 'success' ? 'Thành công' : 'Lỗi'}</div>
+                    <div class="text-xs text-slate-500 mt-0.5">${message}</div>
+                </div>
+            `;
+            
+            container.appendChild(toast);
+            requestAnimationFrame(() => toast.classList.add('show'));
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

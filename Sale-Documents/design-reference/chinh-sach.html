@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="vi" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chính sách bảo mật & Điều khoản - ÔnThiPro</title>
+    
+    <!-- Google Fonts: Nunito -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Nunito', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#2563EB', 
+                        primaryHover: '#1D4ED8',
+                        accent: '#F97316', 
+                        highlight: '#FACC15', 
+                        darkBg: '#0F172A',
+                        darkCard: '#1E293B',
+                        bio: {
+                            50: '#f7fee7',
+                            100: '#ecfccb',
+                            600: '#65a30d', // Lime
+                            900: '#365314',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Hiệu ứng nảy Zalo 1 lần */
+        @keyframes bounce-intro {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-15px); }
+            60% { transform: translateY(-7px); }
+        }
+        .animate-bounce-intro {
+            animation: bounce-intro 2s ease-in-out 1;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .animate-bounce-intro { animation: none; }
+        }
+
+        /* Ẩn thanh cuộn */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Smooth scroll cho Mục lục */
+        html { scroll-behavior: smooth; }
+        
+        /* Highlight item mục lục đang active (tuỳ chọn thêm JS, ở đây dùng hover) */
+        .toc-link.active {
+            color: #2563EB;
+            font-weight: 800;
+            border-left-color: #2563EB;
+            background-color: #eff6ff;
+        }
+        .dark .toc-link.active {
+            color: #60A5FA;
+            border-left-color: #3B82F6;
+            background-color: rgba(37, 99, 235, 0.1);
+        }
+
+        /* Styling cho nội dung văn bản */
+        .policy-content h2 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #f1f5f9;
+            scroll-margin-top: 100px; /* Offset cho sticky header */
+        }
+        .dark .policy-content h2 {
+            border-bottom-color: #334155;
+        }
+        
+        .policy-content h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            color: #3b82f6;
+            scroll-margin-top: 100px;
+        }
+
+        .policy-content p, .policy-content ul {
+            margin-bottom: 1rem;
+            line-height: 1.7;
+        }
+        
+        .policy-content ul {
+            list-style-type: disc;
+            padding-left: 1.5rem;
+        }
+        
+        .policy-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .policy-content strong {
+            color: #1e293b;
+        }
+        .dark .policy-content strong {
+            color: #f8fafc;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-darkBg text-slate-800 dark:text-slate-100 font-sans transition-colors duration-300 pb-20 md:pb-0 relative">
+
+    <header class="sticky top-0 z-40 bg-white dark:bg-darkCard shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <a href="#" class="flex items-center gap-2 h-11">
+                <div class="w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center font-bold text-xl shadow-lg shadow-blue-200 dark:shadow-none">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <span class="font-extrabold text-2xl tracking-tight text-primary hidden sm:block">ÔnThiPro</span>
+            </a>
+
+            <div class="hidden md:flex flex-1 max-w-xl mx-8 relative">
+                <input type="text" placeholder="Tìm tài liệu, đề thi, môn học..." 
+                       class="w-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-5 h-11 rounded-full outline-none focus:ring-2 focus:ring-primary border-none">
+                <button class="absolute right-1 top-1 bottom-1 w-10 h-9 bg-primary text-white rounded-full hover:bg-primaryHover transition flex items-center justify-center m-auto">
+                    <i class="fa-solid fa-search"></i>
+                </button>
+            </div>
+
+            <div class="flex items-center gap-2 md:gap-4">
+                <button id="themeToggle" class="w-11 h-11 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition" aria-label="Đổi giao diện">
+                    <i class="fa-solid fa-moon dark:hidden text-lg"></i>
+                    <i class="fa-solid fa-sun hidden dark:block text-highlight text-lg"></i>
+                </button>
+                
+                <a href="#" class="relative w-11 h-11 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition">
+                    <i class="fa-solid fa-cart-shopping text-lg"></i>
+                </a>
+
+                <div class="hidden md:flex items-center h-11 cursor-pointer">
+                    <img src="https://placehold.co/100x100/3B82F6/FFF?text=US" alt="User" class="w-9 h-9 rounded-full border-2 border-slate-200 dark:border-slate-700">
+                    <span class="ml-2 font-bold text-sm">Học sinh A</span>
+                </div>
+
+                <button class="md:hidden w-11 h-11 flex items-center justify-center text-slate-600 dark:text-slate-300 text-xl rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Page Header Background -->
+    <div class="bg-gradient-to-b from-blue-600 to-indigo-700 text-white py-12 md:py-16 relative overflow-hidden">
+        <div class="absolute -right-20 -top-20 w-64 h-64 bg-white opacity-10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute left-10 -bottom-10 w-40 h-40 bg-highlight opacity-20 rounded-full blur-2xl pointer-events-none"></div>
+        
+        <div class="max-w-4xl mx-auto px-4 text-center relative z-10">
+            <h1 class="text-3xl md:text-5xl font-black mb-4 drop-shadow-sm">Chính sách bảo mật & Điều khoản</h1>
+            <p class="text-blue-100 font-medium text-sm md:text-base max-w-2xl mx-auto">Cam kết bảo vệ quyền riêng tư và dữ liệu học tập của bạn tại nền tảng ÔnThiPro.</p>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="max-w-7xl mx-auto px-4 py-8 md:py-12 flex flex-col md:flex-row gap-8 items-start relative -mt-8">
+        
+        <!-- Cột trái: Mục lục (Sticky trên Desktop, Ẩn trên Mobile) -->
+        <aside class="hidden md:block w-64 lg:w-72 flex-shrink-0 sticky top-24 z-30">
+            <div class="bg-white dark:bg-darkCard rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm p-5">
+                <h3 class="font-extrabold text-lg mb-4 text-slate-800 dark:text-slate-100 border-b border-slate-100 dark:border-slate-800 pb-2">Mục lục nội dung</h3>
+                <nav class="flex flex-col space-y-1 text-sm font-medium">
+                    <a href="#sec-notice" class="toc-link block py-2 px-3 border-l-2 border-transparent text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition">Lưu ý quan trọng</a>
+                    <a href="#sec-collect" class="toc-link block py-2 px-3 border-l-2 border-transparent text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition">1. Thu thập thông tin</a>
+                    <a href="#sec-usage" class="toc-link block py-2 px-3 border-l-2 border-transparent text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition">2. Mục đích sử dụng</a>
+                    <a href="#sec-public" class="toc-link block py-2 px-3 border-l-2 border-transparent text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition">3. Hiển thị công khai</a>
+                    <a href="#sec-rights" class="toc-link block py-2 px-3 border-l-2 border-transparent text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition">4. Quyền của người dùng</a>
+                    <a href="#sec-minors" class="toc-link block py-2 px-3 border-l-2 border-transparent text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition">5. Người dùng dưới 18 tuổi</a>
+                    <a href="#sec-terms" class="toc-link block py-2 px-3 border-l-2 border-transparent text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition">6. Điều khoản sử dụng</a>
+                    <a href="#sec-contact" class="toc-link block py-2 px-3 border-l-2 border-transparent text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition">7. Liên hệ hỗ trợ</a>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Cột phải: Nội dung văn bản -->
+        <div class="flex-1 w-full bg-white dark:bg-darkCard rounded-3xl p-6 md:p-10 border border-slate-200 dark:border-slate-700 shadow-sm policy-content">
+            
+            <div id="sec-notice" class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 p-4 rounded-2xl flex items-start gap-3 mb-8">
+                <i class="fa-solid fa-triangle-exclamation text-yellow-600 mt-1 text-lg"></i>
+                <div>
+                    <h4 class="font-bold text-yellow-800 dark:text-yellow-500 mb-1">Lưu ý quan trọng</h4>
+                    <p class="text-sm text-yellow-700 dark:text-yellow-400 m-0">Đây là Bản nháp nội dung tham khảo. Bản văn này cần được người có chuyên môn pháp lý xem xét và điều chỉnh trước khi áp dụng chính thức làm tài liệu ràng buộc pháp lý cho website ÔnThiPro.</p>
+                </div>
+            </div>
+
+            <div class="text-slate-600 dark:text-slate-300 text-sm md:text-base">
+                <p>Chào mừng bạn đến với ÔnThiPro. Việc bạn đăng ký tài khoản và sử dụng dịch vụ trên nền tảng của chúng tôi đồng nghĩa với việc bạn đã đọc, hiểu và đồng ý với các Điều khoản sử dụng và Chính sách bảo mật dưới đây.</p>
+
+                <h2 id="sec-collect">1. Chúng tôi thu thập thông tin gì?</h2>
+                <p>Để cung cấp trải nghiệm học tập tốt nhất, chúng tôi chỉ thu thập các thông tin cá nhân cơ bản khi bạn đăng ký tài khoản, bao gồm:</p>
+                <ul>
+                    <li><strong>Họ và tên thật:</strong> Để xác thực tài khoản và hỗ trợ các vấn đề liên quan đến thanh toán, khiếu nại.</li>
+                    <li><strong>Biệt danh hiển thị (Nickname):</strong> Tên ngắn gọn bạn muốn dùng để giao tiếp trên nền tảng.</li>
+                    <li><strong>Tên trường THPT:</strong> Dùng để phân tích thống kê và tạo động lực cạnh tranh lành mạnh trên bảng xếp hạng.</li>
+                    <li><strong>Số điện thoại & Email:</strong> Dùng làm phương thức liên lạc chính, lấy lại mật khẩu và gửi mã khuyến mãi.</li>
+                    <li><strong>Dữ liệu học tập:</strong> Điểm số thi thử, thời gian làm bài, lịch sử mua và tải tài liệu.</li>
+                </ul>
+
+                <h2 id="sec-usage">2. Mục đích sử dụng thông tin</h2>
+                <p>Thông tin của bạn được sử dụng vào các mục đích nội bộ và cải thiện dịch vụ:</p>
+                <ul>
+                    <li>Định danh người dùng, cấp quyền truy cập vào các tài liệu và đề thi đã mua.</li>
+                    <li>Ghi nhận và lưu trữ kết quả học tập để bạn có thể xem lại lịch sử tiến bộ của mình.</li>
+                    <li>Xử lý và xác nhận các giao dịch thanh toán mua tài liệu hoặc gói Premium.</li>
+                    <li>Gửi thông báo về kỳ thi mới, tài liệu cập nhật hoặc các ưu đãi flash sale.</li>
+                    <li>Tuyệt đối KHÔNG bán, cho thuê hoặc chia sẻ dữ liệu cá nhân của bạn cho bất kỳ bên thứ ba nào vì mục đích quảng cáo thương mại.</li>
+                </ul>
+
+                <h2 id="sec-public">3. Hiển thị công khai những gì và khi nào?</h2>
+                <p>Chúng tôi tôn trọng quyền riêng tư của bạn. Trên nền tảng ÔnThiPro, các thông tin sau có thể được hiển thị công khai:</p>
+                <ul>
+                    <li><strong>Trên Bảng Xếp Hạng Kỳ Thi:</strong> Chỉ hiển thị <strong>Biệt danh (Nickname)</strong>, <strong>Tên trường THPT</strong> và <strong>Điểm số</strong>.</li>
+                    <li><strong>Trong khu vực Bình luận / Đánh giá:</strong> Chỉ hiển thị <strong>Biệt danh</strong> và nội dung bạn viết.</li>
+                    <li>Họ tên thật, Email, Số điện thoại và Lịch sử mua hàng của bạn được <strong>BẢO MẬT TUYỆT ĐỐI</strong>, chỉ bạn và Ban quản trị mới có thể xem.</li>
+                </ul>
+                <p><em>Lưu ý: Biệt danh (Nickname) của bạn sẽ được Ban quản trị duyệt trước khi hiển thị công khai để đảm bảo không vi phạm thuần phong mỹ tục.</em></p>
+
+                <h2 id="sec-rights">4. Quyền kiểm soát và xóa dữ liệu</h2>
+                <p>Bạn hoàn toàn làm chủ dữ liệu cá nhân của mình trên ÔnThiPro:</p>
+                <ul>
+                    <li>Bạn có thể xem và chỉnh sửa thông tin cá nhân bất kỳ lúc nào trong mục <strong>Hồ sơ & Bảo mật</strong>.</li>
+                    <li><strong>Quyền xóa dữ liệu:</strong> Bạn có quyền yêu cầu xóa vĩnh viễn tài khoản của mình. Khi bạn chọn chức năng "Xóa tài khoản", toàn bộ thông tin cá nhân, lịch sử học tập, tài liệu đã mua và gói Premium sẽ bị xóa vĩnh viễn khỏi hệ thống và không thể khôi phục.</li>
+                </ul>
+
+                <h2 id="sec-minors">5. Lưu ý đối với người dùng dưới 18 tuổi</h2>
+                <p>Nền tảng ÔnThiPro phục vụ chủ yếu cho học sinh THPT. Nếu bạn dưới 18 tuổi:</p>
+                <ul>
+                    <li>Bạn nên trao đổi với phụ huynh hoặc người giám hộ trước khi đăng ký tài khoản và đặc biệt là trước khi thực hiện bất kỳ giao dịch thanh toán nào trên website.</li>
+                    <li>Chúng tôi khuyến nghị phụ huynh theo dõi và hướng dẫn các em trong việc sử dụng internet và bảo vệ thông tin cá nhân.</li>
+                </ul>
+
+                <h2 id="sec-terms">6. Điều khoản sử dụng nền tảng</h2>
+                <p>Khi sử dụng ÔnThiPro, bạn cam kết tuân thủ các quy tắc ứng xử sau:</p>
+                <ul>
+                    <li><strong>Bản quyền:</strong> Mọi tài liệu (PDF, Video, Lời giải) trên hệ thống thuộc bản quyền của ÔnThiPro hoặc đối tác. Bạn chỉ được sử dụng cho mục đích cá nhân. Tuyệt đối <strong>nghiêm cấm</strong> hành vi sao chép, phát tán, hoặc bán lại tài liệu dưới mọi hình thức.</li>
+                    <li><strong>Tài khoản:</strong> Không chia sẻ tài khoản của bạn cho người khác sử dụng chung. Hệ thống có cơ chế phát hiện đăng nhập bất thường và có thể khóa tài khoản vi phạm.</li>
+                    <li><strong>Giao tiếp:</strong> Giữ thái độ lịch sự, tôn trọng trong các khu vực Bình luận và Nhóm chat cộng đồng. Tin nhắn chứa từ ngữ phản cảm, spam quảng cáo hoặc xúc phạm người khác sẽ bị Ban quản trị xóa và có thể dẫn đến việc khóa tài khoản vĩnh viễn.</li>
+                </ul>
+
+                <h2 id="sec-contact">7. Thông tin liên hệ hỗ trợ</h2>
+                <p>Nếu bạn có bất kỳ câu hỏi nào về Chính sách bảo mật, Điều khoản sử dụng, hoặc cần hỗ trợ về tài khoản, nạp tiền, vui lòng liên hệ trực tiếp với chúng tôi qua các kênh sau:</p>
+                
+                <!-- Contact Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
+                    <a href="#" class="flex flex-col items-center justify-center p-6 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-700 hover:border-blue-500 hover:shadow-md transition group">
+                        <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-2xl mb-3 group-hover:scale-110 transition">
+                            <i class="fa-solid fa-headset"></i>
+                        </div>
+                        <div class="font-bold text-slate-800 dark:text-slate-100 mb-1">Zalo Hỗ trợ</div>
+                        <div class="text-xs text-slate-500 font-medium">Chat trực tiếp (08:00 - 22:00)</div>
+                    </a>
+
+                    <a href="#" class="flex flex-col items-center justify-center p-6 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-700 hover:border-rose-500 hover:shadow-md transition group">
+                        <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center text-2xl mb-3 group-hover:scale-110 transition">
+                            <i class="fa-brands fa-facebook-messenger"></i>
+                        </div>
+                        <div class="font-bold text-slate-800 dark:text-slate-100 mb-1">Messenger Fanpage</div>
+                        <div class="text-xs text-slate-500 font-medium">Nhắn tin qua Facebook</div>
+                    </a>
+
+                    <div class="flex flex-col items-center justify-center p-6 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-700 hover:border-green-500 hover:shadow-md transition group">
+                        <div class="w-12 h-12 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-2xl mb-3 group-hover:scale-110 transition">
+                            <i class="fa-solid fa-envelope"></i>
+                        </div>
+                        <div class="font-bold text-slate-800 dark:text-slate-100 mb-1">Email CSKH</div>
+                        <div class="text-xs text-slate-500 font-medium">hotro@onthipro.vn</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <!-- FAB -->
+    <div class="fixed bottom-6 right-4 md:right-8 flex flex-col gap-3 z-50">
+        <a href="#" class="w-11 h-11 md:w-[44px] md:h-[44px] rounded-full bg-blue-500 text-white flex items-center justify-center text-xl shadow-lg hover:scale-110 transition animate-bounce-intro" title="Chat Zalo">
+            <div class="font-bold text-[10px] md:text-xs">Zalo</div>
+        </a>
+        <a href="#" class="w-11 h-11 md:w-[44px] md:h-[44px] rounded-full bg-gradient-to-tr from-blue-500 to-rose-500 text-white flex items-center justify-center text-xl shadow-lg hover:scale-110 transition" title="Chat Messenger">
+            <i class="fa-brands fa-facebook-messenger"></i>
+        </a>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white dark:bg-darkCard pt-12 pb-6 border-t border-slate-200 dark:border-slate-800 mt-10">
+        <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+            <div class="col-span-1 md:col-span-1">
+                <a href="#" class="flex items-center gap-2 mb-4 h-11">
+                    <div class="w-8 h-8 bg-primary text-white rounded-lg flex items-center justify-center font-bold shadow-lg">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </div>
+                    <span class="font-extrabold text-xl text-primary">ÔnThiPro</span>
+                </a>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Nền tảng chia sẻ và mua bán tài liệu luyện thi THPT Quốc Gia uy tín, chất lượng hàng đầu Việt Nam.</p>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4 text-slate-800 dark:text-slate-200">Về chúng tôi</h4>
+                <ul class="text-sm text-slate-500 dark:text-slate-400 space-y-3">
+                    <li><a href="#" class="hover:text-primary transition block py-1">Giới thiệu</a></li>
+                    <li><a href="#" class="hover:text-primary transition block py-1 font-bold text-primary">Điều khoản sử dụng</a></li>
+                    <li><a href="#" class="hover:text-primary transition block py-1 font-bold text-primary">Chính sách bảo mật</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4 text-slate-800 dark:text-slate-200">Hỗ trợ học sinh</h4>
+                <ul class="text-sm text-slate-500 dark:text-slate-400 space-y-3">
+                    <li><a href="#" class="hover:text-primary transition block py-1">Hướng dẫn thanh toán</a></li>
+                    <li><a href="#" class="hover:text-primary transition block py-1 flex items-center">Gói Premium <span class="bg-highlight text-slate-900 text-[10px] font-bold px-1.5 py-0.5 rounded ml-2">HOT</span></a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4 text-slate-800 dark:text-slate-200">Liên hệ</h4>
+                <ul class="text-sm text-slate-500 dark:text-slate-400 space-y-3">
+                    <li class="flex items-center py-1"><i class="fa-solid fa-phone mr-3 w-4 text-center"></i> 0123.456.789</li>
+                    <li class="flex items-center py-1"><i class="fa-solid fa-envelope mr-3 w-4 text-center"></i> hotro@onthipro.vn</li>
+                </ul>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto px-4 text-center text-sm text-slate-500 border-t border-slate-100 dark:border-slate-800 pt-6">
+            &copy; 2026 ÔnThiPro. All rights reserved.
+        </div>
+    </footer>
+
+    <script>
+        // --- Dark Mode ---
+        const themeToggleBtn = document.getElementById('themeToggle');
+        themeToggleBtn.addEventListener('click', () => document.documentElement.classList.toggle('dark'));
+
+        // --- ScrollSpy cho Mục lục (Tùy chọn nâng cao) ---
+        const sections = document.querySelectorAll('.policy-content h2');
+        const navLinks = document.querySelectorAll('.toc-link');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+            // Lấy offset cho sticky header + padding
+            const offset = 120; 
+
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (scrollY >= (sectionTop - offset)) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href').includes(current)) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

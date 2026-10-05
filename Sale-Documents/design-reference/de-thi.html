@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="vi" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thi thử - ÔnThiPro</title>
+    
+    <!-- Google Fonts: Nunito -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Nunito', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#2563EB', 
+                        primaryHover: '#1D4ED8',
+                        accent: '#F97316', 
+                        highlight: '#FACC15', 
+                        darkBg: '#0F172A',
+                        darkCard: '#1E293B',
+                        bio: {
+                            50: '#f7fee7',
+                            100: '#ecfccb',
+                            600: '#65a30d', // Lime
+                            900: '#365314',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Hiệu ứng nảy Zalo 1 lần */
+        @keyframes bounce-intro {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-15px); }
+            60% { transform: translateY(-7px); }
+        }
+        .animate-bounce-intro {
+            animation: bounce-intro 2s ease-in-out 1;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .animate-bounce-intro { animation: none; }
+        }
+
+        /* Ẩn thanh cuộn */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Hiệu ứng pulse cho kỳ thi đang diễn ra */
+        .live-indicator {
+            animation: pulse-live 2s infinite;
+        }
+        @keyframes pulse-live {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-darkBg text-slate-800 dark:text-slate-100 font-sans transition-colors duration-300 pb-24 md:pb-0 relative">
+
+    <header class="sticky top-0 z-40 bg-white dark:bg-darkCard shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <a href="#" class="flex items-center gap-2 h-11">
+                <div class="w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center font-bold text-xl shadow-lg shadow-blue-200 dark:shadow-none">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <span class="font-extrabold text-2xl tracking-tight text-primary hidden sm:block">ÔnThiPro</span>
+            </a>
+
+            <div class="hidden md:flex flex-1 max-w-xl mx-8 relative">
+                <input type="text" placeholder="Tìm tài liệu, đề thi, môn học..." 
+                       class="w-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-5 h-11 rounded-full outline-none focus:ring-2 focus:ring-primary border-none">
+                <button class="absolute right-1 top-1 bottom-1 w-10 h-9 bg-primary text-white rounded-full hover:bg-primaryHover transition flex items-center justify-center m-auto">
+                    <i class="fa-solid fa-search"></i>
+                </button>
+            </div>
+
+            <div class="flex items-center gap-2 md:gap-4">
+                <button id="themeToggle" class="w-11 h-11 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition" aria-label="Đổi giao diện">
+                    <i class="fa-solid fa-moon dark:hidden text-lg"></i>
+                    <i class="fa-solid fa-sun hidden dark:block text-highlight text-lg"></i>
+                </button>
+                
+                <a href="#" class="relative w-11 h-11 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition">
+                    <i class="fa-solid fa-cart-shopping text-lg"></i>
+                </a>
+
+                <div class="hidden md:flex items-center h-11 cursor-pointer">
+                    <img src="https://placehold.co/100x100/3B82F6/FFF?text=US" alt="User" class="w-9 h-9 rounded-full border-2 border-slate-200 dark:border-slate-700">
+                    <span class="ml-2 font-bold text-sm">Học sinh A</span>
+                </div>
+
+                <button class="md:hidden w-11 h-11 flex items-center justify-center text-slate-600 dark:text-slate-300 text-xl rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-6 md:py-8 min-h-screen">
+        
+        <section class="mb-8 md:mb-12">
+            <div class="bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 rounded-3xl p-6 md:p-10 text-white shadow-xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
+                <!-- Decor -->
+                <div class="absolute -right-10 -top-10 w-48 h-48 bg-white opacity-10 rounded-full blur-3xl pointer-events-none"></div>
+                
+                <div class="flex-1 relative z-10 w-full text-center md:text-left">
+                    <div class="inline-flex items-center gap-2 bg-red-500/20 text-red-100 border border-red-500/50 px-3 py-1.5 rounded-full mb-4 text-xs font-bold uppercase tracking-wider backdrop-blur-sm">
+                        <div class="w-2 h-2 bg-red-500 rounded-full live-indicator"></div> Kỳ thi đang diễn ra
+                    </div>
+                    <h1 class="text-2xl md:text-4xl font-black mb-3 leading-tight drop-shadow-sm">Thi thử THPT Quốc Gia môn Toán - Lần 3</h1>
+                    <div class="flex flex-wrap justify-center md:justify-start items-center gap-4 text-sm font-medium text-blue-100 mb-6">
+                        <span class="flex items-center gap-1.5"><i class="fa-regular fa-clock"></i> 90 phút</span>
+                        <span class="flex items-center gap-1.5"><i class="fa-solid fa-list-ol"></i> 50 câu</span>
+                        <span class="flex items-center gap-1.5"><i class="fa-solid fa-users"></i> Đang thi: 1,245 học sinh</span>
+                    </div>
+                </div>
+
+                <!-- Cột phải: Countdown & Nút tham gia -->
+                <div class="relative z-10 flex flex-col items-center bg-white/10 p-5 rounded-2xl backdrop-blur-md border border-white/20 w-full md:w-auto flex-shrink-0">
+                    <div class="text-sm font-bold text-blue-100 mb-2 uppercase tracking-wider">Thời gian còn lại</div>
+                    <div class="flex gap-2 mb-4">
+                        <div class="bg-white/20 rounded-xl w-14 h-14 flex flex-col items-center justify-center border border-white/10">
+                            <span class="text-xl font-black">01</span>
+                            <span class="text-[9px] uppercase tracking-widest text-blue-200">Giờ</span>
+                        </div>
+                        <div class="text-2xl font-bold mt-2">:</div>
+                        <div class="bg-white/20 rounded-xl w-14 h-14 flex flex-col items-center justify-center border border-white/10">
+                            <span class="text-xl font-black">45</span>
+                            <span class="text-[9px] uppercase tracking-widest text-blue-200">Phút</span>
+                        </div>
+                        <div class="text-2xl font-bold mt-2">:</div>
+                        <div class="bg-white/20 rounded-xl w-14 h-14 flex flex-col items-center justify-center border border-white/10">
+                            <span class="text-xl font-black" id="heroTimerSec">30</span>
+                            <span class="text-[9px] uppercase tracking-widest text-blue-200">Giây</span>
+                        </div>
+                    </div>
+                    <button class="w-full h-12 bg-white text-primary font-black rounded-xl hover:bg-slate-50 transition shadow-lg flex items-center justify-center gap-2">
+                        THAM GIA NGAY <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-8 sticky top-16 z-30 bg-slate-50 dark:bg-darkBg pt-2 pb-4">
+            <div class="flex overflow-x-auto hide-scrollbar gap-2 md:gap-3 px-1">
+                <button class="h-11 px-5 rounded-full font-bold transition whitespace-nowrap bg-primary text-white shadow-md shadow-blue-200 dark:shadow-none flex-shrink-0">Toán học</button>
+                <button class="h-11 px-5 rounded-full font-bold transition whitespace-nowrap bg-white dark:bg-darkCard text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 flex-shrink-0">Vật Lý</button>
+                <button class="h-11 px-5 rounded-full font-bold transition whitespace-nowrap bg-white dark:bg-darkCard text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 flex-shrink-0">Hóa học</button>
+                <button class="h-11 px-5 rounded-full font-bold transition whitespace-nowrap bg-white dark:bg-darkCard text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 flex-shrink-0">Sinh học</button>
+                <button class="h-11 px-5 rounded-full font-bold transition whitespace-nowrap bg-white dark:bg-darkCard text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 flex-shrink-0">Lịch sử</button>
+                <button class="h-11 px-5 rounded-full font-bold transition whitespace-nowrap bg-white dark:bg-darkCard text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 flex-shrink-0">Địa lý</button>
+                <button class="h-11 px-5 rounded-full font-bold transition whitespace-nowrap bg-white dark:bg-darkCard text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 flex-shrink-0">KTPL</button>
+                <button class="h-11 px-5 rounded-full font-bold transition whitespace-nowrap bg-white dark:bg-darkCard text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 flex-shrink-0">Tiếng Anh</button>
+                <button class="h-11 px-5 rounded-full font-bold transition whitespace-nowrap bg-white dark:bg-darkCard text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 flex-shrink-0">Tin học</button>
+            </div>
+        </section>
+
+        <section class="mb-12">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl md:text-2xl font-extrabold text-slate-800 dark:text-slate-100">Kho đề thi Toán</h2>
+                <div class="text-sm font-bold text-primary cursor-pointer hover:underline">Sắp xếp: Mới nhất <i class="fa-solid fa-chevron-down text-[10px]"></i></div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+                
+                <!-- Card 1: Miễn phí, Làm trên Web (Đã từng thi) -->
+                <div class="bg-white dark:bg-darkCard rounded-3xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition flex flex-col h-full relative overflow-hidden">
+                    <div class="flex justify-between items-start mb-3">
+                        <span class="bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 text-xs font-bold px-2.5 py-1 rounded-lg">Miễn phí</span>
+                        <span class="bg-blue-50 dark:bg-blue-900/20 text-primary text-[10px] font-bold px-2 py-1 rounded border border-blue-100 dark:border-blue-800">Tính xếp hạng</span>
+                    </div>
+                    <h3 class="font-extrabold text-lg leading-snug mb-3">Đề thi thử THPT QG Sở Hà Nội 2026</h3>
+                    <div class="grid grid-cols-2 gap-3 text-sm text-slate-600 dark:text-slate-400 mb-4 font-medium">
+                        <div class="flex items-center gap-2"><i class="fa-solid fa-list-ol w-4 text-center"></i> 50 câu</div>
+                        <div class="flex items-center gap-2"><i class="fa-regular fa-clock w-4 text-center"></i> 90 phút</div>
+                        <div class="flex items-center gap-2"><i class="fa-solid fa-users w-4 text-center"></i> 4.5K lượt thi</div>
+                        <div class="flex items-center gap-2 text-primary font-bold"><i class="fa-solid fa-award w-4 text-center"></i> Kỷ lục: 8.5đ</div>
+                    </div>
+                    <div class="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800">
+                        <button class="w-full h-11 bg-primary text-white font-bold rounded-xl hover:bg-primaryHover transition flex items-center justify-center gap-2">
+                            Làm bài ngay
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Card 2: Azota, Miễn phí -->
+                <div class="bg-white dark:bg-darkCard rounded-3xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition flex flex-col h-full relative overflow-hidden border-t-4 border-t-[#00A3FF]">
+                    <div class="flex justify-between items-start mb-3">
+                        <span class="bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 text-xs font-bold px-2.5 py-1 rounded-lg">Miễn phí</span>
+                        <div class="flex items-center gap-1 text-[#00A3FF] font-bold text-xs"><i class="fa-solid fa-cloud"></i> Azota</div>
+                    </div>
+                    <h3 class="font-extrabold text-lg leading-snug mb-3">Đề thi thử chuyên KHTN lần 1 - Có ma trận đề</h3>
+                    <div class="grid grid-cols-2 gap-3 text-sm text-slate-600 dark:text-slate-400 mb-4 font-medium">
+                        <div class="flex items-center gap-2"><i class="fa-solid fa-list-ol w-4 text-center"></i> 50 câu</div>
+                        <div class="flex items-center gap-2"><i class="fa-regular fa-clock w-4 text-center"></i> 90 phút</div>
+                        <div class="flex items-center gap-2 col-span-2 text-slate-500"><i class="fa-solid fa-info-circle w-4 text-center"></i> Đề này không tính vào BXH hệ thống</div>
+                    </div>
+                    <div class="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800">
+                        <button class="w-full h-11 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition flex items-center justify-center gap-2 border border-slate-200 dark:border-slate-700">
+                            Mở bài trên Azota <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Card 3: Có phí, Đã khóa (Yêu cầu Premium hoặc Mua lẻ) -->
+                <div class="bg-white dark:bg-darkCard rounded-3xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition flex flex-col h-full relative overflow-hidden group">
+                    <div class="flex justify-between items-start mb-3">
+                        <span class="bg-gradient-to-r from-highlight to-accent text-slate-900 text-xs font-bold px-2.5 py-1 rounded-lg shadow-sm">Premium</span>
+                        <span class="bg-blue-50 dark:bg-blue-900/20 text-primary text-[10px] font-bold px-2 py-1 rounded border border-blue-100 dark:border-blue-800">Tính xếp hạng</span>
+                    </div>
+                    <h3 class="font-extrabold text-lg leading-snug mb-3">Bộ đề Dự đoán chuẩn cấu trúc 2026 - Đề số 1</h3>
+                    <div class="grid grid-cols-2 gap-3 text-sm text-slate-600 dark:text-slate-400 mb-4 font-medium">
+                        <div class="flex items-center gap-2"><i class="fa-solid fa-list-ol w-4 text-center"></i> 50 câu</div>
+                        <div class="flex items-center gap-2"><i class="fa-regular fa-clock w-4 text-center"></i> 90 phút</div>
+                        <div class="flex items-center gap-2"><i class="fa-solid fa-users w-4 text-center"></i> 850 lượt thi</div>
+                    </div>
+                    
+                    <!-- Lớp mờ khóa -->
+                    <div class="absolute inset-0 bg-white/70 dark:bg-darkCard/80 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center p-5 opacity-100 group-hover:bg-white/80 dark:group-hover:bg-darkCard/90 transition">
+                        <div class="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-500 mb-2 shadow-inner">
+                            <i class="fa-solid fa-lock text-lg"></i>
+                        </div>
+                        <div class="font-bold text-slate-800 dark:text-slate-100 mb-3 text-center text-sm">Đề thi dành cho thành viên VIP</div>
+                        <button class="w-full h-11 bg-primary text-white font-bold rounded-xl hover:bg-primaryHover transition flex items-center justify-center gap-2 shadow-lg shadow-blue-200 dark:shadow-none">
+                            Mở khóa chỉ 19.000đ
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Card 4: Có phí, Đã mở (Đã mua hoặc có Premium) -->
+                <div class="bg-white dark:bg-darkCard rounded-3xl p-5 border border-highlight/50 shadow-sm hover:shadow-md transition flex flex-col h-full relative overflow-hidden">
+                    <div class="flex justify-between items-start mb-3">
+                        <span class="bg-gradient-to-r from-highlight to-accent text-slate-900 text-xs font-bold px-2.5 py-1 rounded-lg shadow-sm">Đã sở hữu</span>
+                        <span class="bg-blue-50 dark:bg-blue-900/20 text-primary text-[10px] font-bold px-2 py-1 rounded border border-blue-100 dark:border-blue-800">Tính xếp hạng</span>
+                    </div>
+                    <h3 class="font-extrabold text-lg leading-snug mb-3">Bộ đề Dự đoán chuẩn cấu trúc 2026 - Đề số 2</h3>
+                    <div class="grid grid-cols-2 gap-3 text-sm text-slate-600 dark:text-slate-400 mb-4 font-medium">
+                        <div class="flex items-center gap-2"><i class="fa-solid fa-list-ol w-4 text-center"></i> 50 câu</div>
+                        <div class="flex items-center gap-2"><i class="fa-regular fa-clock w-4 text-center"></i> 90 phút</div>
+                        <div class="flex items-center gap-2"><i class="fa-solid fa-users w-4 text-center"></i> 920 lượt thi</div>
+                        <div class="flex items-center gap-2 text-slate-400"><i class="fa-solid fa-award w-4 text-center"></i> Kỷ lục: --</div>
+                    </div>
+                    <div class="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800">
+                        <button class="w-full h-11 bg-primary text-white font-bold rounded-xl hover:bg-primaryHover transition flex items-center justify-center gap-2">
+                            Làm bài ngay
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Card 5: Miễn phí, Web, Chưa làm -->
+                <div class="bg-white dark:bg-darkCard rounded-3xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition flex flex-col h-full relative overflow-hidden">
+                    <div class="flex justify-between items-start mb-3">
+                        <span class="bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 text-xs font-bold px-2.5 py-1 rounded-lg">Miễn phí</span>
+                        <span class="bg-blue-50 dark:bg-blue-900/20 text-primary text-[10px] font-bold px-2 py-1 rounded border border-blue-100 dark:border-blue-800">Tính xếp hạng</span>
+                    </div>
+                    <h3 class="font-extrabold text-lg leading-snug mb-3">Đề thi thử THPT chuyên Vinh lần 2</h3>
+                    <div class="grid grid-cols-2 gap-3 text-sm text-slate-600 dark:text-slate-400 mb-4 font-medium">
+                        <div class="flex items-center gap-2"><i class="fa-solid fa-list-ol w-4 text-center"></i> 50 câu</div>
+                        <div class="flex items-center gap-2"><i class="fa-regular fa-clock w-4 text-center"></i> 90 phút</div>
+                        <div class="flex items-center gap-2"><i class="fa-solid fa-users w-4 text-center"></i> 2.1K lượt thi</div>
+                        <div class="flex items-center gap-2 text-slate-400"><i class="fa-solid fa-award w-4 text-center"></i> Chưa thi</div>
+                    </div>
+                    <div class="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800">
+                        <button class="w-full h-11 bg-primary text-white font-bold rounded-xl hover:bg-primaryHover transition flex items-center justify-center gap-2">
+                            Làm bài ngay
+                        </button>
+                    </div>
+                </div>
+                
+                 <!-- Card 6: Azota, Có phí -->
+                 <div class="bg-white dark:bg-darkCard rounded-3xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition flex flex-col h-full relative overflow-hidden border-t-4 border-t-[#00A3FF] group">
+                    <div class="flex justify-between items-start mb-3">
+                        <span class="bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-400 text-xs font-bold px-2.5 py-1 rounded-lg">Có phí</span>
+                        <div class="flex items-center gap-1 text-[#00A3FF] font-bold text-xs"><i class="fa-solid fa-cloud"></i> Azota</div>
+                    </div>
+                    <h3 class="font-extrabold text-lg leading-snug mb-3">Đề thực chiến môn Toán khóa VIP 10</h3>
+                    <div class="grid grid-cols-2 gap-3 text-sm text-slate-600 dark:text-slate-400 mb-4 font-medium">
+                        <div class="flex items-center gap-2"><i class="fa-solid fa-list-ol w-4 text-center"></i> 50 câu</div>
+                        <div class="flex items-center gap-2"><i class="fa-regular fa-clock w-4 text-center"></i> 90 phút</div>
+                    </div>
+                    <!-- Lớp mờ khóa -->
+                    <div class="absolute inset-0 bg-white/70 dark:bg-darkCard/80 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center p-5 opacity-100 group-hover:bg-white/80 dark:group-hover:bg-darkCard/90 transition">
+                        <div class="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-500 mb-2 shadow-inner">
+                            <i class="fa-solid fa-lock text-lg"></i>
+                        </div>
+                        <button class="w-full h-11 bg-primary text-white font-bold rounded-xl hover:bg-primaryHover transition flex items-center justify-center gap-2 shadow-lg shadow-blue-200 dark:shadow-none">
+                            Mở khóa 15.000đ
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+            
+            <div class="mt-8 flex justify-center">
+                <button class="h-11 px-8 rounded-full border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+                    Tải thêm đề thi
+                </button>
+            </div>
+        </section>
+
+        <section class="mb-12">
+            <h2 class="text-xl md:text-2xl font-extrabold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2">
+                <i class="fa-solid fa-clock-rotate-left text-primary"></i> Lịch sử làm bài của bạn
+            </h2>
+            
+            <div class="bg-white dark:bg-darkCard rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+                <div class="overflow-x-auto hide-scrollbar">
+                    <table class="w-full text-sm text-left min-w-[700px]">
+                        <thead class="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700 text-slate-500 uppercase tracking-wider text-xs font-bold">
+                            <tr>
+                                <th class="p-4">Ngày thi</th>
+                                <th class="p-4">Tên đề thi</th>
+                                <th class="p-4">Môn</th>
+                                <th class="p-4 text-center">Điểm số</th>
+                                <th class="p-4 text-center">Thời gian làm</th>
+                                <th class="p-4 text-right">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
+                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/30 transition">
+                                <td class="p-4 text-slate-500">10/10/2026<br><span class="text-xs">14:30</span></td>
+                                <td class="p-4 font-bold text-slate-800 dark:text-slate-200 max-w-[250px] truncate" title="Đề thi thử THPT QG Sở Hà Nội 2026">Đề thi thử THPT QG Sở Hà Nội 2026</td>
+                                <td class="p-4"><span class="bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs px-2 py-1 rounded">Toán</span></td>
+                                <td class="p-4 text-center"><span class="font-black text-lg text-green-500">8.5</span> <span class="text-xs text-slate-400">/10</span></td>
+                                <td class="p-4 text-center text-slate-500">75p 12s</td>
+                                <td class="p-4 text-right">
+                                    <button class="h-9 px-4 bg-slate-100 dark:bg-slate-800 text-primary font-bold rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition text-xs">Xem chi tiết</button>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/30 transition">
+                                <td class="p-4 text-slate-500">05/10/2026<br><span class="text-xs">09:15</span></td>
+                                <td class="p-4 font-bold text-slate-800 dark:text-slate-200 max-w-[250px] truncate" title="Đề thi thử chuyên KHTN lần 1">Đề thi thử chuyên KHTN lần 1</td>
+                                <td class="p-4"><span class="bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 text-xs px-2 py-1 rounded">Lý</span></td>
+                                <td class="p-4 text-center"><span class="font-black text-lg text-primary">7.25</span> <span class="text-xs text-slate-400">/10</span></td>
+                                <td class="p-4 text-center text-slate-500">50p 00s</td>
+                                <td class="p-4 text-right">
+                                    <button class="h-9 px-4 bg-slate-100 dark:bg-slate-800 text-primary font-bold rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition text-xs">Xem chi tiết</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Empty State (Hidden by default) -->
+                <div class="hidden flex-col items-center justify-center py-10 text-center">
+                    <i class="fa-solid fa-clipboard-list text-4xl text-slate-300 dark:text-slate-600 mb-3"></i>
+                    <p class="text-slate-500 font-medium">Bạn chưa hoàn thành đề thi nào.</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <div class="fixed bottom-6 right-4 md:right-8 flex flex-col gap-3 z-50">
+        <a href="#" class="w-11 h-11 md:w-[44px] md:h-[44px] rounded-full bg-blue-500 text-white flex items-center justify-center text-xl shadow-lg hover:scale-110 transition animate-bounce-intro" title="Chat Zalo">
+            <div class="font-bold text-[10px] md:text-xs">Zalo</div>
+        </a>
+        <a href="#" class="w-11 h-11 md:w-[44px] md:h-[44px] rounded-full bg-gradient-to-tr from-blue-500 to-rose-500 text-white flex items-center justify-center text-xl shadow-lg hover:scale-110 transition" title="Chat Messenger">
+            <i class="fa-brands fa-facebook-messenger"></i>
+        </a>
+    </div>
+
+    <footer class="bg-white dark:bg-darkCard pt-12 pb-6 border-t border-slate-200 dark:border-slate-800 mt-10">
+        <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+            <div class="col-span-1 md:col-span-1">
+                <a href="#" class="flex items-center gap-2 mb-4 h-11">
+                    <div class="w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center font-bold text-xl shadow-lg">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </div>
+                    <span class="font-extrabold text-2xl tracking-tight text-primary">ÔnThiPro</span>
+                </a>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Nền tảng chia sẻ và mua bán tài liệu luyện thi THPT Quốc Gia uy tín, chất lượng hàng đầu Việt Nam.</p>
+                <div class="flex gap-4">
+                    <a href="#" class="w-11 h-11 flex items-center justify-center text-slate-400 hover:text-primary transition rounded-full"><i class="fa-brands fa-facebook text-xl"></i></a>
+                    <a href="#" class="w-11 h-11 flex items-center justify-center text-slate-400 hover:text-red-500 transition rounded-full"><i class="fa-brands fa-youtube text-xl"></i></a>
+                    <a href="#" class="w-11 h-11 flex items-center justify-center text-slate-400 hover:text-slate-900 dark:hover:text-white transition rounded-full"><i class="fa-brands fa-tiktok text-xl"></i></a>
+                </div>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4 text-slate-800 dark:text-slate-200">Về chúng tôi</h4>
+                <ul class="text-sm text-slate-500 dark:text-slate-400 space-y-3">
+                    <li><a href="#" class="hover:text-primary transition block py-1">Giới thiệu</a></li>
+                    <li><a href="#" class="hover:text-primary transition block py-1">Điều khoản sử dụng</a></li>
+                    <li><a href="#" class="hover:text-primary transition block py-1">Chính sách bảo mật</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4 text-slate-800 dark:text-slate-200">Hỗ trợ học sinh</h4>
+                <ul class="text-sm text-slate-500 dark:text-slate-400 space-y-3">
+                    <li><a href="#" class="hover:text-primary transition block py-1">Hướng dẫn thanh toán</a></li>
+                    <li><a href="#" class="hover:text-primary transition block py-1">Câu hỏi thường gặp</a></li>
+                    <li><a href="#" class="hover:text-primary transition block py-1 flex items-center">Gói Premium <span class="bg-highlight text-slate-900 text-[10px] font-bold px-1.5 py-0.5 rounded ml-2">HOT</span></a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4 text-slate-800 dark:text-slate-200">Liên hệ</h4>
+                <ul class="text-sm text-slate-500 dark:text-slate-400 space-y-3">
+                    <li class="flex items-center py-1"><i class="fa-solid fa-phone w-6 text-center"></i> 0123.456.789</li>
+                    <li class="flex items-center py-1"><i class="fa-solid fa-envelope w-6 text-center"></i> hotro@onthipro.vn</li>
+                    <li class="flex items-center py-1"><i class="fa-solid fa-location-dot w-6 text-center"></i> Quận 1, TP. HCM</li>
+                </ul>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto px-4 text-center text-sm text-slate-500 border-t border-slate-100 dark:border-slate-800 pt-6">
+            &copy; 2026 ÔnThiPro. All rights reserved.
+        </div>
+    </footer>
+
+    <script>
+        // --- Dark Mode ---
+        const themeToggleBtn = document.getElementById('themeToggle');
+        themeToggleBtn.addEventListener('click', () => document.documentElement.classList.toggle('dark'));
+
+        // --- Demo Timer Countdown (Hero Section) ---
+        const secElement = document.getElementById('heroTimerSec');
+        let sec = parseInt(secElement.innerText);
+        
+        setInterval(() => {
+            sec--;
+            if (sec < 0) sec = 59; 
+            secElement.innerText = sec < 10 ? '0' + sec : sec;
+        }, 1000);
+    </script>
+</body>
+</html>

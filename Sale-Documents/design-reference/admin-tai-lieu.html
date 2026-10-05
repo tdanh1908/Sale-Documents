@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="vi" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Tài liệu - Admin ÔnThiPro</title>
+    
+    <!-- Google Fonts: Nunito -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Nunito', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#2563EB', 
+                        primaryHover: '#1D4ED8',
+                        accent: '#F97316', 
+                        highlight: '#FACC15', 
+                        darkBg: '#0F172A',
+                        darkCard: '#1E293B',
+                        bio: {
+                            50: '#f7fee7',
+                            100: '#ecfccb',
+                            600: '#65a30d', // Lime for Sinh
+                            900: '#365314',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Scrollbar styles */
+        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .dark .custom-scroll::-webkit-scrollbar-thumb { background: #475569; }
+
+        /* Hide scrollbar completely */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Active Menu Item */
+        .admin-nav-item.active { background-color: #2563EB; color: #ffffff; font-weight: 700; }
+        .admin-nav-item.active i { color: #ffffff; }
+
+        /* Custom Checkbox */
+        .custom-checkbox input:checked + div { background-color: #2563EB; border-color: #2563EB; }
+        .custom-checkbox input:checked + div svg { display: block; }
+
+        /* Modals & Views Transitions */
+        .view-section { display: none; animation: fadeIn 0.3s ease; }
+        .view-section.active { display: block; }
+        
+        /* Modal Tabs */
+        .pm-tab-content { display: none; }
+        .pm-tab-content.active { display: block; }
+
+        .modal-overlay { opacity: 0; visibility: hidden; transition: all 0.3s ease; }
+        .modal-overlay.open { opacity: 1; visibility: visible; }
+        .modal-content { transform: translateY(20px) scale(0.95); transition: all 0.3s ease; }
+        .modal-overlay.open .modal-content { transform: translateY(0) scale(1); }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Dropzone Styling */
+        .dropzone { border: 2px dashed #cbd5e1; transition: all 0.2s ease; }
+        .dark .dropzone { border-color: #475569; }
+        .dropzone.dragover { border-color: #2563EB; background-color: #eff6ff; }
+        .dark .dropzone.dragover { background-color: rgba(37, 99, 235, 0.1); }
+
+        /* Toast Notifications */
+        .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .toast {
+            min-width: 250px; background: white; border-radius: 12px; padding: 16px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            display: flex; align-items: start; gap: 12px; transform: translateX(120%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .dark .toast { background: #1E293B; border: 1px solid #334155; }
+        .toast.show { transform: translateX(0); }
+
+        /* Bulk Action Bar (Floating) */
+        #bulkActionBar {
+            transform: translateY(150%); opacity: 0; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        #bulkActionBar.show { transform: translateY(0); opacity: 1; }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-darkBg text-slate-800 dark:text-slate-100 font-sans transition-colors duration-300 flex overflow-hidden h-screen">
+
+    <!-- Lớp phủ Mobile Sidebar -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/50 dark:bg-black/60 z-40 hidden xl:hidden transition-opacity opacity-0" onclick="toggleSidebar()"></div>
+
+    <!-- SIDEBAR -->
+    <aside id="adminSidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-darkCard border-r border-slate-200 dark:border-slate-800 shadow-xl xl:shadow-none transform -translate-x-full xl:translate-x-0 flex flex-col h-full transition-transform duration-300">
+        <!-- Logo -->
+        <div class="h-16 flex items-center px-6 border-b border-slate-100 dark:border-slate-800 flex-shrink-0">
+            <a href="#" class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-primary text-white rounded-lg flex items-center justify-center font-bold text-lg">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <span class="font-extrabold text-xl tracking-tight text-primary">Admin Panel</span>
+            </a>
+            <button class="xl:hidden ml-auto w-8 h-8 flex items-center justify-center text-slate-500 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" onclick="toggleSidebar()">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <!-- Menu Navigation -->
+        <nav class="flex-1 overflow-y-auto custom-scroll py-4 px-3 space-y-1">
+            <a href="#" class="admin-nav-item flex items-center gap-3 w-full h-11 px-4 rounded-xl text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                <i class="fa-solid fa-border-all w-5 text-center text-slate-400"></i> Tổng quan
+            </a>
+            <a href="#" class="admin-nav-item active flex items-center gap-3 w-full h-11 px-4 rounded-xl text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                <i class="fa-solid fa-book w-5 text-center text-slate-400"></i> Tài liệu
+            </a>
+            <a href="#" class="admin-nav-item flex items-center gap-3 w-full h-11 px-4 rounded-xl text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                <i class="fa-solid fa-file-signature w-5 text-center text-slate-400"></i> Đề thi
+            </a>
+            <a href="#" class="admin-nav-item flex items-center gap-3 w-full h-11 px-4 rounded-xl text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                <i class="fa-solid fa-trophy w-5 text-center text-slate-400"></i> Kỳ thi
+            </a>
+            <a href="#" class="admin-nav-item flex items-center gap-3 w-full h-11 px-4 rounded-xl text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                <i class="fa-solid fa-receipt w-5 text-center text-slate-400"></i> Đơn hàng
+            </a>
+            <a href="#" class="admin-nav-item flex items-center gap-3 w-full h-11 px-4 rounded-xl text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                <i class="fa-solid fa-ticket w-5 text-center text-slate-400"></i> Mã giảm giá
+            </a>
+            
+            <div class="h-px bg-slate-100 dark:bg-slate-800 my-2 mx-2"></div>
+            
+            <a href="#" class="admin-nav-item flex items-center gap-3 w-full h-11 px-4 rounded-xl text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                <i class="fa-solid fa-clipboard-check w-5 text-center text-slate-400"></i> Chờ duyệt
+            </a>
+            <a href="#" class="admin-nav-item flex items-center gap-3 w-full h-11 px-4 rounded-xl text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                <i class="fa-solid fa-users w-5 text-center text-slate-400"></i> Người dùng
+            </a>
+            <a href="#" class="admin-nav-item flex items-center gap-3 w-full h-11 px-4 rounded-xl text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                <i class="fa-solid fa-gear w-5 text-center text-slate-400"></i> Cài đặt
+            </a>
+        </nav>
+
+        <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+            <div class="flex items-center gap-3 bg-slate-50 dark:bg-slate-900/50 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 cursor-pointer hover:border-primary transition">
+                <img src="https://placehold.co/100x100/3B82F6/FFF?text=AD" alt="Admin" class="w-9 h-9 rounded-full">
+                <div class="flex-1 min-w-0">
+                    <div class="font-bold text-sm text-slate-800 dark:text-slate-100 truncate">Admin System</div>
+                    <div class="text-[10px] text-green-500 font-bold flex items-center gap-1"><div class="w-1.5 h-1.5 rounded-full bg-green-500"></div> Online</div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN WRAPPER -->
+    <div class="flex-1 flex flex-col min-w-0 xl:ml-64 h-screen bg-slate-50 dark:bg-darkBg transition-all duration-300 relative">
+        
+        <!-- Header Top -->
+        <header class="h-16 bg-white dark:bg-darkCard border-b border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between px-4 md:px-6 flex-shrink-0 z-30">
+            <div class="flex items-center gap-3">
+                <button class="xl:hidden w-11 h-11 flex items-center justify-center text-slate-600 dark:text-slate-300 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition -ml-2" onclick="toggleSidebar()">
+                    <i class="fa-solid fa-bars text-lg"></i>
+                </button>
+                <div class="hidden sm:flex relative w-64 lg:w-96">
+                    <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" placeholder="Tìm kiếm nhanh toàn hệ thống..." class="w-full h-11 pl-10 pr-4 bg-slate-100 dark:bg-slate-800 border-none rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary text-slate-700 dark:text-slate-200">
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 md:gap-4">
+                <button id="themeToggle" class="w-11 h-11 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition" aria-label="Đổi giao diện">
+                    <i class="fa-solid fa-moon dark:hidden text-lg"></i>
+                    <i class="fa-solid fa-sun hidden dark:block text-highlight text-lg"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Container for different views -->
+        <main class="flex-1 overflow-y-auto custom-scroll p-4 md:p-6 lg:p-8 relative">
+            
+            <!-- VIEW LIST (DANH SÁCH) -->
+            <div id="view-list" class="view-section active h-full flex flex-col">
+                <!-- Page Header -->
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                    <div>
+                        <h1 class="text-2xl font-extrabold text-slate-800 dark:text-white">Quản lý Tài liệu</h1>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Tổng số: 2,450 tài liệu trên hệ thống</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button class="h-11 px-4 bg-white dark:bg-darkCard border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition shadow-sm flex items-center gap-2" onclick="openModal('logModal')">
+                            <i class="fa-solid fa-clock-rotate-left"></i> Nhật ký
+                        </button>
+                        <button class="h-11 px-5 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primaryHover transition shadow-sm flex items-center gap-2" onclick="switchView('view-add')">
+                            <i class="fa-solid fa-plus"></i> Thêm tài liệu
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filters & Controls -->
+                <div class="bg-white dark:bg-darkCard p-4 rounded-t-2xl border border-slate-200 dark:border-slate-700 border-b-0 flex flex-col lg:flex-row gap-4 justify-between items-center">
+                    <div class="flex flex-1 w-full lg:w-auto gap-4 flex-col sm:flex-row">
+                        <div class="relative flex-1 max-w-md">
+                            <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <input type="text" placeholder="Tìm theo tên, ID tài liệu..." class="w-full h-11 pl-10 pr-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-primary text-slate-800 dark:text-slate-100">
+                        </div>
+                        <select class="h-11 px-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-xl text-sm font-bold outline-none cursor-pointer w-full sm:w-40">
+                            <option value="">Tất cả môn</option>
+                            <option value="Toán">Toán học</option>
+                            <option value="Lý">Vật lý</option>
+                            <option value="Hóa">Hóa học</option>
+                        </select>
+                        <select class="h-11 px-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-xl text-sm font-bold outline-none cursor-pointer w-full sm:w-40">
+                            <option value="">Mọi trạng thái</option>
+                            <option value="Đang bán">Đang bán</option>
+                            <option value="Nháp">Bản nháp</option>
+                            <option value="Đã gỡ">Đã gỡ</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Data Table -->
+                <div class="bg-white dark:bg-darkCard border border-slate-200 dark:border-slate-700 rounded-b-2xl shadow-sm overflow-hidden flex-1 flex flex-col">
+                    <div class="overflow-x-auto custom-scroll flex-1">
+                        <table class="w-full text-left min-w-[1100px]">
+                            <thead class="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-500 uppercase tracking-wider sticky top-0 z-10">
+                                <tr>
+                                    <th class="p-4 w-12 text-center">
+                                        <label class="custom-checkbox flex items-center justify-center cursor-pointer">
+                                            <input type="checkbox" class="hidden" id="selectAll" onchange="toggleAllCheckboxes(this)">
+                                            <div class="w-5 h-5 rounded border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center bg-white dark:bg-darkCard transition"><svg class="w-3 h-3 text-white hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg></div>
+                                        </label>
+                                    </th>
+                                    <th class="p-4 w-20">Ảnh</th>
+                                    <th class="p-4 cursor-pointer hover:text-primary transition">Tên tài liệu <i class="fa-solid fa-sort ml-1"></i></th>
+                                    <th class="p-4 w-24">Môn</th>
+                                    <th class="p-4 w-20 text-center">Trang</th>
+                                    <th class="p-4 w-28 text-right cursor-pointer hover:text-primary transition">Giá Xem <i class="fa-solid fa-sort ml-1"></i></th>
+                                    <th class="p-4 w-28 text-right">Giá Tải</th>
+                                    <th class="p-4 w-32 text-center">Trạng thái</th>
+                                    <th class="p-4 w-24 text-center cursor-pointer hover:text-primary transition">Đã bán <i class="fa-solid fa-sort-down ml-1"></i></th>
+                                    <th class="p-4 w-32 text-right">Cập nhật</th>
+                                    <th class="p-4 w-40 text-center">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-sm font-medium" id="documentTableBody">
+                                <!-- Row 1: Đang bán (Bán chạy) -->
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/30 transition group">
+                                    <td class="p-4 text-center">
+                                        <label class="custom-checkbox flex items-center justify-center cursor-pointer">
+                                            <input type="checkbox" class="hidden row-checkbox" value="1" onchange="handleRowCheck()">
+                                            <div class="w-5 h-5 rounded border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center bg-white dark:bg-darkCard transition"><svg class="w-3 h-3 text-white hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg></div>
+                                        </label>
+                                    </td>
+                                    <td class="p-4">
+                                        <div class="w-10 h-14 rounded overflow-hidden bg-blue-50 border border-slate-200 dark:border-slate-700">
+                                            <img src="https://placehold.co/100x140/3B82F6/FFF?text=Toán" class="w-full h-full object-cover">
+                                        </div>
+                                    </td>
+                                    <td class="p-4">
+                                        <div class="font-bold text-slate-800 dark:text-slate-100 line-clamp-2">Bộ 50 đề Toán VDC</div>
+                                        <div class="text-[10px] text-slate-500 font-mono mt-1">ID: DOC-1001</div>
+                                    </td>
+                                    <td class="p-4"><span class="bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 text-xs px-2 py-1 rounded">Toán</span></td>
+                                    <td class="p-4 text-center">250</td>
+                                    <td class="p-4 text-right font-bold text-primary">49.000đ</td>
+                                    <td class="p-4 text-right text-slate-500">59.000đ</td>
+                                    <td class="p-4 text-center"><span class="inline-block bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-bold px-2 py-1 rounded-full border border-green-200 dark:border-green-800/50">Đang bán</span></td>
+                                    <td class="p-4 text-center font-bold">320</td>
+                                    <td class="p-4 text-right text-xs text-slate-500">Hôm nay<br>10:45</td>
+                                    <td class="p-4 text-center">
+                                        <div class="flex items-center justify-center gap-1 xl:opacity-0 xl:group-hover:opacity-100 transition-opacity">
+                                            <button class="w-8 h-8 rounded-lg text-slate-500 hover:bg-blue-50 hover:text-primary transition" title="Sửa thông tin" onclick="switchView('view-add')"><i class="fa-solid fa-pen"></i></button>
+                                            <button class="w-8 h-8 rounded-lg text-slate-500 hover:bg-orange-50 hover:text-accent transition" title="Đổi giá" onclick="openPriceModal('Bộ 50 đề Toán VDC', 49000, 59000)"><i class="fa-solid fa-tag"></i></button>
+                                            <button class="w-8 h-8 rounded-lg text-slate-500 hover:bg-purple-50 hover:text-purple-600 transition" title="Thay file PDF" onclick="openFileModal('Bộ 50 đề Toán VDC')"><i class="fa-solid fa-file-pdf"></i></button>
+                                            <button class="w-8 h-8 rounded-lg text-slate-500 hover:bg-red-50 hover:text-red-500 transition" title="Gỡ khỏi cửa hàng" onclick="openRemoveModal('Bộ 50 đề Toán VDC')"><i class="fa-solid fa-eye-slash"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <!-- Row 2: Nháp (0 Bán -> có thể xóa) -->
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/30 transition group">
+                                    <td class="p-4 text-center">
+                                        <label class="custom-checkbox flex items-center justify-center cursor-pointer">
+                                            <input type="checkbox" class="hidden row-checkbox" value="2" onchange="handleRowCheck()">
+                                            <div class="w-5 h-5 rounded border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center bg-white dark:bg-darkCard transition"><svg class="w-3 h-3 text-white hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg></div>
+                                        </label>
+                                    </td>
+                                    <td class="p-4">
+                                        <div class="w-10 h-14 rounded overflow-hidden bg-green-50 border border-slate-200 dark:border-slate-700 opacity-60 grayscale">
+                                            <img src="https://placehold.co/100x140/10B981/FFF?text=Hóa" class="w-full h-full object-cover">
+                                        </div>
+                                    </td>
+                                    <td class="p-4">
+                                        <div class="font-bold text-slate-600 dark:text-slate-400 line-clamp-2">Chuyên đề Hóa vô cơ 12</div>
+                                        <div class="text-[10px] text-slate-400 font-mono mt-1">ID: DOC-1002</div>
+                                    </td>
+                                    <td class="p-4"><span class="bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 text-xs px-2 py-1 rounded">Hóa</span></td>
+                                    <td class="p-4 text-center">120</td>
+                                    <td class="p-4 text-right font-bold text-slate-500">35.000đ</td>
+                                    <td class="p-4 text-right text-slate-400">42.000đ</td>
+                                    <td class="p-4 text-center"><span class="inline-block bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold px-2 py-1 rounded-full border border-slate-300 dark:border-slate-600/50">Bản nháp</span></td>
+                                    <td class="p-4 text-center font-bold text-slate-400">0</td>
+                                    <td class="p-4 text-right text-xs text-slate-500">Hôm qua<br>15:20</td>
+                                    <td class="p-4 text-center">
+                                        <div class="flex items-center justify-center gap-1 xl:opacity-0 xl:group-hover:opacity-100 transition-opacity">
+                                            <button class="w-8 h-8 rounded-lg text-slate-500 hover:bg-blue-50 hover:text-primary transition" title="Sửa thông tin" onclick="switchView('view-add')"><i class="fa-solid fa-pen"></i></button>
+                                            <button class="w-8 h-8 rounded-lg text-slate-500 hover:bg-orange-50 hover:text-accent transition" title="Đổi giá" onclick="openPriceModal('Chuyên đề Hóa vô cơ 12', 35000, 42000)"><i class="fa-solid fa-tag"></i></button>
+                                            <button class="w-8 h-8 rounded-lg text-slate-500 hover:bg-purple-50 hover:text-purple-600 transition" title="Thay file PDF" onclick="openFileModal('Chuyên đề Hóa vô cơ 12')"><i class="fa-solid fa-file-pdf"></i></button>
+                                            <!-- Icon thùng rác vì 0 bán -->
+                                            <button class="w-8 h-8 rounded-lg text-red-400 hover:bg-red-50 hover:text-red-600 transition" title="Xóa vĩnh viễn" onclick="openDeleteModal('Chuyên đề Hóa vô cơ 12')"><i class="fa-solid fa-trash-can"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <!-- Row 3: Đã gỡ -->
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/30 transition group bg-slate-50/50 dark:bg-slate-900/20">
+                                    <td class="p-4 text-center">
+                                        <label class="custom-checkbox flex items-center justify-center cursor-pointer">
+                                            <input type="checkbox" class="hidden row-checkbox" value="3" onchange="handleRowCheck()">
+                                            <div class="w-5 h-5 rounded border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center bg-white dark:bg-darkCard transition"><svg class="w-3 h-3 text-white hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg></div>
+                                        </label>
+                                    </td>
+                                    <td class="p-4">
+                                        <div class="w-10 h-14 rounded overflow-hidden bg-pink-50 border border-slate-200 dark:border-slate-700 opacity-60 grayscale">
+                                            <img src="https://placehold.co/100x140/EC4899/FFF?text=Văn" class="w-full h-full object-cover">
+                                        </div>
+                                    </td>
+                                    <td class="p-4">
+                                        <div class="font-bold text-slate-500 dark:text-slate-400 line-clamp-2 line-through decoration-slate-400">Sơ đồ tư duy Văn</div>
+                                        <div class="text-[10px] text-slate-400 font-mono mt-1">ID: DOC-0995</div>
+                                    </td>
+                                    <td class="p-4"><span class="bg-pink-100 dark:bg-pink-900/40 text-pink-700 dark:text-pink-400 text-xs px-2 py-1 rounded">Văn</span></td>
+                                    <td class="p-4 text-center text-slate-500">15</td>
+                                    <td class="p-4 text-right font-bold text-slate-500">9.000đ</td>
+                                    <td class="p-4 text-right text-slate-400">11.000đ</td>
+                                    <td class="p-4 text-center"><span class="inline-block bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-xs font-bold px-2 py-1 rounded-full border border-red-200 dark:border-red-800/50">Đã gỡ</span></td>
+                                    <td class="p-4 text-center font-bold text-slate-500">150</td>
+                                    <td class="p-4 text-right text-xs text-slate-500">15/09/2026</td>
+                                    <td class="p-4 text-center">
+                                        <div class="flex items-center justify-center gap-1 xl:opacity-0 xl:group-hover:opacity-100 transition-opacity">
+                                            <button class="w-8 h-8 rounded-lg text-slate-500 hover:bg-blue-50 hover:text-primary transition" title="Sửa thông tin" onclick="switchView('view-add')"><i class="fa-solid fa-pen"></i></button>
+                                            <button class="w-8 h-8 rounded-lg text-slate-500 hover:bg-orange-50 hover:text-accent transition" title="Đổi giá" onclick="openPriceModal('Sơ đồ tư duy Văn', 9000, 11000)"><i class="fa-solid fa-tag"></i></button>
+                                            <button class="w-8 h-8 rounded-lg text-slate-500 hover:bg-purple-50 hover:text-purple-600 transition" title="Thay file" onclick="openFileModal('Sơ đồ tư duy Văn')"><i class="fa-solid fa-file-pdf"></i></button>
+                                            <button class="w-8 h-8 rounded-lg text-green-500 hover:bg-green-50 hover:text-green-600 transition" title="Khôi phục bán" onclick="showToast('Đã khôi phục tài liệu Sơ đồ tư duy Văn', 'success')"><i class="fa-solid fa-rotate-left"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    <div class="p-4 border-t border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row items-center justify-between text-sm gap-4">
+                        <div class="text-slate-500">Hiển thị 1-10 của 2,450</div>
+                        <div class="flex items-center gap-1">
+                            <button class="w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 transition"><i class="fa-solid fa-chevron-left"></i></button>
+                            <button class="w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg bg-primary text-white font-bold shadow-sm transition">1</button>
+                            <button class="w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 font-bold transition">2</button>
+                            <button class="w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 font-bold transition">3</button>
+                            <span class="px-2 text-slate-400">...</span>
+                            <button class="w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition"><i class="fa-solid fa-chevron-right"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Floating Bulk Action Bar -->
+                <div id="bulkActionBar" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-6 py-3 rounded-full shadow-2xl flex flex-wrap items-center justify-center gap-4 sm:gap-6 border border-slate-700 dark:border-slate-200 w-[95%] sm:w-auto">
+                    <div class="font-bold flex-shrink-0"><span id="selectedCountTxt" class="text-highlight dark:text-primary">0</span> tài liệu đang chọn</div>
+                    <div class="hidden sm:block h-6 w-px bg-slate-700 dark:bg-slate-300"></div>
+                    <div class="flex items-center gap-2 flex-wrap justify-center">
+                        <button class="h-10 px-4 rounded-xl hover:bg-slate-800 dark:hover:bg-slate-100 transition font-bold text-sm flex items-center gap-2 flex-shrink-0" onclick="openBulkPriceModal()">
+                            <i class="fa-solid fa-tags"></i> Đổi giá
+                        </button>
+                        <button class="h-10 px-4 rounded-xl hover:bg-slate-800 dark:hover:bg-slate-100 transition font-bold text-sm flex items-center gap-2 flex-shrink-0">
+                            <i class="fa-solid fa-folder-tree"></i> Đổi môn
+                        </button>
+                        <button class="h-10 px-4 rounded-xl text-green-400 dark:text-green-600 hover:bg-green-900/50 dark:hover:bg-green-50 transition font-bold text-sm flex items-center gap-2 flex-shrink-0" onclick="showToast('Khôi phục hàng loạt thành công', 'success'); handleRowCheck(true)">
+                            <i class="fa-solid fa-rotate-left"></i> Khôi phục
+                        </button>
+                        <button class="h-10 px-4 rounded-xl hover:bg-red-900/50 text-red-400 dark:hover:bg-red-50 dark:text-red-500 transition font-bold text-sm flex items-center gap-2 flex-shrink-0" onclick="showToast('Gỡ hàng loạt thành công', 'success'); handleRowCheck(true)">
+                            <i class="fa-solid fa-eye-slash"></i> Gỡ hàng loạt
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW ADD (THÊM / SỬA TÀI LIỆU) -->
+            <div id="view-add" class="view-section h-full flex flex-col">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                    <div class="flex items-center gap-3">
+                        <button class="w-11 h-11 rounded-xl bg-white dark:bg-darkCard border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-primary transition flex items-center justify-center shadow-sm" onclick="switchView('view-list')" title="Quay lại">
+                            <i class="fa-solid fa-arrow-left"></i>
+                        </button>
+                        <h1 class="text-xl md:text-2xl font-extrabold text-slate-800 dark:text-white">Thêm tài liệu mới</h1>
+                    </div>
+                    <div class="flex gap-3">
+                        <button class="flex-1 sm:flex-none h-11 px-6 bg-white dark:bg-darkCard border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition shadow-sm" onclick="showToast('Đã lưu nháp!', 'success')">Lưu nháp</button>
+                        <button class="flex-1 sm:flex-none h-11 px-8 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primaryHover transition shadow-md shadow-blue-200 dark:shadow-none" onclick="showToast('Đăng tài liệu thành công!', 'success'); switchView('view-list')">Đăng ngay</button>
+                    </div>
+                </div>
+
+                <div class="flex flex-col lg:flex-row gap-6 items-start pb-10">
+                    <!-- Form Left -->
+                    <div class="flex-1 w-full space-y-6">
+                        
+                        <!-- Upload Section -->
+                        <div class="bg-white dark:bg-darkCard rounded-3xl p-5 md:p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
+                            <h3 class="font-extrabold text-lg mb-4 border-b border-slate-100 dark:border-slate-800 pb-2">File tài liệu (Bắt buộc)</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- File Đầy Đủ -->
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">File Đầy Đủ (Riêng tư - Cấp khi mua)</label>
+                                    <div class="dropzone rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-800 min-h-[160px]">
+                                        <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 text-primary rounded-full flex items-center justify-center text-2xl mb-3"><i class="fa-solid fa-file-pdf"></i></div>
+                                        <p class="font-bold text-sm text-slate-700 dark:text-slate-200 mb-1">Kéo thả file PDF vào đây</p>
+                                        <p class="text-xs text-slate-500">Hoặc click để chọn file. Tối đa 50MB.</p>
+                                    </div>
+                                </div>
+                                <!-- File Demo -->
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">File Demo (Công khai - Xem trước)</label>
+                                    <div class="dropzone rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-800 min-h-[160px]">
+                                        <div class="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 text-accent rounded-full flex items-center justify-center text-2xl mb-3"><i class="fa-solid fa-file-pdf"></i></div>
+                                        <p class="font-bold text-sm text-slate-700 dark:text-slate-200 mb-1">Kéo thả file Demo vào đây</p>
+                                        <p class="text-[10px] text-orange-500 font-bold mt-1 bg-orange-50 dark:bg-orange-900/20 px-2 py-1 rounded">Chỉ nên có 3 trang. Hệ thống cảnh báo nếu quá dài.</p>
+                                        <p class="text-[10px] text-primary font-bold mt-1 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded">Tự trích xuất trang 1 làm Ảnh Bìa</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Basic Info -->
+                        <div class="bg-white dark:bg-darkCard rounded-3xl p-5 md:p-6 border border-slate-200 dark:border-slate-700 shadow-sm space-y-5">
+                            <h3 class="font-extrabold text-lg mb-2 border-b border-slate-100 dark:border-slate-800 pb-2">Thông tin cơ bản</h3>
+                            
+                            <div>
+                                <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Tên tài liệu</label>
+                                <input type="text" id="docNameInput" placeholder="Ví dụ: Chuyên đề Hàm số 12..." class="w-full h-11 px-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-primary transition text-slate-800 dark:text-slate-100" oninput="updatePreview()">
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Môn học</label>
+                                    <select id="docSubjInput" class="w-full h-11 px-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold outline-none focus:border-primary transition cursor-pointer text-slate-800 dark:text-slate-100" onchange="updatePreview()">
+                                        <option value="Toán">Toán học</option>
+                                        <option value="Lý">Vật lý</option>
+                                        <option value="Hóa">Hóa học</option>
+                                        <option value="Sinh">Sinh học</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Loại tài liệu</label>
+                                    <select class="w-full h-11 px-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold outline-none focus:border-primary transition cursor-pointer text-slate-800 dark:text-slate-100">
+                                        <option>Lý thuyết</option>
+                                        <option>Bài tập</option>
+                                        <option>Đề thi</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Khối liên quan</label>
+                                    <div class="h-11 px-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl flex items-center text-sm text-slate-500 cursor-pointer">
+                                        Chọn khối (A00, A01...)
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Mô tả (Bạn sẽ học được gì, mục lục...)</label>
+                                <textarea rows="4" class="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-primary transition resize-none text-slate-800 dark:text-slate-100"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Pricing -->
+                        <div class="bg-white dark:bg-darkCard rounded-3xl p-5 md:p-6 border border-slate-200 dark:border-slate-700 shadow-sm space-y-5">
+                            <h3 class="font-extrabold text-lg mb-2 border-b border-slate-100 dark:border-slate-800 pb-2">Định giá</h3>
+                            
+                            <div class="flex gap-6 mb-4">
+                                <label class="flex items-center gap-2 cursor-pointer h-11">
+                                    <input type="radio" name="priceType" value="free" class="w-5 h-5 accent-primary" onchange="togglePriceCalc()">
+                                    <span class="font-bold text-sm">Miễn phí</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer h-11">
+                                    <input type="radio" name="priceType" value="paid" class="w-5 h-5 accent-primary" checked onchange="togglePriceCalc()">
+                                    <span class="font-bold text-sm">Có phí</span>
+                                </label>
+                            </div>
+
+                            <div id="priceCalcArea" class="bg-slate-50 dark:bg-slate-900/50 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 transition-opacity">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end mb-6">
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-500 mb-1">Số trang PDF (Tự trích xuất)</label>
+                                        <input type="number" id="calcPages" value="100" class="w-full h-11 px-3 bg-white dark:bg-darkCard border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-800 dark:text-slate-100" oninput="calculatePrices()">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-500 mb-1">Đơn giá / 1 Trang (VNĐ)</label>
+                                        <input type="number" id="calcUnitPrice" value="200" step="50" class="w-full h-11 px-3 bg-white dark:bg-darkCard border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-primary text-slate-800 dark:text-slate-100" oninput="calculatePrices()">
+                                    </div>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div class="bg-white dark:bg-darkCard p-3 rounded-xl border border-blue-200 dark:border-blue-800 shadow-sm relative">
+                                        <div class="absolute -top-2.5 left-3 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-[10px] font-bold px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800">Giá Xem Online (Gợi ý)</div>
+                                        <div class="flex items-center justify-between mt-2">
+                                            <span class="text-xs text-slate-500">= Số trang × Đơn giá</span>
+                                            <input type="number" id="finalViewPrice" value="20000" class="w-24 text-right font-black text-primary bg-transparent border-b border-slate-200 dark:border-slate-700 outline-none" oninput="updatePreviewPrice()">
+                                        </div>
+                                    </div>
+                                    <div class="bg-white dark:bg-darkCard p-3 rounded-xl border border-orange-200 dark:border-orange-800 shadow-sm relative">
+                                        <div class="absolute -top-2.5 left-3 bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300 text-[10px] font-bold px-2 py-0.5 rounded border border-orange-200 dark:border-orange-800">Giá Tải PDF (Gợi ý)</div>
+                                        <div class="flex items-center justify-between mt-2">
+                                            <span class="text-xs text-slate-500">= Giá xem × 1.2</span>
+                                            <input type="number" id="finalDlPrice" value="24000" class="w-24 text-right font-black text-accent bg-transparent border-b border-slate-200 dark:border-slate-700 outline-none">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-[10px] text-slate-400 mt-3 text-center">Bạn có thể sửa tay lại giá cuối cùng nếu muốn làm tròn.</div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Right Sticky Preview -->
+                    <div class="w-full lg:w-[340px] xl:w-[380px] flex-shrink-0 lg:sticky lg:top-24">
+                        <h3 class="font-extrabold text-sm text-slate-500 uppercase tracking-wider mb-4">Xem trước thẻ hiển thị</h3>
+                        
+                        <!-- Mock Card -->
+                        <div class="bg-white dark:bg-darkCard rounded-3xl p-4 border border-slate-200 dark:border-slate-700 shadow-xl flex flex-col h-[420px]">
+                            <div class="relative aspect-[3/4] w-full overflow-hidden flex-shrink-0 bg-blue-50 rounded-xl mb-3 flex items-center justify-center">
+                                <div class="text-slate-400 text-sm font-medium flex flex-col items-center gap-2">
+                                    <i class="fa-regular fa-image text-3xl"></i>
+                                    <span>Ảnh tự sinh từ File</span>
+                                </div>
+                                <div class="absolute top-2 left-2 flex flex-col gap-1 hidden" id="prevBadgeFree">
+                                    <span class="bg-green-500 text-white text-[10px] font-bold px-2 py-1 rounded-lg">Miễn phí</span>
+                                </div>
+                            </div>
+                            <div class="flex flex-col flex-1">
+                                <span id="prevSubj" class="text-[10px] font-bold text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded-md mb-2 w-max border border-blue-100 dark:border-blue-800">Toán học</span>
+                                <h3 id="prevName" class="font-bold text-base text-slate-800 dark:text-slate-100 line-clamp-2 leading-snug mb-2">Tên tài liệu sẽ hiện ở đây...</h3>
+                                <div class="flex items-center text-xs text-slate-500 dark:text-slate-400 gap-3 mb-3">
+                                    <span><i class="fa-regular fa-file-pdf"></i> <span id="prevPages">100</span> trang</span>
+                                </div>
+                                
+                                <div class="mt-auto pt-3 border-t border-slate-100 dark:border-slate-800/50 flex items-center justify-between">
+                                    <div id="prevPriceBlock">
+                                        <div class="text-[10px] text-slate-500">Từ</div>
+                                        <div id="prevPrice" class="font-extrabold text-primary text-xl">20.000đ</div>
+                                    </div>
+                                    <div id="prevFreeBlock" class="hidden">
+                                        <div class="font-extrabold text-green-500 text-xl">0đ</div>
+                                    </div>
+                                    <button id="prevBtnAction" class="w-11 h-11 rounded-xl bg-orange-50 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400 flex items-center justify-center opacity-50 cursor-not-allowed">
+                                        <i class="fa-solid fa-cart-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!--
+    MODALS
+    -->
+
+    <!-- Modal 1: Đổi giá (Single) -->
+    <div id="priceModal" class="fixed inset-0 bg-slate-900/60 dark:bg-black/70 z-50 flex items-center justify-center modal-overlay">
+        <div class="bg-white dark:bg-darkCard w-[95%] max-w-md rounded-3xl shadow-2xl modal-content flex flex-col overflow-hidden">
+            <div class="p-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-900/50">
+                <h3 class="font-extrabold text-lg flex items-center gap-2"><i class="fa-solid fa-tag text-accent"></i> Đổi giá tài liệu</h3>
+                <button class="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-500 hover:text-slate-800 dark:hover:text-white transition" onclick="closeModal('priceModal')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div class="p-5 overflow-y-auto max-h-[70vh]">
+                <div class="font-bold text-sm text-slate-800 dark:text-slate-100 line-clamp-2 mb-4" id="pmTitle">Bộ 50 đề Toán VDC</div>
+                
+                <!-- Tab Lịch sử / Cập nhật -->
+                <div class="flex gap-4 border-b border-slate-200 dark:border-slate-700 mb-5">
+                    <button class="pb-2 font-bold text-primary border-b-2 border-primary text-sm transition" id="tabBtnUpdate" onclick="switchPriceTab('update')">Cập nhật giá</button>
+                    <button class="pb-2 font-bold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 border-b-2 border-transparent text-sm transition" id="tabBtnHistory" onclick="switchPriceTab('history')">Lịch sử (2)</button>
+                </div>
+
+                <!-- Content Update -->
+                <div id="pmUpdateContent" class="pm-tab-content active space-y-4">
+                    <div class="grid grid-cols-2 gap-4 bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                        <div>
+                            <div class="text-[10px] font-bold text-slate-400 uppercase">Giá Xem hiện tại</div>
+                            <div class="font-black text-slate-400 line-through" id="pmOldView">49.000đ</div>
+                        </div>
+                        <div>
+                            <div class="text-[10px] font-bold text-slate-400 uppercase">Giá Tải hiện tại</div>
+                            <div class="font-black text-slate-400 line-through" id="pmOldDl">59.000đ</div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Giá Xem Mới</label>
+                            <input type="number" id="pmNewView" class="w-full h-11 px-3 bg-white dark:bg-darkCard border border-primary rounded-xl font-bold text-primary outline-none focus:ring-2 focus:ring-primary/20 transition text-slate-800 dark:text-slate-100" oninput="document.getElementById('pmNewDl').value = Math.round(this.value * 1.2)">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Giá Tải Mới (Gợi ý *1.2)</label>
+                            <input type="number" id="pmNewDl" class="w-full h-11 px-3 bg-white dark:bg-darkCard border border-accent rounded-xl font-bold text-accent outline-none focus:ring-2 focus:ring-accent/20 transition text-slate-800 dark:text-slate-100">
+                        </div>
+                    </div>
+
+                    <label class="custom-checkbox flex items-start gap-3 cursor-pointer group mt-2 bg-blue-50 dark:bg-blue-900/10 p-3 rounded-xl border border-blue-100 dark:border-blue-900/30">
+                        <input type="checkbox" class="hidden" checked>
+                        <div class="w-5 h-5 rounded border-2 border-blue-300 dark:border-blue-600 flex items-center justify-center bg-white dark:bg-darkCard transition mt-0.5 flex-shrink-0"><svg class="w-3 h-3 text-white hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg></div>
+                        <span class="text-sm font-medium text-blue-800 dark:text-blue-300 leading-snug">Áp dụng giá mới cho các đơn hàng tạo sau thời điểm này. Đơn cũ giữ nguyên giá.</span>
+                    </label>
+                </div>
+
+                <!-- Content History -->
+                <div id="pmHistoryContent" class="pm-tab-content space-y-4">
+                    <div class="relative border-l-2 border-slate-200 dark:border-slate-700 ml-2 space-y-4">
+                        <div class="relative pl-5">
+                            <div class="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-primary ring-4 ring-white dark:ring-darkCard"></div>
+                            <div class="text-[10px] text-slate-400 mb-0.5">15/09/2026 - 10:45 • Admin System</div>
+                            <div class="font-bold text-sm text-slate-800 dark:text-slate-100">Cập nhật giá Xem & Tải</div>
+                            <div class="text-xs text-slate-500 mt-1">Xem: 39k &rarr; 49k | Tải: 49k &rarr; 59k</div>
+                        </div>
+                        <div class="relative pl-5">
+                            <div class="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-slate-300 dark:bg-slate-600 ring-4 ring-white dark:ring-darkCard"></div>
+                            <div class="text-[10px] text-slate-400 mb-0.5">01/09/2026 - 08:00 • Mod_Toan</div>
+                            <div class="font-bold text-sm text-slate-800 dark:text-slate-100">Khởi tạo giá gốc</div>
+                            <div class="text-xs text-slate-500 mt-1">Xem: 39k | Tải: 49k</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="p-4 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3 bg-slate-50 dark:bg-slate-900/50">
+                <button class="h-11 px-5 rounded-xl font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition" onclick="closeModal('priceModal')">Hủy</button>
+                <button class="h-11 px-6 rounded-xl font-bold bg-primary text-white hover:bg-primaryHover transition shadow-md" onclick="showToast('Cập nhật giá thành công!', 'success'); closeModal('priceModal')">Lưu thay đổi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 2: Đổi giá Hàng loạt -->
+    <div id="bulkPriceModal" class="fixed inset-0 bg-slate-900/60 dark:bg-black/70 z-50 flex items-center justify-center modal-overlay">
+        <div class="bg-white dark:bg-darkCard w-[95%] max-w-2xl rounded-3xl shadow-2xl modal-content flex flex-col overflow-hidden max-h-[90vh]">
+            <div class="p-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-900/50">
+                <h3 class="font-extrabold text-lg flex items-center gap-2"><i class="fa-solid fa-tags text-primary"></i> Đổi giá hàng loạt (<span id="bpmCount">2</span> tài liệu)</h3>
+                <button class="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-500 hover:text-slate-800 dark:hover:text-white transition" onclick="closeModal('bulkPriceModal')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div class="p-5 overflow-y-auto custom-scroll flex-1 space-y-6">
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <label class="border-2 border-slate-200 dark:border-slate-700 rounded-2xl p-4 cursor-pointer hover:border-primary transition relative">
+                        <input type="radio" name="bpmType" value="percent" class="peer absolute opacity-0" checked onchange="toggleBpmInput()">
+                        <div class="font-bold text-slate-800 dark:text-slate-100 mb-1">Tăng / Giảm theo %</div>
+                        <div class="text-xs text-slate-500">Giữ nguyên cơ cấu giá, điều chỉnh đồng loạt.</div>
+                        <div class="absolute inset-0 border-2 border-primary rounded-2xl pointer-events-none opacity-0 peer-checked:opacity-100 transition"></div>
+                        <div class="absolute top-4 right-4 w-4 h-4 rounded-full border-2 border-slate-300 peer-checked:border-primary peer-checked:bg-primary flex items-center justify-center"><div class="w-1.5 h-1.5 bg-white rounded-full hidden peer-checked:block"></div></div>
+                    </label>
+                    <label class="border-2 border-slate-200 dark:border-slate-700 rounded-2xl p-4 cursor-pointer hover:border-primary transition relative">
+                        <input type="radio" name="bpmType" value="unit" class="peer absolute opacity-0" onchange="toggleBpmInput()">
+                        <div class="font-bold text-slate-800 dark:text-slate-100 mb-1">Đặt lại Đơn giá / Trang</div>
+                        <div class="text-xs text-slate-500">Tính lại toàn bộ giá = Số trang × Đơn giá mới.</div>
+                        <div class="absolute inset-0 border-2 border-primary rounded-2xl pointer-events-none opacity-0 peer-checked:opacity-100 transition"></div>
+                        <div class="absolute top-4 right-4 w-4 h-4 rounded-full border-2 border-slate-300 peer-checked:border-primary peer-checked:bg-primary flex items-center justify-center"><div class="w-1.5 h-1.5 bg-white rounded-full hidden peer-checked:block"></div></div>
+                    </label>
+                </div>
+
+                <div class="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800" id="bpmInputArea">
+                    <div class="flex items-center gap-3 max-w-xs">
+                        <select class="h-11 px-3 bg-white dark:bg-darkCard border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-xl font-bold outline-none cursor-pointer">
+                            <option value="up">Tăng (+)</option>
+                            <option value="down">Giảm (-)</option>
+                        </select>
+                        <div class="relative flex-1">
+                            <input type="number" value="10" class="w-full h-11 px-3 pr-8 bg-white dark:bg-darkCard border border-slate-200 dark:border-slate-700 rounded-xl font-bold outline-none focus:border-primary text-right text-slate-800 dark:text-slate-100">
+                            <span class="absolute right-3 top-1/2 -translate-y-1/2 font-bold text-slate-500">%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-end mb-2">
+                        <h4 class="font-bold text-sm">Xem trước thay đổi (Tạm tính)</h4>
+                        <button class="text-xs h-10 px-3 flex items-center justify-center font-bold text-primary hover:bg-blue-50 dark:hover:bg-slate-800 rounded-lg transition"><i class="fa-solid fa-rotate mr-1"></i> Cập nhật trước</button>
+                    </div>
+                    <div class="overflow-x-auto custom-scroll border border-slate-200 dark:border-slate-700 rounded-xl">
+                        <table class="w-full text-left text-xs min-w-[500px]">
+                            <thead class="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 text-slate-500">
+                                <tr>
+                                    <th class="p-3">Tài liệu</th>
+                                    <th class="p-3 text-right">Giá Cũ (Xem)</th>
+                                    <th class="p-3 text-right text-primary">Giá Mới (Xem)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
+                                <tr>
+                                    <td class="p-3 truncate max-w-[200px]">Bộ 50 đề Toán VDC</td>
+                                    <td class="p-3 text-right line-through text-slate-400">49.000đ</td>
+                                    <td class="p-3 text-right font-bold text-primary">53.900đ</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 truncate max-w-[200px]">Chuyên đề Hóa vô cơ</td>
+                                    <td class="p-3 text-right line-through text-slate-400">35.000đ</td>
+                                    <td class="p-3 text-right font-bold text-primary">38.500đ</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="p-4 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3 bg-slate-50 dark:bg-slate-900/50">
+                <button class="h-11 px-5 rounded-xl font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition" onclick="closeModal('bulkPriceModal')">Hủy</button>
+                <button class="h-11 px-6 rounded-xl font-bold bg-primary text-white hover:bg-primaryHover transition shadow-md" onclick="showToast('Đã áp dụng đổi giá hàng loạt!', 'success'); closeModal('bulkPriceModal'); handleRowCheck(true);">Áp dụng ngay</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 3: Thay File -->
+    <div id="fileModal" class="fixed inset-0 bg-slate-900/60 dark:bg-black/70 z-50 flex items-center justify-center modal-overlay">
+        <div class="bg-white dark:bg-darkCard w-[95%] max-w-md rounded-3xl shadow-2xl modal-content flex flex-col overflow-hidden">
+            <div class="p-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-900/50">
+                <h3 class="font-extrabold text-lg flex items-center gap-2"><i class="fa-solid fa-file-pdf text-purple-500"></i> Thay thế File PDF</h3>
+                <button class="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-500 hover:text-slate-800 dark:hover:text-white transition" onclick="closeModal('fileModal')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div class="p-5 overflow-y-auto max-h-[70vh]">
+                <div class="font-bold text-sm text-slate-800 dark:text-slate-100 line-clamp-2 mb-4" id="fmTitle">Tên tài liệu</div>
+                
+                <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 p-3 rounded-xl flex items-start gap-2 mb-5">
+                    <i class="fa-solid fa-triangle-exclamation text-yellow-600 mt-0.5"></i>
+                    <p class="text-xs text-yellow-700 dark:text-yellow-400 font-medium">Lưu ý: Sau khi thay, người dùng đã mua tài liệu này sẽ tải/xem được bản cập nhật mới nhất này.</p>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2 uppercase">Chọn File muốn thay thế</label>
+                        <div class="flex gap-2">
+                            <label class="flex-1 text-center h-11 flex items-center justify-center border-2 border-primary bg-blue-50 dark:bg-blue-900/10 rounded-xl cursor-pointer font-bold text-sm text-primary">
+                                <input type="radio" name="fmType" checked class="hidden"> File Đầy Đủ
+                            </label>
+                            <label class="flex-1 text-center h-11 flex items-center justify-center border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-darkCard rounded-xl cursor-pointer font-bold text-sm text-slate-500 hover:border-slate-300 transition">
+                                <input type="radio" name="fmType" class="hidden"> File Demo
+                            </label>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="text-[10px] font-bold text-slate-400 uppercase mb-2">Lịch sử Phiên bản</div>
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-center bg-slate-50 dark:bg-slate-900 px-3 py-2 rounded-lg border border-primary/30">
+                                <span class="font-mono text-sm font-bold text-primary">v1.2 (Hiện tại)</span>
+                                <span class="text-xs text-slate-500">10/10/2026</span>
+                            </div>
+                            <div class="flex justify-between items-center bg-transparent px-3 py-1 rounded-lg">
+                                <span class="font-mono text-sm text-slate-500 line-through">v1.1</span>
+                                <span class="text-xs text-slate-400">15/09/2026</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dropzone rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-800 border-dashed min-h-[140px]">
+                        <div class="w-12 h-12 bg-slate-200 dark:bg-slate-700 text-slate-500 rounded-full flex items-center justify-center text-xl mb-2"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+                        <p class="font-bold text-sm mb-1 text-slate-800 dark:text-slate-100">Kéo thả File MỚI vào đây</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3 bg-slate-50 dark:bg-slate-900/50">
+                <button class="h-11 px-6 rounded-xl font-bold bg-primary text-white hover:bg-primaryHover transition shadow-md w-full flex items-center justify-center gap-2" onclick="showToast('Đã tải lên phiên bản mới!', 'success'); closeModal('fileModal')"><i class="fa-solid fa-upload"></i> Tải lên & Thay thế</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 4: Xóa vĩnh viễn -->
+    <div id="deleteModal" class="fixed inset-0 bg-slate-900/60 dark:bg-black/70 z-50 flex items-center justify-center modal-overlay">
+        <div class="bg-white dark:bg-darkCard w-[90%] max-w-sm rounded-3xl p-6 md:p-8 shadow-2xl modal-content border border-red-500/20">
+            <div class="w-16 h-16 bg-red-100 dark:bg-red-900/40 text-red-500 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h3 class="text-xl font-extrabold text-center mb-2" id="dmTitleText">Xóa vĩnh viễn tài liệu?</h3>
+            <p class="text-slate-500 dark:text-slate-400 text-center text-sm mb-6" id="dmDesc">
+                Hành động này không thể hoàn tác. Để xác nhận, vui lòng gõ lại tên tài liệu:
+                <br><strong class="text-slate-800 dark:text-slate-100 mt-2 block select-all" id="dmTargetName">Chuyên đề Hóa vô cơ 12</strong>
+            </p>
+            
+            <input type="text" placeholder="Nhập tên tài liệu..." class="w-full h-11 px-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-red-500 mb-6 text-center text-slate-800 dark:text-slate-100">
+
+            <div class="flex flex-col-reverse sm:flex-row gap-3">
+                <button class="w-full h-11 rounded-xl font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition" onclick="closeModal('deleteModal')">Hủy bỏ</button>
+                <button class="w-full h-11 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 transition shadow-lg shadow-red-200 dark:shadow-none" onclick="showToast('Đã xóa tài liệu!', 'success'); closeModal('deleteModal')">Xóa vĩnh viễn</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 5: Gỡ (Remove) -->
+    <div id="removeModal" class="fixed inset-0 bg-slate-900/60 dark:bg-black/70 z-50 flex items-center justify-center modal-overlay">
+        <div class="bg-white dark:bg-darkCard w-[90%] max-w-sm rounded-3xl p-6 shadow-2xl modal-content">
+            <div class="w-16 h-16 bg-orange-100 dark:bg-orange-900/40 text-orange-500 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
+                <i class="fa-solid fa-eye-slash"></i>
+            </div>
+            <h3 class="text-xl font-extrabold text-center mb-2 text-orange-500">Gỡ khỏi cửa hàng?</h3>
+            <p class="text-slate-500 dark:text-slate-400 text-center text-sm mb-4">
+                Tài liệu <strong class="text-slate-800 dark:text-white" id="rmTitle">...</strong> sẽ bị ẩn khỏi gian hàng.
+            </p>
+            <div class="bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 text-xs p-3 rounded-xl border border-orange-200 dark:border-orange-800 mb-6 font-medium text-center">
+                Những học sinh đã mua trước đó vẫn có thể vào Tủ sách cá nhân để đọc/tải bình thường.
+            </div>
+            <div class="flex flex-col-reverse sm:flex-row gap-3">
+                <button class="flex-1 h-11 rounded-xl font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition" onclick="closeModal('removeModal')">Hủy</button>
+                <button class="flex-1 h-11 bg-orange-500 text-white font-bold rounded-xl hover:bg-orange-600 transition shadow-md" onclick="showToast('Đã gỡ tài liệu!', 'success'); closeModal('removeModal')">Gỡ ngay</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 6: Nhật ký hoạt động -->
+    <div id="logModal" class="fixed inset-0 bg-slate-900/60 dark:bg-black/70 z-50 flex items-center justify-center modal-overlay">
+        <div class="bg-white dark:bg-darkCard w-[95%] max-w-lg rounded-3xl shadow-2xl modal-content flex flex-col overflow-hidden max-h-[80vh]">
+            <div class="p-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-900/50">
+                <h3 class="font-extrabold text-lg flex items-center gap-2"><i class="fa-solid fa-clock-rotate-left text-primary"></i> Nhật ký thao tác (Gần đây)</h3>
+                <button class="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-500 hover:text-slate-800 dark:hover:text-white transition" onclick="closeModal('logModal')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-5 overflow-y-auto custom-scroll">
+                <div class="relative border-l-2 border-slate-200 dark:border-slate-700 ml-3 space-y-6">
+                    <!-- Log Item -->
+                    <div class="relative pl-6">
+                        <div class="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-primary ring-4 ring-white dark:ring-darkCard"></div>
+                        <div class="text-xs text-slate-400 mb-1">Vừa xong • Bởi: Admin System</div>
+                        <div class="font-bold text-sm text-slate-800 dark:text-slate-100">Đổi giá tài liệu "Bộ 50 đề Toán VDC"</div>
+                        <div class="text-xs text-slate-500 mt-1 bg-slate-50 dark:bg-slate-900 p-2 rounded-lg border border-slate-100 dark:border-slate-800">Giá Xem: 49k &rarr; 59k</div>
+                    </div>
+                    <!-- Log Item -->
+                    <div class="relative pl-6">
+                        <div class="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-orange-500 ring-4 ring-white dark:ring-darkCard"></div>
+                        <div class="text-xs text-slate-400 mb-1">Hôm qua, 15:20 • Bởi: Mod_Hoa</div>
+                        <div class="font-bold text-sm text-slate-800 dark:text-slate-100">Gỡ tài liệu khỏi cửa hàng</div>
+                        <div class="text-xs text-slate-500 mt-1">Sơ đồ tư duy Văn</div>
+                    </div>
+                    <!-- Log Item -->
+                    <div class="relative pl-6">
+                        <div class="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-green-500 ring-4 ring-white dark:ring-darkCard"></div>
+                        <div class="text-xs text-slate-400 mb-1">12/09/2026 • Bởi: Admin System</div>
+                        <div class="font-bold text-sm text-slate-800 dark:text-slate-100">Đăng tài liệu mới</div>
+                        <div class="text-xs text-slate-500 mt-1">Chuyên đề Hóa vô cơ 12</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script>
+        // --- Dark Mode ---
+        const themeToggleBtn = document.getElementById('themeToggle');
+        themeToggleBtn.addEventListener('click', () => document.documentElement.classList.toggle('dark'));
+
+        // --- Sidebar (Mobile) ---
+        const sidebar = document.getElementById('adminSidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        function toggleSidebar() {
+            const isClosed = sidebar.classList.contains('-translate-x-full');
+            if (isClosed) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+                requestAnimationFrame(() => overlay.classList.remove('opacity-0'));
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('opacity-0');
+                setTimeout(() => overlay.classList.add('hidden'), 300);
+            }
+        }
+
+        // --- View Switching ---
+        function switchView(viewId) {
+            document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+            window.scrollTo(0, 0);
+        }
+
+        // --- Mock Add Document Logic ---
+        function calculatePrices() {
+            const pages = parseInt(document.getElementById('calcPages').value) || 0;
+            const unitPrice = parseInt(document.getElementById('calcUnitPrice').value) || 0;
+            const viewPrice = pages * unitPrice;
+            document.getElementById('finalViewPrice').value = viewPrice;
+            document.getElementById('finalDlPrice').value = Math.round(viewPrice * 1.2);
+            updatePreviewPrice();
+        }
+
+        function togglePriceCalc() {
+            const isPaid = document.querySelector('input[name="priceType"][value="paid"]').checked;
+            const calcArea = document.getElementById('priceCalcArea');
+            const freeBadge = document.getElementById('prevBadgeFree');
+            const priceBlock = document.getElementById('prevPriceBlock');
+            const freeBlock = document.getElementById('prevFreeBlock');
+            const btnAction = document.getElementById('prevBtnAction');
+
+            if(isPaid) {
+                calcArea.style.opacity = '1';
+                calcArea.style.pointerEvents = 'auto';
+                
+                freeBadge.classList.add('hidden');
+                freeBlock.classList.add('hidden');
+                priceBlock.classList.remove('hidden');
+                
+                btnAction.innerHTML = '<i class="fa-solid fa-cart-plus"></i>';
+                btnAction.className = 'w-11 h-11 rounded-xl bg-orange-50 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400 flex items-center justify-center';
+                
+                updatePreviewPrice();
+            } else {
+                calcArea.style.opacity = '0.5';
+                calcArea.style.pointerEvents = 'none';
+                
+                freeBadge.classList.remove('hidden');
+                priceBlock.classList.add('hidden');
+                freeBlock.classList.remove('hidden');
+
+                btnAction.innerHTML = 'Xem';
+                btnAction.className = 'h-11 px-6 rounded-xl bg-slate-100 dark:bg-slate-800 text-primary font-bold text-sm flex items-center justify-center';
+            }
+        }
+
+        function updatePreview() {
+            const name = document.getElementById('docNameInput').value;
+            document.getElementById('prevName').innerText = name || 'Tên tài liệu sẽ hiện ở đây...';
+            
+            const subjSelect = document.getElementById('docSubjInput');
+            const subjText = subjSelect.options[subjSelect.selectedIndex].text;
+            document.getElementById('prevSubj').innerText = subjText;
+            
+            // Basic color coding for preview badge based on select value
+            const val = subjSelect.value;
+            const badge = document.getElementById('prevSubj');
+            badge.className = 'text-[10px] font-bold px-2 py-1 rounded-md mb-2 w-max border ';
+            if(val === 'Toán') badge.className += 'text-blue-600 bg-blue-50 border-blue-100 dark:bg-blue-900/30 dark:border-blue-800';
+            if(val === 'Lý') badge.className += 'text-purple-600 bg-purple-50 border-purple-100 dark:bg-purple-900/30 dark:border-purple-800';
+            if(val === 'Hóa') badge.className += 'text-green-600 bg-green-50 border-green-100 dark:bg-green-900/30 dark:border-green-800';
+            if(val === 'Sinh') badge.className += 'text-lime-600 bg-lime-50 border-lime-100 dark:bg-lime-900/30 dark:border-lime-800';
+
+            const pages = document.getElementById('calcPages').value || '100';
+            document.getElementById('prevPages').innerText = pages;
+        }
+
+        function updatePreviewPrice() {
+            const val = document.getElementById('finalViewPrice').value;
+            document.getElementById('prevPrice').innerText = parseInt(val).toLocaleString() + 'đ';
+        }
+
+        // --- Modals Logic ---
+        function openModal(id) {
+            document.getElementById(id).classList.add('open');
+        }
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('open');
+        }
+
+        function switchPriceTab(tab) {
+            document.getElementById('tabBtnUpdate').classList.remove('text-primary', 'border-primary');
+            document.getElementById('tabBtnUpdate').classList.add('text-slate-500', 'border-transparent');
+            document.getElementById('tabBtnHistory').classList.remove('text-primary', 'border-primary');
+            document.getElementById('tabBtnHistory').classList.add('text-slate-500', 'border-transparent');
+            
+            document.querySelectorAll('.pm-tab-content').forEach(el => el.classList.remove('active'));
+
+            if (tab === 'update') {
+                document.getElementById('tabBtnUpdate').classList.add('text-primary', 'border-primary');
+                document.getElementById('tabBtnUpdate').classList.remove('text-slate-500', 'border-transparent');
+                document.getElementById('pmUpdateContent').classList.add('active');
+            } else {
+                document.getElementById('tabBtnHistory').classList.add('text-primary', 'border-primary');
+                document.getElementById('tabBtnHistory').classList.remove('text-slate-500', 'border-transparent');
+                document.getElementById('pmHistoryContent').classList.add('active');
+            }
+        }
+
+        function openPriceModal(title, oldView, oldDl) {
+            document.getElementById('pmTitle').innerText = title;
+            document.getElementById('pmOldView').innerText = oldView.toLocaleString() + 'đ';
+            document.getElementById('pmOldDl').innerText = oldDl.toLocaleString() + 'đ';
+            document.getElementById('pmNewView').value = oldView;
+            document.getElementById('pmNewDl').value = oldDl;
+            switchPriceTab('update'); // Reset to default tab
+            openModal('priceModal');
+        }
+
+        function openFileModal(title) {
+            document.getElementById('fmTitle').innerText = title;
+            openModal('fileModal');
+        }
+
+        function openRemoveModal(title) {
+            document.getElementById('rmTitle').innerText = title;
+            openModal('removeModal');
+        }
+
+        function openDeleteModal(title) {
+            document.getElementById('dmTargetName').innerText = title;
+            openModal('deleteModal');
+        }
+
+        function openBulkPriceModal() {
+            const count = document.querySelectorAll('.row-checkbox:checked').length;
+            document.getElementById('bpmCount').innerText = count;
+            openModal('bulkPriceModal');
+        }
+
+        function toggleBpmInput() {
+            const type = document.querySelector('input[name="bpmType"]:checked').value;
+            const inputArea = document.getElementById('bpmInputArea');
+            if(type === 'percent') {
+                inputArea.innerHTML = `
+                    <div class="flex items-center gap-3 max-w-xs">
+                        <select class="h-11 px-3 bg-white dark:bg-darkCard border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-xl font-bold outline-none cursor-pointer">
+                            <option value="up">Tăng (+)</option>
+                            <option value="down">Giảm (-)</option>
+                        </select>
+                        <div class="relative flex-1">
+                            <input type="number" value="10" class="w-full h-11 px-3 pr-8 bg-white dark:bg-darkCard border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-xl font-bold outline-none focus:border-primary text-right">
+                            <span class="absolute right-3 top-1/2 -translate-y-1/2 font-bold text-slate-500">%</span>
+                        </div>
+                    </div>`;
+            } else {
+                inputArea.innerHTML = `
+                    <div class="flex items-center gap-3 max-w-xs">
+                        <div class="font-bold text-sm whitespace-nowrap text-slate-600 dark:text-slate-300">Đơn giá mới:</div>
+                        <div class="relative flex-1">
+                            <input type="number" value="200" class="w-full h-11 px-3 pr-10 bg-white dark:bg-darkCard border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-xl font-bold outline-none focus:border-primary text-right">
+                            <span class="absolute right-3 top-1/2 -translate-y-1/2 font-bold text-slate-500">đ/trang</span>
+                        </div>
+                    </div>`;
+            }
+        }
+
+        // --- Bulk Action Bar Logic ---
+        function toggleAllCheckboxes(source) {
+            const checkboxes = document.querySelectorAll('.row-checkbox');
+            checkboxes.forEach(cb => cb.checked = source.checked);
+            handleRowCheck();
+        }
+
+        function handleRowCheck(forceHide = false) {
+            const checkboxes = document.querySelectorAll('.row-checkbox:checked');
+            const checkedCount = checkboxes.length;
+            const totalCount = document.querySelectorAll('.row-checkbox').length;
+            const bulkBar = document.getElementById('bulkActionBar');
+            
+            if(forceHide) {
+                document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = false);
+                document.getElementById('selectAll').checked = false;
+                bulkBar.classList.remove('show');
+                return;
+            }
+
+            document.getElementById('selectAll').checked = (checkedCount === totalCount && totalCount > 0);
+            document.getElementById('selectedCountTxt').innerText = checkedCount;
+
+            if (checkedCount > 0) {
+                bulkBar.classList.add('show');
+            } else {
+                bulkBar.classList.remove('show');
+            }
+        }
+
+        // --- Toast Logic ---
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            
+            let icon = type === 'success' ? '<i class="fa-solid fa-circle-check text-green-500 text-xl mt-0.5"></i>' : '<i class="fa-solid fa-circle-exclamation text-red-500 text-xl mt-0.5"></i>';
+            
+            toast.innerHTML = `
+                ${icon}
+                <div class="flex-1">
+                    <div class="font-bold text-sm text-slate-800 dark:text-slate-100">${type === 'success' ? 'Thành công' : 'Lỗi'}</div>
+                    <div class="text-xs text-slate-500 mt-0.5">${message}</div>
+                </div>
+            `;
+            
+            container.appendChild(toast);
+            
+            // Trigger animation
+            requestAnimationFrame(() => toast.classList.add('show'));
+            
+            // Auto remove
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="vi" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xác thực tài khoản - ÔnThiPro</title>
+    
+    <!-- Google Fonts: Nunito -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Nunito', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#2563EB', 
+                        primaryHover: '#1D4ED8',
+                        accent: '#F97316', 
+                        highlight: '#FACC15', 
+                        darkBg: '#0F172A',
+                        darkCard: '#1E293B',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Form view transition */
+        .auth-view {
+            display: none;
+            animation: slideUpFade 0.4s ease forwards;
+        }
+        .auth-view.active {
+            display: block;
+        }
+
+        @keyframes slideUpFade {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Ẩn scrollbar */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Custom Checkbox */
+        .custom-checkbox input:checked + div {
+            background-color: #2563EB;
+            border-color: #2563EB;
+        }
+        .custom-checkbox input:checked + div svg {
+            display: block;
+        }
+
+        /* Password Strength Bar */
+        .strength-bar { transition: all 0.3s ease; }
+        .strength-weak { background-color: #ef4444; width: 33%; }
+        .strength-medium { background-color: #f59e0b; width: 66%; }
+        .strength-strong { background-color: #22c55e; width: 100%; }
+        
+        /* Hiệu ứng nảy Zalo 1 lần */
+        @keyframes bounce-intro {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-15px); }
+            60% { transform: translateY(-7px); }
+        }
+        .animate-bounce-intro {
+            animation: bounce-intro 2s ease-in-out 1;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .animate-bounce-intro { animation: none; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-darkBg text-slate-800 dark:text-slate-100 font-sans transition-colors duration-300 min-h-screen flex">
+
+    <!-- Nút Dark Mode (Fixed) -->
+    <button id="themeToggle" class="fixed top-4 right-4 z-50 w-11 h-11 rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur shadow-md flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition" aria-label="Đổi giao diện">
+        <i class="fa-solid fa-moon dark:hidden text-lg"></i>
+        <i class="fa-solid fa-sun hidden dark:block text-highlight text-lg"></i>
+    </button>
+
+    <!-- Nút Về Trang Chủ (Fixed) -->
+    <a href="#" class="fixed top-4 left-4 z-50 w-11 h-11 rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur shadow-md flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition lg:hidden" aria-label="Về trang chủ">
+        <i class="fa-solid fa-arrow-left text-lg"></i>
+    </a>
+
+    <!-- Container Chính chia 2 cột -->
+    <div class="flex w-full min-h-screen">
+        
+        <!-- CỘT TRÁI: Hình minh họa (Chỉ hiện trên Desktop lg) -->
+        <div class="hidden lg:flex w-1/2 bg-gradient-to-br from-primary to-indigo-700 text-white relative overflow-hidden flex-col justify-between p-12">
+            <!-- Background Elements -->
+            <div class="absolute -top-24 -left-24 w-96 h-96 bg-white opacity-10 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute bottom-10 right-10 w-64 h-64 bg-highlight opacity-20 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div class="relative z-10">
+                <a href="#" class="flex items-center gap-2 mb-12 hover:opacity-90 transition w-max">
+                    <div class="w-12 h-12 bg-white text-primary rounded-xl flex items-center justify-center font-bold text-2xl shadow-lg">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </div>
+                    <span class="font-extrabold text-3xl tracking-tight text-white">ÔnThiPro</span>
+                </a>
+            </div>
+
+            <!-- Dynamic Illustration Content -->
+            <div class="relative z-10 mb-12" id="heroContent">
+                <h1 class="text-4xl xl:text-5xl font-black mb-6 leading-tight">Chinh phục điểm 9+<br>kỳ thi THPT Quốc Gia</h1>
+                <p class="text-blue-100 text-lg mb-8 max-w-md">Kho tài liệu đồ sộ, đề thi thử sát với cấu trúc thực tế và hàng ngàn học sinh đang cùng nhau ôn luyện mỗi ngày.</p>
+                
+                <!-- Mockup Card -->
+                <div class="bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl p-6 shadow-2xl max-w-sm transform rotate-[-2deg] hover:rotate-0 transition duration-500">
+                    <div class="flex items-center justify-between mb-4 border-b border-white/10 pb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-highlight text-orange-900 flex items-center justify-center font-black">1</div>
+                            <div>
+                                <div class="font-bold text-sm">Trần Ngọc Huy</div>
+                                <div class="text-[10px] text-blue-200">THPT Chuyên KHTN</div>
+                            </div>
+                        </div>
+                        <div class="font-black text-xl text-highlight">29.5</div>
+                    </div>
+                    <div class="text-sm font-medium text-white/90">"Tài liệu ở đây thực sự rất bám sát đề minh họa. Cảm ơn ÔnThiPro!"</div>
+                </div>
+            </div>
+
+            <div class="relative z-10 text-sm font-medium text-blue-200">
+                &copy; 2026 ÔnThiPro. All rights reserved.
+            </div>
+        </div>
+
+        <!-- CỘT PHẢI: Forms Container -->
+        <div class="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-8 md:p-12 relative">
+            <div class="w-full max-w-md">
+                
+                <!-- Màn hình ĐĂNG NHẬP -->
+                <div id="view-login" class="auth-view active">
+                    <div class="text-center mb-8 lg:text-left">
+                        <div class="lg:hidden flex justify-center items-center gap-2 mb-6">
+                            <div class="w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center font-bold text-xl shadow-lg">
+                                <i class="fa-solid fa-graduation-cap"></i>
+                            </div>
+                            <span class="font-extrabold text-2xl tracking-tight text-primary">ÔnThiPro</span>
+                        </div>
+                        <h2 class="text-3xl font-extrabold mb-2 text-slate-900 dark:text-white">Chào mừng trở lại! 👋</h2>
+                        <p class="text-slate-500 dark:text-slate-400 font-medium">Đăng nhập để tiếp tục ôn luyện.</p>
+                    </div>
+
+                    <form onsubmit="return handleLogin(event)" class="space-y-5">
+                        
+                        <!-- Lỗi form (Mặc định ẩn) -->
+                        <div id="login-error" class="hidden bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm font-bold p-3 rounded-xl flex items-start gap-2">
+                            <i class="fa-solid fa-circle-exclamation mt-0.5"></i>
+                            <span>Email hoặc mật khẩu không chính xác. Vui lòng thử lại.</span>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Email</label>
+                            <div class="relative">
+                                <i class="fa-solid fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                <input type="email" id="loginEmail" placeholder="nhapemail@gmail.com" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 h-12 rounded-xl pl-11 pr-4 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition text-slate-800 dark:text-slate-100" required>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between items-center mb-1.5">
+                                <label class="block text-sm font-bold text-slate-700 dark:text-slate-300">Mật khẩu</label>
+                                <a href="javascript:void(0)" onclick="switchView('view-forgot')" class="text-xs font-bold text-primary hover:text-primaryHover transition">Quên mật khẩu?</a>
+                            </div>
+                            <div class="relative">
+                                <i class="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                <input type="password" id="loginPass" placeholder="••••••••" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 h-12 rounded-xl pl-11 pr-12 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition text-slate-800 dark:text-slate-100" required>
+                                <!-- Nút Hiện/Ẩn MK (Đảm bảo w-11 h-11 để dễ chạm) -->
+                                <button type="button" class="absolute right-1 top-1 bottom-1 w-11 flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition focus:outline-none" onclick="togglePassword('loginPass', this)">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Giả lập reCAPTCHA -->
+                        <div class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-3 flex items-center justify-between">
+                            <label class="custom-checkbox flex items-center gap-3 cursor-pointer group min-h-[32px]">
+                                <input type="checkbox" class="hidden" required>
+                                <div class="w-6 h-6 rounded border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center bg-white dark:bg-darkCard transition shadow-inner">
+                                    <svg class="w-3.5 h-3.5 text-white hidden pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                </div>
+                                <span class="text-slate-700 dark:text-slate-300 font-medium select-none text-sm">Tôi không phải là robot</span>
+                            </label>
+                            <div class="flex flex-col items-center">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/RecaptchaLogo.svg/512px-RecaptchaLogo.svg.png?20201014163435" alt="reCAPTCHA" class="w-8 opacity-70">
+                                <span class="text-[8px] text-slate-400 mt-1">reCAPTCHA</span>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full h-12 bg-primary text-white font-extrabold text-base rounded-xl hover:bg-primaryHover transition shadow-lg shadow-blue-200 dark:shadow-none flex items-center justify-center gap-2">
+                            Đăng Nhập
+                        </button>
+                    </form>
+
+                    <div class="mt-8 text-center text-sm font-medium text-slate-600 dark:text-slate-400">
+                        Chưa có tài khoản? 
+                        <a href="javascript:void(0)" onclick="switchView('view-register')" class="text-primary font-bold hover:underline">Đăng ký ngay</a>
+                    </div>
+                </div>
+
+                <!-- Màn hình ĐĂNG KÝ -->
+                <div id="view-register" class="auth-view">
+                    <div class="text-center mb-6 lg:text-left">
+                        <h2 class="text-3xl font-extrabold mb-2 text-slate-900 dark:text-white">Tạo tài khoản mới 🚀</h2>
+                        <p class="text-slate-500 dark:text-slate-400 font-medium">Tham gia cùng hàng ngàn học sinh khác.</p>
+                    </div>
+
+                    <form onsubmit="return handleRegister(event)" class="space-y-4 max-h-[70vh] overflow-y-auto hide-scrollbar pb-4 pr-1">
+                        
+                        <!-- Lỗi form (Mặc định ẩn) -->
+                        <div id="register-error" class="hidden bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm font-bold p-3 rounded-xl flex items-start gap-2">
+                            <i class="fa-solid fa-circle-exclamation mt-0.5"></i>
+                            <span>Email này đã được sử dụng. Vui lòng chọn email khác.</span>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Họ và tên</label>
+                            <input type="text" placeholder="Nguyễn Văn A" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 h-12 rounded-xl px-4 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition text-slate-800 dark:text-slate-100" required>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Biệt danh hiển thị</label>
+                            <input type="text" placeholder="Cậu Bé Vàng" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 h-12 rounded-xl px-4 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition text-slate-800 dark:text-slate-100" required>
+                            <div class="text-[11px] text-slate-500 mt-1 flex items-start gap-1"><i class="fa-solid fa-circle-info mt-0.5 text-primary"></i> Biệt danh sẽ hiển thị công khai trên bảng xếp hạng sau khi admin duyệt.</div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Tên trường THPT</label>
+                            <input type="text" placeholder="THPT Chuyên KHTN" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 h-12 rounded-xl px-4 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition text-slate-800 dark:text-slate-100" required>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Số điện thoại</label>
+                                <input type="tel" placeholder="0987654321" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 h-12 rounded-xl px-4 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition text-slate-800 dark:text-slate-100" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Email</label>
+                                <input type="email" id="regEmail" placeholder="email@gmail.com" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 h-12 rounded-xl px-4 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition text-slate-800 dark:text-slate-100" required>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Mật khẩu</label>
+                            <div class="relative">
+                                <input type="password" id="regPass" placeholder="••••••••" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 h-12 rounded-xl pl-4 pr-12 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition text-slate-800 dark:text-slate-100" required>
+                                <button type="button" class="absolute right-1 top-1 bottom-1 w-11 flex items-center justify-center text-slate-400 hover:text-slate-600 transition" onclick="togglePassword('regPass', this)">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Nhập lại mật khẩu</label>
+                            <div class="relative">
+                                <input type="password" id="regPassConfirm" placeholder="••••••••" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 h-12 rounded-xl pl-4 pr-12 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition text-slate-800 dark:text-slate-100" required>
+                                <button type="button" class="absolute right-1 top-1 bottom-1 w-11 flex items-center justify-center text-slate-400 hover:text-slate-600 transition" onclick="togglePassword('regPassConfirm', this)">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="pt-2 space-y-3">
+                            <label class="custom-checkbox flex items-start gap-3 cursor-pointer group">
+                                <input type="checkbox" class="hidden" required>
+                                <div class="w-5 h-5 rounded border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center bg-white dark:bg-darkCard transition mt-0.5 flex-shrink-0">
+                                    <svg class="w-3 h-3 text-white hidden pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                </div>
+                                <span class="text-slate-600 dark:text-slate-400 text-sm font-medium leading-snug">Tôi đồng ý với <a href="#" class="text-primary hover:underline font-bold">Chính sách bảo mật</a> và <a href="#" class="text-primary hover:underline font-bold">Điều khoản sử dụng</a>.</span>
+                            </label>
+                            <label class="custom-checkbox flex items-start gap-3 cursor-pointer group">
+                                <input type="checkbox" class="hidden" checked>
+                                <div class="w-5 h-5 rounded border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center bg-white dark:bg-darkCard transition mt-0.5 flex-shrink-0">
+                                    <svg class="w-3 h-3 text-white hidden pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                </div>
+                                <span class="text-slate-600 dark:text-slate-400 text-sm font-medium leading-snug">Đồng ý hiển thị biệt danh và tên trường trên bảng xếp hạng (Đề xuất).</span>
+                            </label>
+                        </div>
+
+                        <!-- Giả lập reCAPTCHA -->
+                        <div class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-3 flex items-center justify-between">
+                            <label class="custom-checkbox flex items-center gap-3 cursor-pointer group min-h-[32px]">
+                                <input type="checkbox" class="hidden" required>
+                                <div class="w-6 h-6 rounded border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center bg-white dark:bg-darkCard transition shadow-inner">
+                                    <svg class="w-3.5 h-3.5 text-white hidden pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                </div>
+                                <span class="text-slate-700 dark:text-slate-300 font-medium select-none text-sm">Tôi không phải là robot</span>
+                            </label>
+                            <div class="flex flex-col items-center">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/RecaptchaLogo.svg/512px-RecaptchaLogo.svg.png?20201014163435" alt="reCAPTCHA" class="w-8 opacity-70">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full h-12 bg-primary text-white font-extrabold text-base rounded-xl hover:bg-primaryHover transition shadow-lg shadow-blue-200 dark:shadow-none flex items-center justify-center mt-4">
+                            Đăng Ký Tài Khoản
+                        </button>
+                    </form>
+
+                    <div class="mt-6 text-center text-sm font-medium text-slate-600 dark:text-slate-400">
+                        Đã có tài khoản? 
+                        <a href="javascript:void(0)" onclick="switchView('view-login')" class="text-primary font-bold hover:underline">Đăng nhập</a>
+                    </div>
+                </div>
+
+                <!-- Màn hình QUÊN MẬT KHẨU -->
+                <div id="view-forgot" class="auth-view">
+                    
+                    <button class="w-11 h-11 flex items-center justify-center text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition mb-2 -ml-2" onclick="switchView('view-login')" title="Quay lại">
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </button>
+
+                    <div class="text-center mb-6 lg:text-left">
+                        <div class="w-16 h-16 bg-blue-50 dark:bg-blue-900/30 text-primary rounded-2xl flex items-center justify-center text-3xl mx-auto lg:mx-0 mb-4">
+                            <i class="fa-solid fa-key"></i>
+                        </div>
+                        <h2 class="text-3xl font-extrabold mb-2 text-slate-900 dark:text-white">Quên mật khẩu?</h2>
+                        <p class="text-slate-500 dark:text-slate-400 font-medium">Nhập email của bạn, chúng tôi sẽ gửi liên kết đặt lại mật khẩu.</p>
+                    </div>
+
+                    <!-- Trạng thái Thành công (Mặc định ẩn) -->
+                    <div id="forgot-success" class="hidden bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 p-4 rounded-2xl text-center mb-6">
+                        <div class="w-12 h-12 bg-green-500 text-white rounded-full flex items-center justify-center text-xl mx-auto mb-3">
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </div>
+                        <h4 class="font-extrabold text-lg mb-1">Đã gửi email hướng dẫn!</h4>
+                        <p class="text-sm">Vui lòng kiểm tra hộp thư đến (và mục Spam) của email <strong><span id="sentEmailTxt"></span></strong> để đặt lại mật khẩu.</p>
+                        
+                        <button class="mt-4 w-full h-11 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition" onclick="switchView('view-login')">
+                            Quay lại đăng nhập
+                        </button>
+                    </div>
+
+                    <form id="forgotForm" onsubmit="return handleForgot(event)" class="space-y-5">
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Email đã đăng ký</label>
+                            <div class="relative">
+                                <i class="fa-solid fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                <input type="email" id="forgotEmail" placeholder="nhapemail@gmail.com" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 h-12 rounded-xl pl-11 pr-4 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition text-slate-800 dark:text-slate-100" required>
+                            </div>
+                        </div>
+
+                        <!-- Giả lập reCAPTCHA -->
+                        <div class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-3 flex items-center justify-between">
+                            <label class="custom-checkbox flex items-center gap-3 cursor-pointer group min-h-[32px]">
+                                <input type="checkbox" class="hidden" required>
+                                <div class="w-6 h-6 rounded border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center bg-white dark:bg-darkCard transition shadow-inner">
+                                    <svg class="w-3.5 h-3.5 text-white hidden pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                </div>
+                                <span class="text-slate-700 dark:text-slate-300 font-medium select-none text-sm">Tôi không phải là robot</span>
+                            </label>
+                            <div class="flex flex-col items-center">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/RecaptchaLogo.svg/512px-RecaptchaLogo.svg.png?20201014163435" alt="reCAPTCHA" class="w-8 opacity-70">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full h-12 bg-primary text-white font-extrabold text-base rounded-xl hover:bg-primaryHover transition shadow-lg shadow-blue-200 dark:shadow-none flex items-center justify-center">
+                            Gửi Link Đặt Lại
+                        </button>
+                    </form>
+                    <!-- Link phụ để test luồng -->
+                    <div class="mt-4 text-center">
+                        <a href="javascript:void(0)" onclick="switchView('view-reset')" class="text-[10px] text-slate-400 hover:underline">(Dev: Bấm để test form Đặt lại MK)</a>
+                    </div>
+                </div>
+
+                <!-- Màn hình ĐẶT LẠI MẬT KHẨU (Truy cập từ link email) -->
+                <div id="view-reset" class="auth-view">
+                    
+                    <div class="text-center mb-6 lg:text-left">
+                        <h2 class="text-3xl font-extrabold mb-2 text-slate-900 dark:text-white">Đặt lại mật khẩu</h2>
+                        <p class="text-slate-500 dark:text-slate-400 font-medium">Tạo mật khẩu mới đủ mạnh để bảo vệ tài khoản.</p>
+                    </div>
+
+                    <form onsubmit="return handleReset(event)" class="space-y-5">
+                        
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Mật khẩu mới</label>
+                            <div class="relative">
+                                <i class="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                <input type="password" id="resetPass" placeholder="Tối thiểu 8 ký tự..." class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 h-12 rounded-xl pl-11 pr-12 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition text-slate-800 dark:text-slate-100" required oninput="checkStrength()">
+                                <button type="button" class="absolute right-1 top-1 bottom-1 w-11 flex items-center justify-center text-slate-400 hover:text-slate-600 transition focus:outline-none" onclick="togglePassword('resetPass', this)">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
+                            </div>
+                            
+                            <!-- Thanh đo độ mạnh -->
+                            <div class="mt-2 h-1.5 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden flex">
+                                <div id="strengthIndicator" class="h-full strength-bar w-0"></div>
+                            </div>
+                            <div class="text-[10px] font-bold text-slate-500 mt-1" id="strengthText">Độ mạnh: Chưa nhập</div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Nhập lại mật khẩu mới</label>
+                            <div class="relative">
+                                <i class="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                <input type="password" id="resetPassConfirm" placeholder="••••••••" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 h-12 rounded-xl pl-11 pr-12 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition text-slate-800 dark:text-slate-100" required>
+                                <button type="button" class="absolute right-1 top-1 bottom-1 w-11 flex items-center justify-center text-slate-400 hover:text-slate-600 transition focus:outline-none" onclick="togglePassword('resetPassConfirm', this)">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full h-12 bg-primary text-white font-extrabold text-base rounded-xl hover:bg-primaryHover transition shadow-lg shadow-blue-200 dark:shadow-none flex items-center justify-center gap-2">
+                            Xác nhận đổi mật khẩu
+                        </button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Dark Mode ---
+        const themeToggleBtn = document.getElementById('themeToggle');
+        themeToggleBtn.addEventListener('click', () => document.documentElement.classList.toggle('dark'));
+
+        // --- Core View Switching Logic ---
+        function switchView(viewId) {
+            // Hide all views
+            document.querySelectorAll('.auth-view').forEach(view => {
+                view.classList.remove('active');
+            });
+            // Show target view
+            document.getElementById(viewId).classList.add('active');
+
+            // Reset forms state
+            document.getElementById('login-error').classList.add('hidden');
+            document.getElementById('register-error').classList.add('hidden');
+            document.getElementById('forgot-success').classList.add('hidden');
+            document.getElementById('forgotForm').style.display = 'block';
+
+            // Optional: Scroll to top if on mobile
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // --- Toggle Password Visibility ---
+        function togglePassword(inputId, btn) {
+            const input = document.getElementById(inputId);
+            const icon = btn.querySelector('i');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        // --- Mock Handlers ---
+        
+        // 1. Login (Luôn báo lỗi để demo state)
+        function handleLogin(e) {
+            e.preventDefault();
+            const errBox = document.getElementById('login-error');
+            errBox.classList.remove('hidden');
+            // Thêm hiệu ứng rung nhẹ
+            errBox.style.animation = 'none';
+            errBox.offsetHeight; /* trigger reflow */
+            errBox.style.animation = 'bounce-intro 0.5s ease-in-out';
+            return false;
+        }
+
+        // 2. Register (Luôn báo lỗi email trùng để demo state)
+        function handleRegister(e) {
+            e.preventDefault();
+            const errBox = document.getElementById('register-error');
+            errBox.classList.remove('hidden');
+            
+            const emailInput = document.getElementById('regEmail');
+            emailInput.classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-500');
+            emailInput.focus();
+            return false;
+        }
+
+        // 3. Forgot Password (Báo thành công)
+        function handleForgot(e) {
+            e.preventDefault();
+            const email = document.getElementById('forgotEmail').value;
+            
+            // Hide form
+            document.getElementById('forgotForm').style.display = 'none';
+            
+            // Show Success
+            const successBox = document.getElementById('forgot-success');
+            document.getElementById('sentEmailTxt').textContent = email;
+            successBox.classList.remove('hidden');
+            
+            return false;
+        }
+
+        // 4. Reset Password Logic (Password Strength)
+        function checkStrength() {
+            const val = document.getElementById('resetPass').value;
+            const indicator = document.getElementById('strengthIndicator');
+            const txt = document.getElementById('strengthText');
+            
+            // Clear classes
+            indicator.className = 'h-full strength-bar';
+            
+            if (val.length === 0) {
+                indicator.style.width = '0%';
+                txt.textContent = 'Độ mạnh: Chưa nhập';
+                txt.className = 'text-[10px] font-bold text-slate-500 mt-1';
+            } else if (val.length < 6) {
+                indicator.classList.add('strength-weak');
+                txt.textContent = 'Độ mạnh: Yếu';
+                txt.className = 'text-[10px] font-bold text-red-500 mt-1';
+            } else if (val.length < 10 || !/[A-Z]/.test(val) || !/[0-9]/.test(val)) {
+                indicator.classList.add('strength-medium');
+                txt.textContent = 'Độ mạnh: Khá';
+                txt.className = 'text-[10px] font-bold text-orange-500 mt-1';
+            } else {
+                indicator.classList.add('strength-strong');
+                txt.textContent = 'Độ mạnh: Rất mạnh';
+                txt.className = 'text-[10px] font-bold text-green-500 mt-1';
+            }
+        }
+
+        function handleReset(e) {
+            e.preventDefault();
+            const p1 = document.getElementById('resetPass').value;
+            const p2 = document.getElementById('resetPassConfirm').value;
+            
+            if(p1 !== p2) {
+                alert("Mật khẩu nhập lại không khớp!");
+                return false;
+            }
+            
+            alert("Đổi mật khẩu thành công! Trở về trang đăng nhập.");
+            switchView('view-login');
+            return false;
+        }
+
+    </script>
+</body>
+</html>

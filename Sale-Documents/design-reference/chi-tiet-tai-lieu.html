@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="vi" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi tiết tài liệu - ÔnThiPro</title>
+    
+    <!-- Google Fonts: Nunito -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Nunito', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#2563EB', 
+                        primaryHover: '#1D4ED8',
+                        accent: '#F97316', 
+                        highlight: '#FACC15', 
+                        darkBg: '#0F172A',
+                        darkCard: '#1E293B',
+                        bio: {
+                            50: '#f7fee7',
+                            100: '#ecfccb',
+                            600: '#65a30d', // Lime
+                            900: '#365314',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Hiệu ứng nảy Zalo 1 lần */
+        @keyframes bounce-intro {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-15px); }
+            60% { transform: translateY(-7px); }
+        }
+        .animate-bounce-intro {
+            animation: bounce-intro 2s ease-in-out 1;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .animate-bounce-intro { animation: none; }
+        }
+
+        /* Ẩn thanh cuộn */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Smooth scroll cho Tabs */
+        html { scroll-behavior: smooth; }
+
+        /* Custom Radio Button cho lựa chọn mua */
+        .buy-option-radio:checked + div {
+            border-color: #2563EB;
+            background-color: #eff6ff; /* blue-50 */
+        }
+        .dark .buy-option-radio:checked + div {
+            background-color: rgba(37, 99, 235, 0.1);
+        }
+        .buy-option-radio:checked + div .check-icon {
+            display: block;
+        }
+        .buy-option-radio:checked + div .radio-circle {
+            border-color: #2563EB;
+            background-color: #2563EB;
+        }
+
+        /* Transition cho Tab nội dung */
+        .tab-content {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .tab-content.active {
+            display: block;
+            opacity: 1;
+        }
+
+        /* State Classes (Dùng JS để toggle các class này trên thẻ body) */
+        body:not(.state-free) .show-only-free { display: none !important; }
+        body.state-free .hide-if-free { display: none !important; }
+
+        body:not(.auth-yes) .show-only-auth { display: none !important; }
+        body.auth-yes .hide-if-auth { display: none !important; }
+
+        /* Ownership states for PAID docs */
+        body.owned-none .show-only-owned { display: none !important; }
+        body:not(.owned-none) .hide-if-owned { display: none !important; }
+
+        body.owned-online .show-only-download { display: none !important; }
+        /* Prevent double displaying if both online/download have logic */
+
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-darkBg text-slate-800 dark:text-slate-100 font-sans transition-colors duration-300 pb-24 md:pb-0 relative auth-no owned-none">
+
+    <header class="sticky top-0 z-40 bg-white dark:bg-darkCard shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <a href="#" class="flex items-center gap-2 h-11">
+                <div class="w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center font-bold text-xl shadow-lg shadow-blue-200 dark:shadow-none">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <span class="font-extrabold text-2xl tracking-tight text-primary hidden sm:block">ÔnThiPro</span>
+            </a>
+
+            <div class="hidden md:flex flex-1 max-w-xl mx-8 relative">
+                <input type="text" placeholder="Tìm tài liệu, đề thi, môn học..." 
+                       class="w-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-5 h-11 rounded-full outline-none focus:ring-2 focus:ring-primary border-none">
+                <button class="absolute right-1 top-1 bottom-1 w-10 h-9 bg-primary text-white rounded-full hover:bg-primaryHover transition flex items-center justify-center m-auto">
+                    <i class="fa-solid fa-search"></i>
+                </button>
+            </div>
+
+            <div class="flex items-center gap-2 md:gap-4">
+                <button id="themeToggle" class="w-11 h-11 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition" aria-label="Đổi giao diện">
+                    <i class="fa-solid fa-moon dark:hidden text-lg"></i>
+                    <i class="fa-solid fa-sun hidden dark:block text-highlight text-lg"></i>
+                </button>
+                
+                <!-- Nút Giỏ Hàng (Ẩn nếu là tài liệu Free và không có gì trong giỏ, demo tạm để luôn hiện trừ khi ở state hoàn toàn free) -->
+                <a href="#" class="relative w-11 h-11 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition hide-if-free">
+                    <i class="fa-solid fa-cart-shopping text-lg"></i>
+                    <span class="absolute -top-1 -right-1 bg-accent text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white dark:border-darkCard">1</span>
+                </a>
+
+                <!-- UI Đăng nhập / Đã đăng nhập -->
+                <div class="hidden md:flex items-center h-11 hide-if-auth">
+                    <a href="#" class="font-bold text-primary hover:text-primaryHover px-2">Đăng nhập</a>
+                </div>
+                <div class="hidden md:flex items-center h-11 show-only-auth cursor-pointer">
+                    <img src="https://placehold.co/100x100/3B82F6/FFF?text=US" alt="User" class="w-9 h-9 rounded-full border-2 border-slate-200 dark:border-slate-700">
+                    <span class="ml-2 font-bold text-sm">Học sinh A</span>
+                </div>
+
+                <button class="md:hidden w-11 h-11 flex items-center justify-center text-slate-600 dark:text-slate-300 text-xl rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-6 md:py-8">
+        
+        <!-- Breadcrumb -->
+        <nav class="flex text-sm text-slate-500 dark:text-slate-400 mb-6 whitespace-nowrap overflow-x-auto hide-scrollbar">
+            <a href="#" class="hover:text-primary transition flex-shrink-0">Trang chủ</a>
+            <span class="mx-2 flex-shrink-0">/</span>
+            <a href="#" class="hover:text-primary transition flex-shrink-0">Toán học</a>
+            <span class="mx-2 flex-shrink-0">/</span>
+            <a href="#" class="hover:text-primary transition flex-shrink-0">Đề thi</a>
+            <span class="mx-2 flex-shrink-0">/</span>
+            <span class="text-slate-800 dark:text-slate-200 font-bold truncate">Bộ 50 đề thi thử THPT QG Môn Toán 2026</span>
+        </nav>
+
+        <!-- Khối Layout chính -->
+        <div class="flex flex-col lg:flex-row gap-8 items-start">
+            
+            <!-- Cột trái: Nội dung tài liệu -->
+            <div class="flex-1 w-full min-w-0">
+                
+                <!-- Bìa và Thông tin cơ bản (Mobile & Desktop) -->
+                <div class="flex flex-col sm:flex-row gap-6 mb-8">
+                    <!-- Ảnh bìa -->
+                    <div class="w-full sm:w-48 lg:w-56 flex-shrink-0">
+                        <div class="aspect-[3/4] rounded-2xl overflow-hidden shadow-md relative border border-slate-100 dark:border-slate-800 bg-blue-50">
+                            <img src="https://placehold.co/400x533/3B82F6/FFF?text=TOAN+12" alt="Bìa sách" class="w-full h-full object-cover">
+                        </div>
+                    </div>
+                    
+                    <!-- Thông tin -->
+                    <div class="flex flex-col flex-1 justify-center">
+                        <div class="flex flex-wrap gap-2 mb-3">
+                            <span class="bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 text-xs font-bold px-2.5 py-1 rounded-lg border border-blue-200 dark:border-blue-800">Môn Toán</span>
+                            <span class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700">Đề thi</span>
+                            
+                            <!-- Nhãn Free/Paid dynamic -->
+                            <span class="bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 text-xs font-bold px-2.5 py-1 rounded-lg border border-green-200 dark:border-green-800 show-only-free">Miễn phí</span>
+                            <span class="bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-400 text-xs font-bold px-2.5 py-1 rounded-lg border border-orange-200 dark:border-orange-800 hide-if-free">Có phí</span>
+                        </div>
+                        
+                        <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white leading-tight mb-4">
+                            Bộ 50 đề thi thử THPT QG Môn Toán 2026 (Có đáp án chi tiết)
+                        </h1>
+                        
+                        <div class="flex flex-wrap items-center gap-4 md:gap-6 text-sm text-slate-600 dark:text-slate-400 font-medium">
+                            <div class="flex items-center gap-1.5"><i class="fa-regular fa-file-pdf"></i> 250 trang</div>
+                            <div class="flex items-center gap-1.5"><i class="fa-solid fa-file-arrow-down"></i> 3.2K lượt tải</div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-highlight"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star-half-stroke"></i></span>
+                                <span class="font-bold text-slate-800 dark:text-slate-200">4.8</span> (120 đánh giá)
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center gap-3">
+                            <img src="https://placehold.co/40x40/94A3B8/FFF?text=GV" alt="Tác giả" class="w-10 h-10 rounded-full">
+                            <div>
+                                <div class="text-xs text-slate-500">Tác giả / Sưu tầm</div>
+                                <div class="font-bold text-sm text-slate-800 dark:text-slate-200">Thầy Trọng Toán</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phần Xem trước (Preview) -->
+                <div class="bg-white dark:bg-darkCard rounded-3xl p-4 sm:p-6 mb-8 border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="font-extrabold text-lg flex items-center gap-2"><i class="fa-solid fa-eye text-primary"></i> Xem trước tài liệu</h2>
+                        <div class="text-sm font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full"><span id="currentPage">1</span> / 3</div>
+                    </div>
+
+                    <!-- Container hiển thị ảnh -->
+                    <div class="relative w-full bg-slate-100 dark:bg-slate-900 rounded-xl overflow-hidden aspect-[1/1.4] sm:aspect-[1/1.2] flex items-center justify-center border border-slate-200 dark:border-slate-700">
+                        <img id="previewImage" src="https://placehold.co/800x1131/F1F5F9/94A3B8?text=Trang+1+%0A(Noi+dung+demo)" alt="Trang 1" class="h-full w-auto object-contain transition-opacity duration-300">
+                        
+                        <!-- Nút điều hướng -->
+                        <button id="prevPageBtn" class="absolute left-2 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/80 dark:bg-black/60 shadow text-slate-800 dark:text-white flex items-center justify-center hover:bg-white dark:hover:bg-black transition disabled:opacity-30 disabled:cursor-not-allowed">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+                        <button id="nextPageBtn" class="absolute right-2 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/80 dark:bg-black/60 shadow text-slate-800 dark:text-white flex items-center justify-center hover:bg-white dark:hover:bg-black transition disabled:opacity-30 disabled:cursor-not-allowed">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+
+                    <!-- Lớp mờ báo khóa (chỉ hiện khi cuộn qua trang 3 hoặc khi tài liệu bắt mua) -->
+                    <div class="mt-4 relative rounded-xl overflow-hidden h-32 border border-slate-200 dark:border-slate-700">
+                        <!-- Ảnh nền giả bị mờ -->
+                        <img src="https://placehold.co/800x200/F1F5F9/94A3B8?text=Trang+4..." alt="Blurred" class="w-full h-full object-cover blur-sm opacity-50">
+                        <!-- Content khóa -->
+                        <div class="absolute inset-0 bg-white/60 dark:bg-darkCard/60 backdrop-blur-md flex flex-col items-center justify-center p-4 text-center">
+                            
+                            <!-- State: Trả phí chưa mua -->
+                            <div class="hide-if-free hide-if-owned flex flex-col items-center">
+                                <div class="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-500 mb-2">
+                                    <i class="fa-solid fa-lock text-xl"></i>
+                                </div>
+                                <div class="font-bold text-slate-800 dark:text-slate-100 mb-1">Đã hết phần xem thử</div>
+                                <div class="text-sm text-slate-600 dark:text-slate-400">Vui lòng mua tài liệu để xem toàn bộ 250 trang.</div>
+                            </div>
+
+                            <!-- State: Đã mua hoặc Miễn phí (Chỉ hiện nút Đọc Full) -->
+                            <div class="show-only-free show-only-owned hidden flex-col items-center">
+                                <button class="h-11 px-6 bg-primary text-white font-bold rounded-full hover:bg-primaryHover transition flex items-center gap-2">
+                                    <i class="fa-solid fa-book-open"></i> Đọc toàn bộ tài liệu
+                                </button>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Khu vực Tabs (Mô tả, Đánh giá, Bình luận) -->
+                <div class="bg-white dark:bg-darkCard rounded-3xl p-4 sm:p-6 sm:px-8 border border-slate-100 dark:border-slate-800 shadow-sm">
+                    
+                    <!-- Tab Header -->
+                    <div class="flex gap-6 border-b border-slate-200 dark:border-slate-700 mb-6 overflow-x-auto hide-scrollbar">
+                        <button class="tab-btn active pb-3 font-bold text-primary border-b-2 border-primary whitespace-nowrap" data-target="tab-desc">Mô tả chi tiết</button>
+                        <button class="tab-btn pb-3 font-bold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 border-b-2 border-transparent transition whitespace-nowrap" data-target="tab-review">Đánh giá (120)</button>
+                        <button class="tab-btn pb-3 font-bold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 border-b-2 border-transparent transition whitespace-nowrap" data-target="tab-comment">Bình luận (45)</button>
+                    </div>
+
+                    <!-- TAB 1: MÔ TẢ -->
+                    <div id="tab-desc" class="tab-content active space-y-6">
+                        
+                        <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-2xl border border-blue-100 dark:border-blue-900/50">
+                            <h3 class="font-bold text-slate-800 dark:text-slate-100 mb-3 flex items-center gap-2">
+                                <i class="fa-solid fa-bullseye text-primary"></i> Bạn sẽ học được gì?
+                            </h3>
+                            <ul class="grid sm:grid-cols-2 gap-2 text-sm text-slate-700 dark:text-slate-300">
+                                <li class="flex items-start gap-2"><i class="fa-solid fa-check text-green-500 mt-0.5"></i> Nắm vững toàn bộ dạng bài tập Hàm số vận dụng cao.</li>
+                                <li class="flex items-start gap-2"><i class="fa-solid fa-check text-green-500 mt-0.5"></i> Kỹ năng giải nhanh trắc nghiệm bằng máy tính cầm tay.</li>
+                                <li class="flex items-start gap-2"><i class="fa-solid fa-check text-green-500 mt-0.5"></i> Luyện tập với 50 đề thi thử bám sát cấu trúc Bộ GD&ĐT.</li>
+                                <li class="flex items-start gap-2"><i class="fa-solid fa-check text-green-500 mt-0.5"></i> Có lời giải chi tiết từng bước cho câu khó điểm 8, 9, 10.</li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h3 class="font-extrabold text-lg mb-2">Giới thiệu tài liệu</h3>
+                            <div class="prose dark:prose-invert max-w-none text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                <p>Tài liệu "Bộ 50 đề thi thử THPT QG Môn Toán" được biên soạn công phu nhằm giúp các em học sinh lớp 12 ôn tập và rèn luyện kỹ năng làm bài môn Toán một cách toàn diện nhất.</p>
+                                <p>Mỗi đề thi bao gồm 50 câu hỏi trắc nghiệm, trải đều các mức độ từ nhận biết, thông hiểu đến vận dụng và vận dụng cao. Đặc biệt, phần lời giải chi tiết được trình bày rõ ràng, dễ hiểu, kèm theo các phương pháp giải tối ưu, mẹo giải nhanh giúp học sinh tiết kiệm thời gian làm bài trong phòng thi.</p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="font-extrabold text-lg mb-3">Mục lục</h3>
+                            <ul class="space-y-2 text-sm text-slate-600 dark:text-slate-300">
+                                <li class="flex justify-between py-2 border-b border-slate-100 dark:border-slate-800"><span>Phần 1: Khảo sát sự biến thiên và vẽ đồ thị hàm số</span> <span class="font-mono text-slate-400">Trang 5</span></li>
+                                <li class="flex justify-between py-2 border-b border-slate-100 dark:border-slate-800"><span>Phần 2: Cực trị của hàm số - Dạng bài VDC</span> <span class="font-mono text-slate-400">Trang 45</span></li>
+                                <li class="flex justify-between py-2 border-b border-slate-100 dark:border-slate-800"><span>Phần 3: Giá trị lớn nhất, nhỏ nhất của hàm số</span> <span class="font-mono text-slate-400">Trang 80</span></li>
+                                <li class="flex justify-between py-2 border-b border-slate-100 dark:border-slate-800"><span>Phần 4: 50 Đề thi thử (Có đáp án chi tiết)</span> <span class="font-mono text-slate-400">Trang 110</span></li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- TAB 2: ĐÁNH GIÁ -->
+                    <div id="tab-review" class="tab-content">
+                        <!-- Header Đánh giá -->
+                        <div class="flex flex-col sm:flex-row gap-6 mb-8 items-center sm:items-start p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl">
+                            <div class="flex flex-col items-center justify-center sm:pr-6 sm:border-r border-slate-200 dark:border-slate-700 min-w-[120px]">
+                                <div class="text-4xl font-black text-slate-900 dark:text-white">4.8</div>
+                                <div class="text-highlight text-sm my-1"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star-half-stroke"></i></div>
+                                <div class="text-xs text-slate-500">120 đánh giá</div>
+                            </div>
+                            <div class="flex-1 w-full space-y-1.5">
+                                <!-- Bars -->
+                                <div class="flex items-center text-xs text-slate-500 gap-2"><span class="w-2 font-bold">5</span> <i class="fa-solid fa-star text-highlight"></i> <div class="flex-1 h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden"><div class="bg-highlight h-full" style="width: 85%"></div></div> <span>102</span></div>
+                                <div class="flex items-center text-xs text-slate-500 gap-2"><span class="w-2 font-bold">4</span> <i class="fa-solid fa-star text-highlight"></i> <div class="flex-1 h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden"><div class="bg-highlight h-full" style="width: 10%"></div></div> <span>12</span></div>
+                                <div class="flex items-center text-xs text-slate-500 gap-2"><span class="w-2 font-bold">3</span> <i class="fa-solid fa-star text-slate-300 dark:text-slate-600"></i> <div class="flex-1 h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden"><div class="bg-highlight h-full" style="width: 3%"></div></div> <span>4</span></div>
+                                <div class="flex items-center text-xs text-slate-500 gap-2"><span class="w-2 font-bold">2</span> <i class="fa-solid fa-star text-slate-300 dark:text-slate-600"></i> <div class="flex-1 h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden"><div class="bg-highlight h-full" style="width: 2%"></div></div> <span>2</span></div>
+                                <div class="flex items-center text-xs text-slate-500 gap-2"><span class="w-2 font-bold">1</span> <i class="fa-solid fa-star text-slate-300 dark:text-slate-600"></i> <div class="flex-1 h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden"><div class="bg-highlight h-full" style="width: 0%"></div></div> <span>0</span></div>
+                            </div>
+                        </div>
+
+                        <!-- Nút viết đánh giá (Chỉ hiện khi Đã sở hữu) -->
+                        <div class="mb-6 show-only-owned hidden">
+                            <button class="h-11 px-6 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-white font-bold rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition w-full sm:w-auto">
+                                Viết đánh giá của bạn
+                            </button>
+                        </div>
+
+                        <!-- List -->
+                        <div class="space-y-6">
+                            <!-- Item 1 -->
+                            <div class="border-b border-slate-100 dark:border-slate-800 pb-6">
+                                <div class="flex items-start justify-between mb-2">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center font-bold">L</div>
+                                        <div>
+                                            <div class="font-bold text-sm">Lê Minh Q.</div>
+                                            <div class="text-xs text-slate-400">Đã mua · 2 ngày trước</div>
+                                        </div>
+                                    </div>
+                                    <div class="text-highlight text-xs"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
+                                </div>
+                                <p class="text-sm text-slate-600 dark:text-slate-300">Tài liệu cực kỳ chi tiết, phần lời giải đọc rất cuốn và dễ hiểu. Rất đáng tiền để ôn luyện trong giai đoạn cuối này.</p>
+                            </div>
+                            <!-- Item 2 -->
+                            <div class="border-b border-slate-100 dark:border-slate-800 pb-6">
+                                <div class="flex items-start justify-between mb-2">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 bg-pink-100 text-pink-600 rounded-full flex items-center justify-center font-bold">T</div>
+                                        <div>
+                                            <div class="font-bold text-sm">Trần Ngọc H.</div>
+                                            <div class="text-xs text-slate-400">Đã mua · 1 tuần trước</div>
+                                        </div>
+                                    </div>
+                                    <div class="text-highlight text-xs"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-regular fa-star text-slate-300"></i></div>
+                                </div>
+                                <p class="text-sm text-slate-600 dark:text-slate-300">Nội dung phong phú, tuy nhiên có một vài lỗi đánh máy nhỏ ở đề số 5. Mong tác giả khắc phục ở bản cập nhật sau.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 3: BÌNH LUẬN -->
+                    <div id="tab-comment" class="tab-content">
+                        <!-- Input -->
+                        <div class="flex gap-3 mb-8">
+                            <img src="https://placehold.co/100x100/3B82F6/FFF?text=US" alt="Avatar" class="w-10 h-10 rounded-full show-only-auth">
+                            <div class="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-400 hide-if-auth"><i class="fa-solid fa-user"></i></div>
+                            
+                            <div class="flex-1 relative">
+                                <input type="text" placeholder="Hỏi đáp, thảo luận về tài liệu này..." class="w-full bg-slate-100 dark:bg-slate-800 border-none h-11 rounded-full pl-4 pr-12 text-sm focus:ring-2 focus:ring-primary outline-none">
+                                <button class="absolute right-1 top-1 bottom-1 w-9 h-9 bg-primary text-white rounded-full flex items-center justify-center hover:bg-primaryHover transition disabled:opacity-50">
+                                    <i class="fa-solid fa-paper-plane text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- List -->
+                        <div class="space-y-6">
+                            <!-- Parent Comment -->
+                            <div>
+                                <div class="flex items-start gap-3 mb-2">
+                                    <div class="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-xs">P</div>
+                                    <div class="flex-1 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-2xl rounded-tl-none">
+                                        <div class="flex justify-between items-start mb-1">
+                                            <div class="font-bold text-sm">Phạm Hùng</div>
+                                            <div class="text-[10px] text-slate-400">1 giờ trước</div>
+                                        </div>
+                                        <p class="text-sm text-slate-600 dark:text-slate-300">Cho mình hỏi bản xem online thì xem trên web hay có app trên điện thoại không ạ?</p>
+                                    </div>
+                                </div>
+                                <!-- Actions -->
+                                <div class="flex items-center gap-4 ml-11 text-xs text-slate-500 font-medium">
+                                    <button class="hover:text-primary transition">Trả lời</button>
+                                    <button class="hover:text-red-500 transition">Báo cáo vi phạm</button>
+                                </div>
+                                
+                                <!-- Reply -->
+                                <div class="flex items-start gap-3 mt-3 ml-11">
+                                    <img src="https://placehold.co/40x40/94A3B8/FFF?text=AD" alt="Admin" class="w-7 h-7 rounded-full">
+                                    <div class="flex-1 bg-slate-100 dark:bg-slate-800 p-3 rounded-2xl rounded-tl-none border border-slate-200 dark:border-slate-700">
+                                        <div class="flex justify-between items-start mb-1">
+                                            <div class="font-bold text-sm text-primary flex items-center gap-1">Admin ÔnThiPro <i class="fa-solid fa-circle-check text-[10px]"></i></div>
+                                            <div class="text-[10px] text-slate-400">30 phút trước</div>
+                                        </div>
+                                        <p class="text-sm text-slate-600 dark:text-slate-300">Chào bạn, bản xem online bạn có thể xem trực tiếp trên website bằng điện thoại hoặc máy tính rất mượt mà nhé. Nếu cần lưu về máy để in, bạn có thể chọn gói Tải về ạ.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Chat Admin Button -->
+                        <div class="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800 flex justify-center">
+                            <button class="h-11 px-6 rounded-full border border-primary text-primary font-bold hover:bg-blue-50 dark:hover:bg-blue-900/20 transition flex items-center gap-2 text-sm">
+                                <i class="fa-solid fa-headset"></i> Chat riêng với Admin về tài liệu này
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Cột phải: Khối mua hàng (Dính màn hình trên Desktop) -->
+            <div class="w-full lg:w-[360px] flex-shrink-0 relative">
+                <div class="sticky top-20 flex flex-col gap-4">
+                    
+                    <!-- Box Mua Hàng -->
+                    <div class="bg-white dark:bg-darkCard rounded-3xl p-5 border border-slate-200 dark:border-slate-700 shadow-xl lg:shadow-md relative overflow-hidden">
+                        
+                        <!-- Header Box -->
+                        <h3 class="font-extrabold text-xl mb-4 text-slate-800 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3">Tùy chọn sở hữu</h3>
+
+                        <!-- ================= STATE 1 & 2: CÓ PHÍ (CHƯA MUA) ================= -->
+                        <div class="hide-if-free hide-if-owned flex flex-col gap-4">
+                            <!-- Các gói giá -->
+                            <div class="space-y-3">
+                                <!-- Option 1: Online -->
+                                <label class="block relative cursor-pointer group">
+                                    <input type="radio" name="buy_type" value="online" class="buy-option-radio absolute opacity-0 w-0 h-0" checked>
+                                    <div class="flex items-center justify-between p-3.5 border-2 border-slate-200 dark:border-slate-700 rounded-2xl transition hover:border-blue-300 dark:hover:border-blue-800 bg-white dark:bg-darkCard">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-5 h-5 rounded-full border-2 border-slate-300 dark:border-slate-600 radio-circle flex items-center justify-center transition">
+                                                <div class="w-2 h-2 bg-white rounded-full check-icon hidden"></div>
+                                            </div>
+                                            <div>
+                                                <div class="font-bold text-slate-800 dark:text-slate-200 text-sm">Chỉ xem Online</div>
+                                                <div class="text-[11px] text-slate-500">Xem vĩnh viễn trên website</div>
+                                            </div>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="font-extrabold text-primary text-base">49.000đ</div>
+                                        </div>
+                                    </div>
+                                </label>
+
+                                <!-- Option 2: Download (+20%) -->
+                                <label class="block relative cursor-pointer group">
+                                    <input type="radio" name="buy_type" value="download" class="buy-option-radio absolute opacity-0 w-0 h-0">
+                                    <div class="flex items-center justify-between p-3.5 border-2 border-slate-200 dark:border-slate-700 rounded-2xl transition hover:border-blue-300 dark:hover:border-blue-800 bg-white dark:bg-darkCard relative overflow-hidden">
+                                        <div class="absolute top-0 right-0 bg-highlight text-slate-900 text-[10px] font-bold px-2 py-0.5 rounded-bl-lg">Khuyên dùng</div>
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-5 h-5 rounded-full border-2 border-slate-300 dark:border-slate-600 radio-circle flex items-center justify-center transition">
+                                                <div class="w-2 h-2 bg-white rounded-full check-icon hidden"></div>
+                                            </div>
+                                            <div>
+                                                <div class="font-bold text-slate-800 dark:text-slate-200 text-sm">Xem & Tải File PDF</div>
+                                                <div class="text-[11px] text-slate-500">Được phép tải về để in ấn</div>
+                                            </div>
+                                        </div>
+                                        <div class="text-right mt-3 sm:mt-0">
+                                            <div class="font-extrabold text-primary text-base">59.000đ</div>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+
+                            <!-- Mã giảm giá -->
+                            <div class="relative">
+                                <i class="fa-solid fa-ticket absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                                <input type="text" placeholder="Nhập mã giảm giá..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 h-11 rounded-xl pl-9 pr-20 text-sm focus:border-primary outline-none text-slate-800 dark:text-slate-200 uppercase">
+                                <button class="absolute right-1 top-1 bottom-1 px-3 bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-xs rounded-lg hover:bg-slate-300 transition">Áp dụng</button>
+                            </div>
+
+                            <!-- Nút Hành động chính -->
+                            <div class="flex gap-2">
+                                <button class="w-12 h-12 flex-shrink-0 rounded-2xl bg-orange-100 text-orange-600 dark:bg-orange-900/40 dark:text-orange-400 flex items-center justify-center text-lg hover:bg-accent hover:text-white transition" title="Thêm vào giỏ">
+                                    <i class="fa-solid fa-cart-plus"></i>
+                                </button>
+                                <button class="flex-1 h-12 bg-primary text-white font-extrabold text-sm rounded-2xl hover:bg-primaryHover transition flex flex-col items-center justify-center">
+                                    <span>MUA NGAY</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- ================= STATE 3: ĐÃ MUA ONLINE ================= -->
+                        <div class="show-only-owned hidden" id="blockOwnedOnline">
+                            <div class="bg-green-50 dark:bg-green-900/20 p-4 rounded-2xl border border-green-200 dark:border-green-800 mb-4 text-center">
+                                <div class="w-12 h-12 bg-green-500 text-white rounded-full flex items-center justify-center text-xl mx-auto mb-2"><i class="fa-solid fa-check"></i></div>
+                                <div class="font-bold text-green-700 dark:text-green-400">Bạn đã sở hữu tài liệu này</div>
+                                <div class="text-xs text-green-600/70 dark:text-green-500 mt-1">Phiên bản: Chỉ xem Online</div>
+                            </div>
+                            <button class="w-full h-12 bg-primary text-white font-extrabold text-sm rounded-2xl hover:bg-primaryHover transition flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-book-open"></i> ĐỌC NGAY
+                            </button>
+                            <!-- Nút Nâng cấp tải về -->
+                            <button class="w-full mt-2 h-11 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-sm rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition flex items-center justify-center gap-2">
+                                Nâng cấp bản Tải Về (10.000đ)
+                            </button>
+                        </div>
+
+                        <!-- ================= STATE 4: ĐÃ MUA TẢI VỀ ================= -->
+                        <div class="show-only-owned hidden" id="blockOwnedDownload">
+                            <div class="bg-green-50 dark:bg-green-900/20 p-4 rounded-2xl border border-green-200 dark:border-green-800 mb-4 text-center">
+                                <div class="w-12 h-12 bg-green-500 text-white rounded-full flex items-center justify-center text-xl mx-auto mb-2"><i class="fa-solid fa-check-double"></i></div>
+                                <div class="font-bold text-green-700 dark:text-green-400">Bạn đã sở hữu tài liệu này</div>
+                                <div class="text-xs text-green-600/70 dark:text-green-500 mt-1">Phiên bản: Xem Online & Tải PDF</div>
+                            </div>
+                            <div class="flex gap-2">
+                                <button class="flex-1 h-12 bg-primary text-white font-extrabold text-sm rounded-2xl hover:bg-primaryHover transition flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-book-open"></i> ĐỌC NGAY
+                                </button>
+                                <button class="flex-1 h-12 bg-slate-800 dark:bg-slate-700 text-white font-extrabold text-sm rounded-2xl hover:bg-slate-700 dark:hover:bg-slate-600 transition flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-download"></i> TẢI PDF
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- ================= STATE 5: MIỄN PHÍ ================= -->
+                        <div class="show-only-free hidden flex-col gap-4">
+                            <div class="text-center py-4">
+                                <div class="text-green-500 font-black text-2xl">0đ</div>
+                                <div class="text-sm text-slate-500 font-medium">Tài liệu chia sẻ miễn phí</div>
+                            </div>
+
+                            <!-- Nút nếu ĐÃ đăng nhập -->
+                            <div class="show-only-auth hidden">
+                                <button class="w-full h-12 bg-primary text-white font-extrabold text-sm rounded-2xl hover:bg-primaryHover transition flex items-center justify-center gap-2 shadow-lg shadow-blue-200 dark:shadow-none">
+                                    <i class="fa-solid fa-book-open"></i> XEM MIỄN PHÍ
+                                </button>
+                            </div>
+
+                            <!-- Nút nếu CHƯA đăng nhập -->
+                            <div class="hide-if-auth">
+                                <button class="w-full h-12 border-2 border-primary text-primary font-extrabold text-sm rounded-2xl hover:bg-primary hover:text-white transition flex flex-col items-center justify-center leading-tight py-1">
+                                    <span>Đăng nhập để xem</span>
+                                </button>
+                                <p class="text-center text-[11px] text-slate-500 mt-2">Vui lòng đăng ký/đăng nhập tài khoản để đọc tài liệu miễn phí này.</p>
+                            </div>
+                        </div>
+
+                        <!-- Thông tin cam kết (Chung) -->
+                        <div class="mt-4 flex items-center justify-center gap-4 text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 pt-4 border-t border-slate-100 dark:border-slate-800">
+                            <span class="flex items-center gap-1"><i class="fa-solid fa-shield-halved text-green-500"></i> Thanh toán an toàn</span>
+                            <span class="flex items-center gap-1"><i class="fa-solid fa-bolt text-accent"></i> Mở khóa tức thì</span>
+                        </div>
+                    </div>
+
+                    <!-- Upsell Premium Block (Chỉ hiện khi tài liệu có phí và chưa mua) -->
+                    <div class="bg-gradient-to-r from-slate-900 to-slate-800 dark:from-black dark:to-slate-900 p-4 rounded-3xl text-white shadow-lg relative overflow-hidden hide-if-free hide-if-owned group cursor-pointer transition hover:scale-[1.02]">
+                        <div class="absolute -right-6 -top-6 w-24 h-24 bg-highlight opacity-20 rounded-full blur-2xl group-hover:opacity-40 transition"></div>
+                        <div class="flex items-start gap-3 relative z-10">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-highlight to-accent flex items-center justify-center text-slate-900 flex-shrink-0 text-xl font-bold shadow-sm">
+                                <i class="fa-solid fa-crown"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-extrabold text-highlight mb-1 drop-shadow-sm text-sm">Gói Premium <span class="bg-red-500 text-white text-[9px] px-1.5 py-0.5 rounded uppercase tracking-wider ml-1">Hot</span></h4>
+                                <p class="text-xs text-slate-300 leading-relaxed font-medium">Chỉ <span class="text-white font-bold text-sm">59.000đ/30 ngày</span>: Xem mọi tài liệu có phí & Tải 5 tài liệu bạn chọn.</p>
+                                <div class="mt-2 text-xs font-bold text-highlight group-hover:underline">Tìm hiểu thêm <i class="fa-solid fa-arrow-right text-[10px]"></i></div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Khu vực Combo Tiết Kiệm (Ẩn nếu Free) -->
+        <section class="mt-16 hide-if-free">
+            <h3 class="text-xl md:text-2xl font-extrabold mb-6 flex items-center gap-2">
+                <i class="fa-solid fa-boxes-stacked text-accent"></i> Mua Combo Tiết Kiệm Hơn
+            </h3>
+            <div class="bg-orange-50 dark:bg-orange-900/10 p-4 md:p-6 rounded-3xl border border-orange-200 dark:border-orange-900/50">
+                <div class="flex flex-col md:flex-row gap-4 items-center">
+                    
+                    <!-- Sách 1 (Đang xem) -->
+                    <div class="w-24 h-32 flex-shrink-0 rounded-lg overflow-hidden shadow">
+                        <img src="https://placehold.co/200x266/3B82F6/FFF?text=TOAN+1" class="w-full h-full object-cover" alt="Sách 1">
+                    </div>
+                    <i class="fa-solid fa-plus text-slate-400"></i>
+                    
+                    <!-- Sách 2 -->
+                    <div class="w-24 h-32 flex-shrink-0 rounded-lg overflow-hidden shadow relative group cursor-pointer">
+                        <img src="https://placehold.co/200x266/3B82F6/FFF?text=TOAN+2" class="w-full h-full object-cover" alt="Sách 2">
+                        <div class="absolute bottom-0 inset-x-0 bg-black/60 text-white text-[10px] text-center py-1 opacity-0 group-hover:opacity-100 transition">Đề thi số phức</div>
+                    </div>
+                    <i class="fa-solid fa-plus text-slate-400"></i>
+                    
+                    <!-- Sách 3 -->
+                    <div class="w-24 h-32 flex-shrink-0 rounded-lg overflow-hidden shadow relative group cursor-pointer">
+                        <img src="https://placehold.co/200x266/3B82F6/FFF?text=TOAN+3" class="w-full h-full object-cover" alt="Sách 3">
+                        <div class="absolute bottom-0 inset-x-0 bg-black/60 text-white text-[10px] text-center py-1 opacity-0 group-hover:opacity-100 transition">Hình học Oxyz</div>
+                    </div>
+                    
+                    <div class="mx-auto md:mx-6 w-full h-[1px] md:w-[1px] md:h-24 bg-orange-200 dark:bg-orange-800"></div>
+                    
+                    <!-- Tổng tiền & Mua -->
+                    <div class="flex-1 text-center md:text-left">
+                        <div class="text-sm text-slate-500 mb-1">Combo 3 chuyên đề Toán VDC</div>
+                        <div class="flex items-center justify-center md:justify-start gap-3 mb-3">
+                            <span class="font-black text-accent text-2xl">129.000đ</span>
+                            <span class="text-sm text-slate-400 line-through">177.000đ</span>
+                        </div>
+                        <button class="h-11 px-8 bg-accent text-white font-bold rounded-full hover:bg-orange-600 transition shadow-lg shadow-orange-200 dark:shadow-none w-full md:w-auto">
+                            Thêm Combo Vào Giỏ
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tài liệu liên quan -->
+        <section class="mt-16 pb-12">
+            <h3 class="text-xl md:text-2xl font-extrabold mb-6">Tài liệu Liên Quan</h3>
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                
+                <!-- Card 1 -->
+                <div class="bg-white dark:bg-darkCard rounded-2xl flex flex-col shadow-sm hover:shadow-md border border-slate-100 dark:border-slate-800 transition overflow-hidden h-full">
+                    <div class="relative aspect-[3/4] w-full overflow-hidden flex-shrink-0 bg-blue-50">
+                        <img src="https://placehold.co/400x533/3B82F6/FFF?text=TOAN" alt="Bìa sách" class="w-full h-full object-cover">
+                    </div>
+                    <div class="p-3 sm:p-4 flex flex-col flex-1">
+                        <h3 class="font-bold text-sm sm:text-base text-slate-800 dark:text-slate-100 line-clamp-2 leading-snug mb-2 hover:text-primary transition cursor-pointer">Chuyên đề Hình học không gian lớp 12</h3>
+                        <div class="mt-auto pt-3 border-t border-slate-100 dark:border-slate-800/50 flex items-center justify-between">
+                            <span class="text-primary font-extrabold text-base">39.000đ</span>
+                            <button class="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 hover:bg-accent hover:text-white transition flex items-center justify-center">
+                                <i class="fa-solid fa-cart-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2 (Free, Sinh học - Lime color text) -->
+                <div class="bg-white dark:bg-darkCard rounded-2xl flex flex-col shadow-sm hover:shadow-md border border-slate-100 dark:border-slate-800 transition overflow-hidden h-full">
+                    <div class="relative aspect-[3/4] w-full overflow-hidden flex-shrink-0 bg-lime-50">
+                        <img src="https://placehold.co/400x533/84cc16/FFF?text=SINH" alt="Bìa sách" class="w-full h-full object-cover">
+                        <div class="absolute top-2 right-2"><span class="bg-green-500 text-white text-[10px] font-bold px-2 py-1 rounded-lg">Miễn phí</span></div>
+                    </div>
+                    <div class="p-3 sm:p-4 flex flex-col flex-1">
+                        <h3 class="font-bold text-sm sm:text-base text-slate-800 dark:text-slate-100 line-clamp-2 leading-snug mb-2 hover:text-primary transition cursor-pointer">Lý thuyết Di truyền học quần thể</h3>
+                        <div class="mt-auto pt-3 border-t border-slate-100 dark:border-slate-800/50">
+                            <button class="w-full h-10 bg-slate-100 dark:bg-slate-800 text-primary text-sm font-bold rounded-xl hover:bg-primary hover:text-white transition">Xem miễn phí</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="bg-white dark:bg-darkCard rounded-2xl flex flex-col shadow-sm hover:shadow-md border border-slate-100 dark:border-slate-800 transition overflow-hidden h-full">
+                    <div class="relative aspect-[3/4] w-full overflow-hidden flex-shrink-0 bg-blue-50">
+                        <img src="https://placehold.co/400x533/3B82F6/FFF?text=TOAN" alt="Bìa sách" class="w-full h-full object-cover">
+                    </div>
+                    <div class="p-3 sm:p-4 flex flex-col flex-1">
+                        <h3 class="font-bold text-sm sm:text-base text-slate-800 dark:text-slate-100 line-clamp-2 leading-snug mb-2 hover:text-primary transition cursor-pointer">50 bài toán thực tế tích phân</h3>
+                        <div class="mt-auto pt-3 border-t border-slate-100 dark:border-slate-800/50 flex items-center justify-between">
+                            <span class="text-primary font-extrabold text-base">29.000đ</span>
+                            <button class="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 hover:bg-accent hover:text-white transition flex items-center justify-center">
+                                <i class="fa-solid fa-cart-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 4 -->
+                <div class="bg-white dark:bg-darkCard rounded-2xl flex flex-col shadow-sm hover:shadow-md border border-slate-100 dark:border-slate-800 transition overflow-hidden h-full">
+                    <div class="relative aspect-[3/4] w-full overflow-hidden flex-shrink-0 bg-blue-50">
+                        <img src="https://placehold.co/400x533/3B82F6/FFF?text=TOAN" alt="Bìa sách" class="w-full h-full object-cover">
+                        <div class="absolute top-2 left-2"><span class="bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-lg">-20%</span></div>
+                    </div>
+                    <div class="p-3 sm:p-4 flex flex-col flex-1">
+                        <h3 class="font-bold text-sm sm:text-base text-slate-800 dark:text-slate-100 line-clamp-2 leading-snug mb-2 hover:text-primary transition cursor-pointer">Sổ tay công thức Toán 12 bản rút gọn</h3>
+                        <div class="mt-auto pt-3 border-t border-slate-100 dark:border-slate-800/50 flex items-center justify-between">
+                            <span class="text-accent font-extrabold text-base">49.000đ</span>
+                            <button class="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 hover:bg-accent hover:text-white transition flex items-center justify-center">
+                                <i class="fa-solid fa-cart-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Sticky Bottom Bar (Mobile) - Bản sao của khối Mua hàng -->
+    <div class="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-darkCard border-t border-slate-200 dark:border-slate-700 p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-40 flex items-center gap-3">
+        
+        <!-- Info ngắn gọn bên trái -->
+        <div class="flex-1">
+            <div class="hide-if-free hide-if-owned">
+                <div class="text-[10px] text-slate-500 font-bold uppercase">Giá từ</div>
+                <div class="font-extrabold text-primary text-lg leading-none">49.000đ</div>
+            </div>
+            <div class="show-only-owned hidden">
+                <div class="text-[10px] text-green-500 font-bold uppercase">Đã mua</div>
+                <div class="font-extrabold text-green-600 text-sm leading-tight line-clamp-1">Xem Online</div>
+            </div>
+            <div class="show-only-free hidden">
+                <div class="font-extrabold text-green-500 text-xl leading-none">0đ</div>
+            </div>
+        </div>
+
+        <!-- Nút Actions (Thay đổi theo state) -->
+        <div class="flex gap-2">
+            <!-- Paid, Not Owned -->
+            <div class="hide-if-free hide-if-owned flex gap-2">
+                <button class="w-11 h-11 flex-shrink-0 rounded-xl bg-orange-100 text-orange-600 dark:bg-orange-900/40 dark:text-orange-400 flex items-center justify-center text-lg hover:bg-accent hover:text-white transition">
+                    <i class="fa-solid fa-cart-plus"></i>
+                </button>
+                <button class="h-11 px-6 bg-primary text-white font-extrabold text-sm rounded-xl hover:bg-primaryHover transition" onclick="window.scrollTo(0, 0)">
+                    MUA NGAY
+                </button>
+            </div>
+            
+            <!-- Owned (Online or Download) -->
+            <div class="show-only-owned hidden">
+                <button class="h-11 px-6 bg-primary text-white font-extrabold text-sm rounded-xl hover:bg-primaryHover transition flex items-center gap-2">
+                    <i class="fa-solid fa-book-open"></i> ĐỌC NGAY
+                </button>
+            </div>
+
+            <!-- Free -->
+            <div class="show-only-free hidden">
+                <button class="h-11 px-6 bg-primary text-white font-extrabold text-sm rounded-xl hover:bg-primaryHover transition flex items-center gap-2 show-only-auth hidden">
+                    <i class="fa-solid fa-book-open"></i> XEM MIỄN PHÍ
+                </button>
+                <button class="h-11 px-6 border-2 border-primary text-primary font-extrabold text-sm rounded-xl hide-if-auth">
+                    ĐĂNG NHẬP
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FAB -->
+    <div class="fixed bottom-[80px] lg:bottom-6 right-4 md:right-8 flex flex-col gap-3 z-50">
+        <a href="#" class="w-12 h-12 md:w-[56px] md:h-[56px] rounded-full bg-blue-500 text-white flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition animate-bounce-intro" title="Chat Zalo">
+            <div class="font-bold text-sm md:text-base">Zalo</div>
+        </a>
+        <a href="#" class="w-12 h-12 md:w-[56px] md:h-[56px] rounded-full bg-gradient-to-tr from-blue-500 to-rose-500 text-white flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition" title="Chat Messenger">
+            <i class="fa-brands fa-facebook-messenger"></i>
+        </a>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white dark:bg-darkCard pt-12 pb-24 lg:pb-6 border-t border-slate-200 dark:border-slate-800 mt-10">
+        <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+            <div class="col-span-1 md:col-span-1">
+                <a href="#" class="flex items-center gap-2 mb-4 h-11">
+                    <div class="w-8 h-8 bg-primary text-white rounded-lg flex items-center justify-center font-bold shadow-lg">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </div>
+                    <span class="font-extrabold text-xl text-primary">ÔnThiPro</span>
+                </a>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Nền tảng chia sẻ và mua bán tài liệu luyện thi THPT Quốc Gia uy tín.</p>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4">Về chúng tôi</h4>
+                <ul class="text-sm text-slate-500 space-y-3">
+                    <li><a href="#" class="hover:text-primary transition block py-1">Giới thiệu</a></li>
+                    <li><a href="#" class="hover:text-primary transition block py-1">Chính sách bảo mật</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4">Hỗ trợ</h4>
+                <ul class="text-sm text-slate-500 space-y-3">
+                    <li><a href="#" class="hover:text-primary transition block py-1">Hướng dẫn thanh toán</a></li>
+                    <li><a href="#" class="hover:text-primary transition block py-1 flex items-center">Gói Premium <span class="bg-highlight text-slate-900 text-[10px] font-bold px-1.5 py-0.5 rounded ml-2">HOT</span></a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4">Liên hệ</h4>
+                <ul class="text-sm text-slate-500 space-y-3">
+                    <li class="flex items-center py-1"><i class="fa-solid fa-phone mr-3 w-4 text-center"></i> 0123.456.789</li>
+                    <li class="flex items-center py-1"><i class="fa-solid fa-envelope mr-3 w-4 text-center"></i> hotro@onthipro.vn</li>
+                </ul>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto px-4 text-center text-sm text-slate-500 border-t border-slate-100 dark:border-slate-800 pt-6">
+            &copy; 2026 ÔnThiPro. All rights reserved.
+        </div>
+    </footer>
+
+    <!-- WIDGET ĐIỀU KHIỂN TRẠNG THÁI (Chỉ dùng cho Demo) -->
+    <div class="fixed top-20 left-4 z-50 bg-slate-900/90 text-white p-4 rounded-xl shadow-2xl backdrop-blur-md border border-slate-700 w-64 text-xs font-mono">
+        <div class="font-bold mb-2 flex items-center justify-between border-b border-slate-700 pb-2">
+            <span>⚙️ ĐIỀU KHIỂN UI</span>
+            <button onclick="this.parentElement.parentElement.style.display='none'" class="text-slate-400 hover:text-white" title="Đóng panel"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+        
+        <div class="mb-3">
+            <label class="flex items-center gap-2 cursor-pointer p-1 hover:bg-slate-800 rounded transition">
+                <input type="checkbox" id="demoAuthToggle" class="accent-primary w-4 h-4">
+                <span>Đã đăng nhập (Học sinh A)</span>
+            </label>
+        </div>
+
+        <div class="space-y-1 border-t border-slate-700 pt-2">
+            <div class="text-slate-400 mb-1">Loại tài liệu & Sở hữu:</div>
+            
+            <label class="flex items-center gap-2 cursor-pointer p-1 hover:bg-slate-800 rounded transition">
+                <input type="radio" name="demoState" value="paid-none" class="accent-primary w-4 h-4" checked>
+                <span>Có phí - Chưa mua</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer p-1 hover:bg-slate-800 rounded transition">
+                <input type="radio" name="demoState" value="paid-online" class="accent-primary w-4 h-4">
+                <span class="text-green-300">Có phí - Đã mua Xem Online</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer p-1 hover:bg-slate-800 rounded transition">
+                <input type="radio" name="demoState" value="paid-download" class="accent-primary w-4 h-4">
+                <span class="text-green-400 font-bold">Có phí - Đã mua Tải Về</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer p-1 hover:bg-slate-800 rounded transition mt-2 border-t border-slate-700 pt-2">
+                <input type="radio" name="demoState" value="free" class="accent-primary w-4 h-4">
+                <span class="text-yellow-300">Tài liệu MIỄN PHÍ</span>
+            </label>
+        </div>
+        <div class="mt-3 text-[10px] text-slate-500 italic leading-tight">Mở panel này để test các trạng thái theo yêu cầu 1 và 2.</div>
+    </div>
+
+    <script>
+        // --- Dark Mode ---
+        const themeToggleBtn = document.getElementById('themeToggle');
+        themeToggleBtn.addEventListener('click', () => document.documentElement.classList.toggle('dark'));
+
+        // --- Tabs Logic ---
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Xóa active cũ
+                tabBtns.forEach(b => {
+                    b.classList.remove('text-primary', 'border-primary', 'active');
+                    b.classList.add('text-slate-500', 'border-transparent');
+                });
+                tabContents.forEach(c => {
+                    c.classList.remove('active');
+                    // Reset display for smooth transition
+                    setTimeout(() => { if(!c.classList.contains('active')) c.style.display = 'none'; }, 300);
+                });
+
+                // Thêm active mới
+                btn.classList.remove('text-slate-500', 'border-transparent');
+                btn.classList.add('text-primary', 'border-primary', 'active');
+                
+                const targetId = btn.getAttribute('data-target');
+                const targetContent = document.getElementById(targetId);
+                targetContent.style.display = 'block';
+                // Nhường 1 frame cho DOM update display:block trước khi set opacity:1
+                requestAnimationFrame(() => {
+                    targetContent.classList.add('active');
+                });
+            });
+        });
+
+        // --- Preview Logic (3 Trang giả lập) ---
+        let currentPreviewPage = 1;
+        const totalPreviewPages = 3;
+        const previewImg = document.getElementById('previewImage');
+        const pageText = document.getElementById('currentPage');
+        const btnPrev = document.getElementById('prevPageBtn');
+        const btnNext = document.getElementById('nextPageBtn');
+
+        function updatePreview() {
+            // Đổi text URL placeholder để mô phỏng trang mới
+            previewImg.style.opacity = 0.5;
+            setTimeout(() => {
+                previewImg.src = `https://placehold.co/800x1131/F1F5F9/94A3B8?text=Trang+${currentPreviewPage}+%0A(Noi+dung+demo)`;
+                previewImg.style.opacity = 1;
+            }, 150);
+            
+            pageText.textContent = currentPreviewPage;
+            
+            btnPrev.disabled = currentPreviewPage === 1;
+            btnNext.disabled = currentPreviewPage === totalPreviewPages;
+        }
+
+        btnPrev.addEventListener('click', () => {
+            if (currentPreviewPage > 1) { currentPreviewPage--; updatePreview(); }
+        });
+        btnNext.addEventListener('click', () => {
+            if (currentPreviewPage < totalPreviewPages) { currentPreviewPage++; updatePreview(); }
+        });
+        updatePreview(); // Init state
+
+        // --- DEMO STATE CONTROLLER LOGIC ---
+        const authCheckbox = document.getElementById('demoAuthToggle');
+        const stateRadios = document.querySelectorAll('input[name="demoState"]');
+        
+        // Khối hiển thị bên phải cần thay đổi Display trực tiếp vì Tailwind 'hidden' có thể bị CSS override
+        const blockOwnedOnline = document.getElementById('blockOwnedOnline');
+        const blockOwnedDownload = document.getElementById('blockOwnedDownload');
+
+        function applyDemoState() {
+            const isAuth = authCheckbox.checked;
+            let selectedState = 'paid-none';
+            stateRadios.forEach(r => { if(r.checked) selectedState = r.value; });
+
+            // 1. Set class Đăng nhập
+            if (isAuth) {
+                document.body.classList.remove('auth-no');
+                document.body.classList.add('auth-yes');
+            } else {
+                document.body.classList.remove('auth-yes');
+                document.body.classList.add('auth-no');
+                
+                // Nếu chưa đăng nhập, force state radio về paid-none hoặc free (không thể đã mua khi chưa login)
+                if (selectedState === 'paid-online' || selectedState === 'paid-download') {
+                    selectedState = 'paid-none';
+                    document.querySelector('input[value="paid-none"]').checked = true;
+                }
+            }
+
+            // 2. Clear old state classes
+            document.body.classList.remove('state-free', 'state-paid', 'owned-none', 'owned-online', 'owned-download');
+            blockOwnedOnline.classList.add('hidden');
+            blockOwnedDownload.classList.add('hidden');
+            blockOwnedOnline.classList.remove('flex', 'flex-col'); // Đảm bảo clear layout class
+            blockOwnedDownload.classList.remove('flex', 'flex-col');
+
+            // 3. Apply new state classes
+            if (selectedState === 'free') {
+                document.body.classList.add('state-free', 'owned-none');
+            } else {
+                document.body.classList.add('state-paid');
+                
+                if (selectedState === 'paid-none') {
+                    document.body.classList.add('owned-none');
+                } 
+                else if (selectedState === 'paid-online') {
+                    document.body.classList.add('owned-online');
+                    blockOwnedOnline.classList.remove('hidden');
+                    blockOwnedOnline.classList.add('flex', 'flex-col');
+                }
+                else if (selectedState === 'paid-download') {
+                    document.body.classList.add('owned-download');
+                    blockOwnedDownload.classList.remove('hidden');
+                    blockOwnedDownload.classList.add('flex', 'flex-col');
+                }
+            }
+        }
+
+        // Gắn event listeners
+        authCheckbox.addEventListener('change', applyDemoState);
+        stateRadios.forEach(r => r.addEventListener('change', () => {
+            // Auto check auth if selecting an owned state
+            if ((r.value === 'paid-online' || r.value === 'paid-download') && !authCheckbox.checked) {
+                authCheckbox.checked = true;
+            }
+            applyDemoState();
+        }));
+
+        // Khởi tạo state ban đầu (Auth: No, State: Paid-None)
+        applyDemoState();
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="vi" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kỳ thi - ÔnThiPro</title>
+    
+    <!-- Google Fonts: Nunito -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Nunito', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#2563EB', 
+                        primaryHover: '#1D4ED8',
+                        accent: '#F97316', 
+                        highlight: '#FACC15', 
+                        darkBg: '#0F172A',
+                        darkCard: '#1E293B',
+                        bio: {
+                            50: '#f7fee7',
+                            100: '#ecfccb',
+                            600: '#65a30d', // Sinh học (Lime)
+                            900: '#365314',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Hiệu ứng Zalo 1 lần đầu trang */
+        @keyframes bounce-intro {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-15px); }
+            60% { transform: translateY(-7px); }
+        }
+        .animate-bounce-intro {
+            animation: bounce-intro 2s ease-in-out 1;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .animate-bounce-intro, .animate-pulse-live { animation: none !important; }
+        }
+
+        /* Ẩn scrollbar */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Pulse Live Indicator */
+        @keyframes pulse-live {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        .animate-pulse-live { animation: pulse-live 2s infinite; }
+
+        /* Smooth scroll & Tab Active logic */
+        html { scroll-behavior: smooth; }
+        .tab-btn.active {
+            color: #2563EB;
+            border-bottom-color: #2563EB;
+        }
+        .dark .tab-btn.active {
+            color: #60A5FA;
+            border-bottom-color: #60A5FA;
+        }
+
+        /* Carousel Snap */
+        .snap-x { scroll-snap-type: x mandatory; }
+        .snap-start { scroll-snap-align: start; }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-darkBg text-slate-800 dark:text-slate-100 font-sans transition-colors duration-300 pb-32 lg:pb-0 relative">
+
+    <header class="sticky top-0 z-50 bg-white dark:bg-darkCard shadow-sm border-b border-slate-200 dark:border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <a href="#" class="flex items-center gap-2 h-11">
+                <div class="w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center font-bold text-xl shadow-lg shadow-blue-200 dark:shadow-none">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <span class="font-extrabold text-2xl tracking-tight text-primary hidden sm:block">ÔnThiPro</span>
+            </a>
+
+            <div class="hidden md:flex flex-1 max-w-xl mx-8 relative">
+                <input type="text" placeholder="Tìm tài liệu, đề thi, môn học..." 
+                       class="w-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-5 h-11 rounded-full outline-none focus:ring-2 focus:ring-primary border-none">
+                <button class="absolute right-1 top-1 bottom-1 w-10 h-9 bg-primary text-white rounded-full hover:bg-primaryHover transition flex items-center justify-center m-auto">
+                    <i class="fa-solid fa-search"></i>
+                </button>
+            </div>
+
+            <div class="flex items-center gap-2 md:gap-4">
+                <button id="themeToggle" class="w-11 h-11 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition" aria-label="Đổi giao diện">
+                    <i class="fa-solid fa-moon dark:hidden text-lg"></i>
+                    <i class="fa-solid fa-sun hidden dark:block text-highlight text-lg"></i>
+                </button>
+                <div class="hidden md:flex items-center h-11 cursor-pointer">
+                    <img src="https://placehold.co/100x100/3B82F6/FFF?text=US" alt="User" class="w-9 h-9 rounded-full border-2 border-slate-200 dark:border-slate-700">
+                    <span class="ml-2 font-bold text-sm">Học sinh A</span>
+                </div>
+                <button class="md:hidden w-11 h-11 flex items-center justify-center text-slate-600 dark:text-slate-300 text-xl rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="w-full relative">
+        
+        <section class="bg-white dark:bg-darkCard py-8 border-b border-slate-200 dark:border-slate-800 mb-6">
+            <div class="max-w-7xl mx-auto px-4">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl md:text-2xl font-extrabold flex items-center gap-2">
+                        <i class="fa-solid fa-fire text-red-500"></i> Kỳ thi Nổi Bật
+                    </h2>
+                    <a href="#" class="text-sm text-primary font-bold hover:underline">Xem tất cả</a>
+                </div>
+
+                <!-- Thẻ ngang cuộn trên Mobile / Grid trên Desktop -->
+                <div class="flex overflow-x-auto snap-x hide-scrollbar gap-4 md:grid md:grid-cols-2 lg:grid-cols-3 pb-4">
+                    
+                    <!-- Card 1: Đang diễn ra -->
+                    <div class="w-[85vw] sm:w-[320px] md:w-full flex-shrink-0 snap-start bg-slate-50 dark:bg-slate-900/50 rounded-3xl border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col hover:border-primary transition group relative">
+                        <div class="h-32 bg-gradient-to-br from-indigo-500 to-purple-600 relative overflow-hidden flex items-center justify-center">
+                            <div class="absolute inset-0 bg-black/20"></div>
+                            <img src="https://placehold.co/400x200/4F46E5/FFF?text=TOAN+HOC" class="absolute inset-0 w-full h-full object-cover mix-blend-overlay opacity-50">
+                            <!-- Badge Đang diễn ra -->
+                            <div class="absolute top-3 left-3 bg-red-500/90 backdrop-blur text-white text-[10px] font-bold px-2.5 py-1 rounded-lg flex items-center gap-1.5 uppercase tracking-wider shadow-sm">
+                                <div class="w-2 h-2 bg-white rounded-full animate-pulse-live"></div> Đang diễn ra
+                            </div>
+                            <h3 class="relative z-10 text-white font-black text-xl text-center px-4 drop-shadow-md line-clamp-2">Kỳ thi Đánh Giá Năng Lực Đợt 1</h3>
+                        </div>
+                        <div class="p-4 flex flex-col flex-1">
+                            <div class="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400 mb-4 font-medium">
+                                <span class="flex items-center gap-1"><i class="fa-solid fa-users"></i> 3.2K tham gia</span>
+                                <span class="flex items-center gap-1"><i class="fa-regular fa-clock"></i> Kết thúc: 2h 45p</span>
+                            </div>
+                            <button class="w-full h-11 bg-primary text-white font-bold rounded-xl hover:bg-primaryHover transition flex items-center justify-center mt-auto shadow-md shadow-blue-200 dark:shadow-none">
+                                Tham gia ngay
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Card 2: Sắp diễn ra -->
+                    <div class="w-[85vw] sm:w-[320px] md:w-full flex-shrink-0 snap-start bg-slate-50 dark:bg-slate-900/50 rounded-3xl border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col hover:border-accent transition group relative">
+                        <div class="h-32 bg-gradient-to-br from-orange-500 to-red-500 relative overflow-hidden flex items-center justify-center">
+                            <div class="absolute inset-0 bg-black/20"></div>
+                            <!-- Badge Sắp diễn ra -->
+                            <div class="absolute top-3 left-3 bg-white/90 backdrop-blur text-slate-900 text-[10px] font-bold px-2.5 py-1 rounded-lg flex items-center gap-1.5 uppercase tracking-wider shadow-sm">
+                                <i class="fa-solid fa-calendar-days text-accent"></i> Sắp diễn ra
+                            </div>
+                            <h3 class="relative z-10 text-white font-black text-xl text-center px-4 drop-shadow-md line-clamp-2">Thi thử Sở GD Hà Nội - Môn Vật Lý</h3>
+                        </div>
+                        <div class="p-4 flex flex-col flex-1">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="text-xs text-slate-500 font-bold">Mở sau:</div>
+                                <div class="flex gap-1 text-slate-800 dark:text-slate-100 font-mono font-bold text-sm">
+                                    <span class="bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded">02</span>:
+                                    <span class="bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded">15</span>:
+                                    <span class="bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded">00</span>
+                                </div>
+                            </div>
+                            <button class="w-full h-11 bg-white dark:bg-darkCard text-accent border-2 border-accent font-bold rounded-xl hover:bg-orange-50 dark:hover:bg-orange-900/20 transition flex items-center justify-center mt-auto">
+                                <i class="fa-regular fa-bell mr-2"></i> Nhắc tôi
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Danh sách thu gọn (Hiển thị thay vì card thứ 3 trên tablet/desktop nhỏ) -->
+                    <div class="w-[85vw] sm:w-[320px] md:w-full flex-shrink-0 snap-start flex flex-col justify-center gap-3">
+                        <div class="font-bold text-sm text-slate-500 uppercase tracking-wider mb-1">Kỳ thi sắp tới</div>
+                        <!-- List Item -->
+                        <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-2xl border border-slate-200 dark:border-slate-700 flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-green-100 text-green-600 flex items-center justify-center font-bold flex-shrink-0">HÓA</div>
+                            <div class="flex-1 min-w-0">
+                                <h4 class="font-bold text-sm text-slate-800 dark:text-slate-100 truncate">Thi thử Hóa VDC lần 1</h4>
+                                <div class="text-[10px] text-slate-500 mt-0.5">20:00 - 15/10/2026</div>
+                            </div>
+                        </div>
+                        <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-2xl border border-slate-200 dark:border-slate-700 flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-bio-100 text-bio-600 flex items-center justify-center font-bold flex-shrink-0">SINH</div>
+                            <div class="flex-1 min-w-0">
+                                <h4 class="font-bold text-sm text-slate-800 dark:text-slate-100 truncate">Thi thử Chuyên Sinh Tổng Hợp</h4>
+                                <div class="text-[10px] text-slate-500 mt-0.5">19:30 - 20/10/2026</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="max-w-7xl mx-auto md:px-4">
+            <!-- Dynamic State Classes Wrapper -->
+            <div id="examContainer" class="state-live-new">
+                
+                <div class="bg-gradient-to-r from-blue-700 to-indigo-900 md:rounded-3xl p-6 md:p-10 text-white shadow-xl relative overflow-hidden flex flex-col lg:flex-row items-center justify-between gap-6 md:gap-10">
+                    <!-- Decor -->
+                    <div class="absolute -right-20 -top-20 w-64 h-64 bg-highlight opacity-20 rounded-full blur-3xl pointer-events-none"></div>
+                    <div class="absolute -left-10 -bottom-10 w-40 h-40 bg-white opacity-10 rounded-full blur-2xl pointer-events-none"></div>
+                    
+                    <div class="flex-1 relative z-10 w-full text-center lg:text-left">
+                        
+                        <!-- Badge Trạng thái (Đổi màu/Text bằng JS) -->
+                        <div id="bannerBadge" class="inline-flex items-center gap-2 bg-red-500/90 backdrop-blur text-white px-3 py-1.5 rounded-xl mb-4 text-xs font-bold uppercase tracking-wider shadow border border-red-400">
+                            <div class="w-2 h-2 bg-white rounded-full animate-pulse-live" id="bannerBadgeIcon"></div> 
+                            <span id="bannerBadgeTxt">Đang diễn ra</span>
+                        </div>
+
+                        <h1 class="text-3xl md:text-4xl lg:text-5xl font-black mb-4 leading-tight drop-shadow-sm text-white">
+                            Kỳ thi Khảo sát Chất lượng Toán 12 - Tháng 10
+                        </h1>
+                        
+                        <div class="flex flex-wrap justify-center lg:justify-start items-center gap-4 text-sm font-medium text-blue-100 mb-6">
+                            <span class="flex items-center gap-1.5 bg-black/20 px-3 py-1 rounded-lg backdrop-blur-sm border border-white/10"><i class="fa-regular fa-calendar"></i> 14/10/2026</span>
+                            <span class="flex items-center gap-1.5 bg-black/20 px-3 py-1 rounded-lg backdrop-blur-sm border border-white/10"><i class="fa-solid fa-users"></i> 1,245 người thi</span>
+                        </div>
+
+                        <button class="h-11 px-5 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/30 text-white rounded-xl font-bold transition text-sm flex items-center gap-2 mx-auto lg:mx-0 shadow-sm" onclick="copyShareLink(this)">
+                            <i class="fa-solid fa-share-nodes"></i> Chia sẻ kỳ thi
+                        </button>
+                    </div>
+
+                    <!-- Khối Action (Chỉ hiển thị Desktop/Tablet, ẩn trên Mobile vì Mobile dùng Sticky Bottom Bar) -->
+                    <div class="hidden lg:flex relative z-10 flex-col w-80 bg-white dark:bg-darkCard rounded-3xl p-6 shadow-2xl flex-shrink-0 text-slate-800 dark:text-slate-100">
+                        <div class="text-center mb-4">
+                            <div class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 timer-label-txt">Kết thúc sau</div>
+                            <div class="flex gap-2 justify-center text-slate-800 dark:text-white font-mono font-black text-2xl timer-value-display">
+                                <span class="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg">01</span>:
+                                <span class="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg">45</span>:
+                                <span class="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg text-primary">30</span>
+                            </div>
+                        </div>
+                        
+                        <button class="w-full h-12 rounded-2xl font-black text-base shadow-lg transition flex items-center justify-center gap-2 main-action-btn bg-primary text-white hover:bg-primaryHover shadow-blue-200 dark:shadow-none">
+                            <span class="main-action-txt">THAM GIA NGAY</span>
+                        </button>
+                        <div class="text-[10px] text-center text-slate-400 mt-3 main-action-subtxt">Bạn có tối đa 2 lượt làm bài.</div>
+                    </div>
+                </div>
+
+                <div class="mt-6 flex flex-col lg:flex-row gap-8 items-start px-4 md:px-0 relative">
+                    
+                    <!-- Cột trái (Chính) -->
+                    <div class="flex-1 w-full min-w-0 pb-10">
+                        
+                        <!-- Thanh Tab Cuộn Ngang -->
+                        <div class="sticky top-16 z-30 bg-slate-50/95 dark:bg-darkBg/95 backdrop-blur pt-2 pb-2 mb-6 border-b border-slate-200 dark:border-slate-800 mx-[-16px] px-4 md:mx-0 md:px-0">
+                            <div class="flex overflow-x-auto hide-scrollbar gap-6 border-b border-transparent">
+                                <a href="#sec-tongquan" class="tab-btn active pb-3 font-extrabold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 border-b-4 border-transparent transition whitespace-nowrap">Tổng quan</a>
+                                <a href="#sec-dethi" class="tab-btn pb-3 font-extrabold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 border-b-4 border-transparent transition whitespace-nowrap">Đề thi (2)</a>
+                                <a href="#sec-xephang" class="tab-btn pb-3 font-extrabold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 border-b-4 border-transparent transition whitespace-nowrap">Xếp hạng</a>
+                                <a href="#sec-phanthuong" class="tab-btn pb-3 font-extrabold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 border-b-4 border-transparent transition whitespace-nowrap">Phần thưởng</a>
+                                <a href="#sec-thele" class="tab-btn pb-3 font-extrabold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 border-b-4 border-transparent transition whitespace-nowrap">Thể lệ</a>
+                            </div>
+                        </div>
+
+                        <!-- Khung Chứa Nội Dung Động (Dùng JS để đổi chỗ Tài Liệu) -->
+                        <div id="dynamicSectionsContainer" class="flex flex-col gap-10">
+                            
+                            <!-- Section: Tài liệu ôn luyện -->
+                            <section id="sec-tongquan" class="scroll-mt-32 order-1 transition-all duration-500">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="text-xl font-extrabold flex items-center gap-2">
+                                        <i class="fa-solid fa-book-bookmark text-primary"></i> Tài liệu ôn luyện
+                                    </h3>
+                                </div>
+                                <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Nắm chắc kiến thức trong các tài liệu sau để đạt điểm cao trong kỳ thi.</p>
+                                
+                                <div class="flex overflow-x-auto snap-x hide-scrollbar gap-4 pb-4 mx-[-16px] px-4 md:mx-0 md:px-0">
+                                    <!-- Thẻ Tài Liệu 1 -->
+                                    <div class="w-[70vw] sm:w-[240px] flex-shrink-0 snap-start bg-white dark:bg-darkCard rounded-2xl flex flex-col shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden h-full">
+                                        <div class="relative aspect-[4/3] w-full overflow-hidden bg-blue-50">
+                                            <img src="https://placehold.co/400x300/3B82F6/FFF?text=TOAN" alt="Bìa" class="w-full h-full object-cover">
+                                        </div>
+                                        <div class="p-4 flex flex-col flex-1">
+                                            <span class="text-[10px] font-bold text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded w-max mb-2">Môn Toán</span>
+                                            <h4 class="font-bold text-sm line-clamp-2 leading-snug mb-2 hover:text-primary transition cursor-pointer">Tổng ôn Hàm Số Vận dụng cao</h4>
+                                            
+                                            <div class="mt-auto pt-3 border-t border-slate-100 dark:border-slate-800/50">
+                                                <div class="text-[10px] text-slate-500 mb-1">Xem Online:</div>
+                                                <div class="flex items-center justify-between">
+                                                    <span class="text-primary font-extrabold">29.000đ</span>
+                                                    <button class="w-8 h-8 rounded-lg bg-orange-50 text-orange-600 hover:bg-accent hover:text-white transition flex items-center justify-center">
+                                                        <i class="fa-solid fa-cart-plus text-xs"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Thẻ Tài Liệu 2 -->
+                                    <div class="w-[70vw] sm:w-[240px] flex-shrink-0 snap-start bg-white dark:bg-darkCard rounded-2xl flex flex-col shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden h-full">
+                                        <div class="relative aspect-[4/3] w-full overflow-hidden bg-blue-50">
+                                            <img src="https://placehold.co/400x300/3B82F6/FFF?text=TOAN" alt="Bìa" class="w-full h-full object-cover">
+                                        </div>
+                                        <div class="p-4 flex flex-col flex-1">
+                                            <span class="text-[10px] font-bold text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded w-max mb-2">Môn Toán</span>
+                                            <h4 class="font-bold text-sm line-clamp-2 leading-snug mb-2 hover:text-primary transition cursor-pointer">Mẹo giải nhanh Tích Phân bằng Casio</h4>
+                                            
+                                            <div class="mt-auto pt-3 border-t border-slate-100 dark:border-slate-800/50">
+                                                <div class="text-[10px] text-slate-500 mb-1">Giá:</div>
+                                                <div class="flex items-center justify-between">
+                                                    <span class="text-green-600 font-extrabold">Miễn phí</span>
+                                                    <button class="h-8 px-3 rounded-lg bg-slate-100 dark:bg-slate-800 text-primary text-xs font-bold hover:bg-primary hover:text-white transition">Xem</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- Section: Đề thi -->
+                            <section id="sec-dethi" class="scroll-mt-32 order-2">
+                                <h3 class="text-xl font-extrabold flex items-center gap-2 mb-4">
+                                    <i class="fa-solid fa-file-signature text-primary"></i> Đề thi trong kỳ thi
+                                </h3>
+                                <div class="space-y-4">
+                                    <!-- Đề 1 (Làm trên Web) -->
+                                    <div class="bg-white dark:bg-darkCard rounded-3xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm relative exam-item-card">
+                                        <div class="flex justify-between items-start mb-3">
+                                            <span class="bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 text-[10px] font-bold px-2 py-1 rounded border border-blue-200 dark:border-blue-800 uppercase">Toán học</span>
+                                            <span class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] font-bold px-2 py-1 rounded">Làm trên hệ thống</span>
+                                        </div>
+                                        <h4 class="font-extrabold text-lg leading-snug mb-3">Đề Khảo sát môn Toán Đề chính thức</h4>
+                                        <div class="flex flex-wrap gap-4 text-sm text-slate-600 dark:text-slate-400 mb-5 font-medium">
+                                            <span class="flex items-center gap-1"><i class="fa-solid fa-list-ol"></i> 50 câu</span>
+                                            <span class="flex items-center gap-1"><i class="fa-regular fa-clock"></i> 90 phút</span>
+                                        </div>
+                                        
+                                        <!-- Khối trạng thái của đề thi (Được JS điều khiển) -->
+                                        <div class="exam-status-block">
+                                            <button class="w-full h-12 bg-primary text-white font-extrabold text-sm rounded-xl hover:bg-primaryHover transition flex items-center justify-center shadow-md">
+                                                Làm bài ngay
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Đề 2 (Azota, Không tính BXH) -->
+                                    <div class="bg-white dark:bg-darkCard rounded-3xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm border-t-4 border-t-[#00A3FF] relative exam-item-card">
+                                        <div class="flex justify-between items-start mb-3">
+                                            <span class="bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 text-[10px] font-bold px-2 py-1 rounded border border-blue-200 dark:border-blue-800 uppercase">Toán học</span>
+                                            <div class="flex items-center gap-1 text-[#00A3FF] font-bold text-xs"><i class="fa-solid fa-cloud"></i> Azota</div>
+                                        </div>
+                                        <h4 class="font-extrabold text-lg leading-snug mb-3">Đề luyện tập mở rộng (Không tính điểm vào BXH kỳ thi)</h4>
+                                        <div class="flex flex-wrap gap-4 text-sm text-slate-600 dark:text-slate-400 mb-5 font-medium">
+                                            <span class="flex items-center gap-1"><i class="fa-solid fa-list-ol"></i> 40 câu</span>
+                                            <span class="flex items-center gap-1"><i class="fa-regular fa-clock"></i> 60 phút</span>
+                                        </div>
+                                        
+                                        <div class="exam-status-block">
+                                            <button class="w-full h-12 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-extrabold text-sm rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition flex items-center justify-center gap-2">
+                                                Làm bài trên Azota <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- Section: Xếp hạng -->
+                            <section id="sec-xephang" class="scroll-mt-32 order-3">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="text-xl font-extrabold flex items-center gap-2">
+                                        <i class="fa-solid fa-ranking-star text-highlight"></i> Xếp hạng kỳ thi
+                                    </h3>
+                                    <div class="text-xs font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">Cập nhật 5p trước</div>
+                                </div>
+
+                                <div class="bg-white dark:bg-darkCard rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden relative pb-16">
+                                    
+                                    <!-- List (Mô phỏng rút gọn) -->
+                                    <div class="p-2 sm:p-4 space-y-2">
+                                        <div class="flex items-center p-3 rounded-2xl bg-yellow-50 dark:bg-yellow-900/10 border border-highlight/30">
+                                            <div class="w-8 font-black text-highlight text-center text-lg"><i class="fa-solid fa-crown"></i></div>
+                                            <img src="https://placehold.co/100/FACC15/FFF?text=H" class="w-10 h-10 rounded-full border-2 border-highlight ml-2 mr-3">
+                                            <div class="flex-1 min-w-0">
+                                                <div class="font-bold text-sm text-slate-800 dark:text-slate-200 truncate">Cậu Bé Vàng</div>
+                                                <div class="text-xs text-slate-500 truncate">THPT Chuyên KHTN</div>
+                                            </div>
+                                            <div class="font-black text-xl text-slate-800 dark:text-white w-16 text-right">10.0</div>
+                                        </div>
+                                        <div class="flex items-center p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-transparent">
+                                            <div class="w-8 font-bold text-slate-400 text-center text-lg">2</div>
+                                            <img src="https://placehold.co/100/94A3B8/FFF?text=M" class="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-700 ml-2 mr-3">
+                                            <div class="flex-1 min-w-0">
+                                                <div class="font-bold text-sm text-slate-800 dark:text-slate-200 truncate">Ngọc Mai</div>
+                                                <div class="text-xs text-slate-500 truncate">THPT Ams</div>
+                                            </div>
+                                            <div class="font-black text-xl text-slate-800 dark:text-white w-16 text-right">9.8</div>
+                                        </div>
+                                        <div class="flex items-center p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-transparent">
+                                            <div class="w-8 font-bold text-slate-400 text-center text-lg">3</div>
+                                            <div class="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-500 ml-2 mr-3"><i class="fa-solid fa-user-secret"></i></div>
+                                            <div class="flex-1 min-w-0">
+                                                <div class="font-bold text-sm text-slate-800 dark:text-slate-200 truncate italic">Học sinh ẩn danh</div>
+                                                <div class="text-xs text-slate-500 truncate italic">Trường đã ẩn</div>
+                                            </div>
+                                            <div class="font-black text-xl text-slate-800 dark:text-white w-16 text-right">9.6</div>
+                                        </div>
+                                        <!-- Vùng làm mờ thể hiện có tiếp -->
+                                        <div class="h-10 bg-gradient-to-b from-transparent to-white dark:to-darkCard w-full mt-[-20px] relative z-10"></div>
+                                    </div>
+
+                                    <!-- Hạng của bạn (Cố định ở dưới cùng khối này) -->
+                                    <div class="absolute bottom-0 left-0 right-0 bg-slate-900 text-white p-3 flex items-center justify-between z-20 rank-me-block">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-8 font-bold text-slate-400 text-center text-sm rank-me-num">--</div>
+                                            <img src="https://placehold.co/100/3B82F6/FFF?text=US" class="w-8 h-8 rounded-full border border-slate-700">
+                                            <div class="font-bold text-sm">Bạn</div>
+                                        </div>
+                                        <div class="font-black text-highlight text-lg rank-me-score">Chưa thi</div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- Section: Phần thưởng -->
+                            <section id="sec-phanthuong" class="scroll-mt-32 order-4">
+                                <h3 class="text-xl font-extrabold flex items-center gap-2 mb-4">
+                                    <i class="fa-solid fa-gift text-accent"></i> Phần thưởng kỳ thi
+                                </h3>
+                                
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <!-- Voucher tham gia -->
+                                    <div class="bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl p-4 text-white relative overflow-hidden flex flex-col justify-between">
+                                        <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-white opacity-20 rounded-full blur-xl pointer-events-none"></div>
+                                        <div>
+                                            <div class="text-[10px] font-bold uppercase tracking-wider mb-1 opacity-90">Cho mọi người tham gia</div>
+                                            <h4 class="font-black text-2xl mb-1">Voucher -20%</h4>
+                                            <p class="text-xs text-orange-100 mb-4 line-clamp-2">Áp dụng cho mọi tài liệu môn Toán. Hạn dùng 48h sau khi kết thúc kỳ thi.</p>
+                                        </div>
+                                        <!-- Nút trạng thái voucher -->
+                                        <button class="h-10 bg-white text-red-600 font-bold text-sm rounded-xl hover:bg-slate-50 transition shadow-sm w-max px-6 reward-btn opacity-50 cursor-not-allowed">
+                                            Chưa đủ điều kiện
+                                        </button>
+                                    </div>
+
+                                    <!-- Thưởng Top 10 -->
+                                    <div class="bg-slate-800 dark:bg-slate-900 rounded-2xl p-4 text-white border border-slate-700 flex flex-col justify-between relative overflow-hidden">
+                                        <div class="absolute right-0 top-0 w-16 h-16 bg-highlight opacity-10 rounded-bl-full pointer-events-none"></div>
+                                        <div>
+                                            <div class="text-[10px] font-bold uppercase tracking-wider mb-1 text-highlight">Đặc quyền Top 10</div>
+                                            <h4 class="font-black text-xl mb-1">Gói Premium 30 Ngày</h4>
+                                            <p class="text-xs text-slate-400 mb-4">Dành cho 10 bạn có điểm cao nhất và thời gian làm bài nhanh nhất.</p>
+                                        </div>
+                                        <div class="text-xs font-bold text-slate-500">Trao giải tự động sau khi kết thúc.</div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- Section: Thể lệ -->
+                            <section id="sec-thele" class="scroll-mt-32 order-5">
+                                <h3 class="text-xl font-extrabold flex items-center gap-2 mb-4">
+                                    <i class="fa-solid fa-list-check text-primary"></i> Thể lệ tham gia
+                                </h3>
+                                <div class="bg-white dark:bg-darkCard rounded-3xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm">
+                                    <ul class="space-y-3 text-sm text-slate-600 dark:text-slate-300 font-medium">
+                                        <li class="flex items-start gap-3">
+                                            <div class="w-6 h-6 rounded-full bg-blue-50 dark:bg-blue-900/30 text-primary flex items-center justify-center flex-shrink-0 mt-0.5"><i class="fa-solid fa-user-check text-[10px]"></i></div>
+                                            <div><strong class="text-slate-800 dark:text-slate-100">Đối tượng:</strong> Miễn phí cho mọi thành viên đã có tài khoản trên hệ thống.</div>
+                                        </li>
+                                        <li class="flex items-start gap-3">
+                                            <div class="w-6 h-6 rounded-full bg-blue-50 dark:bg-blue-900/30 text-primary flex items-center justify-center flex-shrink-0 mt-0.5"><i class="fa-solid fa-rotate-right text-[10px]"></i></div>
+                                            <div><strong class="text-slate-800 dark:text-slate-100">Số lượt thi:</strong> Mỗi học sinh có tối đa 2 lượt làm bài. Điểm xét hạng là điểm của lượt cao nhất.</div>
+                                        </li>
+                                        <li class="flex items-start gap-3">
+                                            <div class="w-6 h-6 rounded-full bg-blue-50 dark:bg-blue-900/30 text-primary flex items-center justify-center flex-shrink-0 mt-0.5"><i class="fa-solid fa-shield text-[10px]"></i></div>
+                                            <div><strong class="text-slate-800 dark:text-slate-100">Chống gian lận:</strong> Rời khỏi trang web quá 3 lần sẽ bị hủy bài thi.</div>
+                                        </li>
+                                        <li class="flex items-start gap-3">
+                                            <div class="w-6 h-6 rounded-full bg-blue-50 dark:bg-blue-900/30 text-primary flex items-center justify-center flex-shrink-0 mt-0.5"><i class="fa-solid fa-key text-[10px]"></i></div>
+                                            <div><strong class="text-slate-800 dark:text-slate-100">Đáp án:</strong> Đáp án chi tiết và video chữa bài sẽ mở sau khi kỳ thi kết thúc 30 phút.</div>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </section>
+
+                        </div>
+                    </div>
+
+                    <!-- Cột Phải (Desktop Sidebar) - Không nội dung vì khối Action đã nằm trong banner, giữ khoảng trống nếu cần -->
+                    <!-- Trong thiết kế này, tôi đã gộp Sidebar Card vào Banner để tối ưu UX màn hình to theo yêu cầu -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    
+    <!-- Nút Chat nổi (Chỉnh lại bottom để không đè lên Bottom Bar) -->
+    <div class="fixed bottom-[90px] lg:bottom-6 right-4 flex flex-col gap-3 z-50 transition-all duration-300" id="fabsContainer">
+        <a href="#" class="w-12 h-12 rounded-full bg-blue-500 text-white flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition animate-bounce-intro" title="Chat Zalo">
+            <div class="font-bold text-sm">Zalo</div>
+        </a>
+        <a href="#" class="w-12 h-12 rounded-full bg-gradient-to-tr from-blue-500 to-rose-500 text-white flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition" title="Chat Messenger">
+            <i class="fa-brands fa-facebook-messenger"></i>
+        </a>
+    </div>
+
+    <!-- Mobile Sticky Action Bar -->
+    <div class="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-darkCard border-t border-slate-200 dark:border-slate-800 p-3 shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.1)] transition-transform duration-300 transform translate-y-0" id="mobileBottomBar">
+        <div class="flex items-center gap-3 max-w-7xl mx-auto">
+            <!-- Mini Countdown -->
+            <div class="flex flex-col flex-shrink-0 min-w-[80px]">
+                <div class="text-[10px] font-bold text-slate-500 uppercase timer-label-txt">Kết thúc sau</div>
+                <div class="font-mono font-black text-slate-800 dark:text-white text-lg leading-none timer-value-display">01:45:30</div>
+            </div>
+            <!-- Main Button -->
+            <button class="flex-1 h-12 rounded-xl font-black text-sm shadow-md transition flex items-center justify-center gap-2 main-action-btn bg-primary text-white">
+                <span class="main-action-txt">THAM GIA NGAY</span>
+            </button>
+        </div>
+    </div>
+
+    <footer class="bg-white dark:bg-darkCard pt-12 pb-6 border-t border-slate-200 dark:border-slate-800 mt-10">
+        <!-- Rút gọn footer cho code sạch, vì đã chuẩn ở các file trước -->
+        <div class="max-w-7xl mx-auto px-4 text-center text-sm text-slate-500">
+            &copy; 2026 ÔnThiPro. All rights reserved.
+        </div>
+    </footer>
+
+    <div class="fixed top-20 left-4 z-[60] bg-slate-900/90 text-white p-4 rounded-xl shadow-2xl backdrop-blur-md border border-slate-700 w-72 text-xs font-mono">
+        <div class="font-bold mb-3 flex items-center justify-between border-b border-slate-700 pb-2 text-sm text-highlight">
+            <span>⚙️ DEMO TRẠNG THÁI</span>
+            <button onclick="this.parentElement.parentElement.style.display='none'" class="text-slate-400 hover:text-white" title="Đóng panel"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+        <div class="space-y-2">
+            <label class="flex items-center gap-2 cursor-pointer p-1.5 hover:bg-slate-800 rounded transition"><input type="radio" name="examState" value="not-logged-in" class="accent-primary w-4 h-4"><span>Chưa đăng nhập</span></label>
+            <label class="flex items-center gap-2 cursor-pointer p-1.5 hover:bg-slate-800 rounded transition"><input type="radio" name="examState" value="upcoming" class="accent-primary w-4 h-4"><span>Sắp diễn ra</span></label>
+            <label class="flex items-center gap-2 cursor-pointer p-1.5 hover:bg-slate-800 rounded transition"><input type="radio" name="examState" value="live-new" class="accent-primary w-4 h-4" checked><span class="text-green-400">Đang diễn ra (Chưa thi)</span></label>
+            <label class="flex items-center gap-2 cursor-pointer p-1.5 hover:bg-slate-800 rounded transition"><input type="radio" name="examState" value="live-retake" class="accent-primary w-4 h-4"><span class="text-yellow-400">Đã thi (Còn lượt)</span></label>
+            <label class="flex items-center gap-2 cursor-pointer p-1.5 hover:bg-slate-800 rounded transition"><input type="radio" name="examState" value="live-done" class="accent-primary w-4 h-4"><span class="text-orange-400">Đã thi (Hết lượt)</span></label>
+            <label class="flex items-center gap-2 cursor-pointer p-1.5 hover:bg-slate-800 rounded transition"><input type="radio" name="examState" value="ended" class="accent-primary w-4 h-4"><span class="text-slate-400">Đã kết thúc</span></label>
+        </div>
+    </div>
+
+    <script>
+        // Toggle Dark Mode
+        const themeToggleBtn = document.getElementById('themeToggle');
+        themeToggleBtn.addEventListener('click', () => document.documentElement.classList.toggle('dark'));
+
+        // Intersection Observer for Sticky Tabs Active State
+        const sections = document.querySelectorAll('section[id^="sec-"]');
+        const tabBtns = document.querySelectorAll('.tab-btn');
+
+        const observerOptions = {
+            root: null,
+            rootMargin: '-100px 0px -50% 0px', // Điều chỉnh để bắt đúng khu vực scroll
+            threshold: 0
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    // Xóa active cũ
+                    tabBtns.forEach(btn => btn.classList.remove('active', 'border-b-4'));
+                    // Tìm btn tương ứng và add active
+                    const id = entry.target.getAttribute('id');
+                    const activeBtn = document.querySelector(`.tab-btn[href="#${id}"]`);
+                    if (activeBtn) activeBtn.classList.add('active', 'border-b-4');
+                }
+            });
+        }, observerOptions);
+
+        sections.forEach(sec => observer.observe(sec));
+
+        // --- MÔ PHỎNG MÁY TRẠNG THÁI (STATE MACHINE) ---
+        // Lấy các element cần thay đổi
+        const wrapper = document.getElementById('examContainer');
+        const badgeTxt = document.getElementById('bannerBadgeTxt');
+        const badgeIcon = document.getElementById('bannerBadgeIcon');
+        const badgeBlock = document.getElementById('bannerBadge');
+        
+        const labelTxts = document.querySelectorAll('.timer-label-txt');
+        const valueDisplays = document.querySelectorAll('.timer-value-display');
+        
+        const actionBtns = document.querySelectorAll('.main-action-btn');
+        const actionTxts = document.querySelectorAll('.main-action-txt');
+        const actionSubTxt = document.querySelector('.main-action-subtxt');
+        
+        const examItemCards = document.querySelectorAll('.exam-item-card');
+        const rewardBtns = document.querySelectorAll('.reward-btn');
+        
+        const rankMeNum = document.querySelector('.rank-me-num');
+        const rankMeScore = document.querySelector('.rank-me-score');
+        const rankBlock = document.querySelector('.rank-me-block');
+
+        const secTongQuan = document.getElementById('sec-tongquan');
+        
+        function updateUIState(state) {
+            // Reset base styles cho Buttons
+            actionBtns.forEach(btn => {
+                btn.className = 'w-full h-12 rounded-xl font-black text-sm shadow-md transition flex items-center justify-center gap-2 main-action-btn lg:rounded-2xl lg:text-base';
+                btn.disabled = false;
+            });
+            // Ẩn/hiện rank me block
+            rankBlock.style.display = 'flex';
+
+            switch (state) {
+                case 'not-logged-in':
+                    badgeBlock.className = 'inline-flex items-center gap-2 bg-slate-500/90 backdrop-blur text-white px-3 py-1.5 rounded-xl mb-4 text-xs font-bold uppercase tracking-wider shadow border border-slate-400';
+                    badgeTxt.innerText = 'Sắp diễn ra';
+                    badgeIcon.className = 'w-3 h-3 bg-white rounded-full flex items-center justify-center text-[8px] text-slate-500 fa-solid fa-calendar';
+                    
+                    labelTxts.forEach(el => el.innerText = 'Bắt đầu sau');
+                    valueDisplays.forEach(el => el.innerHTML = '<span class="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg">12</span>:<span class="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg">00</span>:<span class="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg">00</span>');
+                    
+                    actionBtns.forEach(btn => btn.classList.add('bg-white', 'text-slate-800', 'dark:bg-slate-800', 'dark:text-white', 'border', 'border-slate-300'));
+                    actionTxts.forEach(txt => txt.innerText = 'Đăng nhập để tham gia');
+                    if(actionSubTxt) actionSubTxt.innerText = 'Vui lòng đăng nhập hệ thống.';
+                    
+                    examItemCards.forEach(card => card.querySelector('.exam-status-block').innerHTML = '<div class="text-center text-sm font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 py-3 rounded-xl"><i class="fa-solid fa-lock mr-1"></i> Đăng nhập để xem</div>');
+                    rewardBtns.forEach(btn => { btn.innerText = 'Chưa đủ điều kiện'; btn.className = 'h-10 bg-white text-slate-400 font-bold text-sm rounded-xl w-max px-6 reward-btn opacity-50 cursor-not-allowed'; });
+                    
+                    rankMeScore.innerText = 'Chưa thi';
+                    secTongQuan.classList.remove('order-last');
+                    break;
+
+                case 'upcoming':
+                    badgeBlock.className = 'inline-flex items-center gap-2 bg-orange-500/90 backdrop-blur text-white px-3 py-1.5 rounded-xl mb-4 text-xs font-bold uppercase tracking-wider shadow border border-orange-400';
+                    badgeTxt.innerText = 'Sắp diễn ra';
+                    badgeIcon.className = 'w-3 h-3 bg-white rounded-full flex items-center justify-center text-[8px] text-orange-500 fa-solid fa-calendar';
+                    
+                    labelTxts.forEach(el => el.innerText = 'Bắt đầu sau');
+                    valueDisplays.forEach(el => el.innerHTML = '<span class="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg">12</span>:<span class="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg">00</span>:<span class="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg">00</span>');
+                    
+                    actionBtns.forEach(btn => btn.classList.add('bg-accent', 'text-white', 'hover:bg-orange-600'));
+                    actionTxts.forEach(txt => txt.innerHTML = '<i class="fa-regular fa-bell mr-1"></i> Nhắc tôi khi bắt đầu');
+                    if(actionSubTxt) actionSubTxt.innerText = 'Mở lúc 20:00 ngày 14/10/2026';
+                    
+                    examItemCards.forEach(card => card.querySelector('.exam-status-block').innerHTML = '<div class="text-center text-sm font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 py-3 rounded-xl"><i class="fa-solid fa-lock mr-1"></i> Mở lúc 20:00</div>');
+                    rewardBtns.forEach(btn => { btn.innerText = 'Chưa đủ điều kiện'; btn.className = 'h-10 bg-white text-slate-400 font-bold text-sm rounded-xl w-max px-6 reward-btn opacity-50 cursor-not-allowed'; });
+                    
+                    rankMeScore.innerText = 'Chưa thi';
+                    secTongQuan.classList.remove('order-last');
+                    break;
+
+                case 'live-new':
+                    badgeBlock.className = 'inline-flex items-center gap-2 bg-red-500/90 backdrop-blur text-white px-3 py-1.5 rounded-xl mb-4 text-xs font-bold uppercase tracking-wider shadow border border-red-400';
+                    badgeTxt.innerText = 'Đang diễn ra';
+                    badgeIcon.className = 'w-2 h-2 bg-white rounded-full animate-pulse-live';
+                    
+                    labelTxts.forEach(el => el.innerText = 'Kết thúc sau');
+                    valueDisplays.forEach(el => el.innerHTML = '<span class="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg">01</span>:<span class="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg">45</span>:<span class="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg text-primary">30</span>');
+                    
+                    actionBtns.forEach(btn => btn.classList.add('bg-primary', 'text-white', 'hover:bg-primaryHover'));
+                    actionTxts.forEach(txt => txt.innerText = 'THAM GIA NGAY');
+                    if(actionSubTxt) actionSubTxt.innerText = 'Bạn có tối đa 2 lượt làm bài.';
+                    
+                    // Khôi phục nút làm bài (Demo HTML cứng)
+                    examItemCards[0].querySelector('.exam-status-block').innerHTML = '<button class="w-full h-12 bg-primary text-white font-extrabold text-sm rounded-xl hover:bg-primaryHover transition flex items-center justify-center shadow-md">Làm bài ngay</button>';
+                    examItemCards[1].querySelector('.exam-status-block').innerHTML = '<button class="w-full h-12 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-extrabold text-sm rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition flex items-center justify-center gap-2">Làm bài trên Azota <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></button>';
+                    
+                    rewardBtns.forEach(btn => { btn.innerText = 'Chưa đủ điều kiện'; btn.className = 'h-10 bg-white text-slate-400 font-bold text-sm rounded-xl w-max px-6 reward-btn opacity-50 cursor-not-allowed'; });
+                    
+                    rankMeScore.innerText = 'Chưa thi';
+                    secTongQuan.classList.remove('order-last');
+                    break;
+
+                case 'live-retake':
+                    badgeBlock.className = 'inline-flex items-center gap-2 bg-red-500/90 backdrop-blur text-white px-3 py-1.5 rounded-xl mb-4 text-xs font-bold uppercase tracking-wider shadow border border-red-400';
+                    badgeTxt.innerText = 'Đang diễn ra';
+                    badgeIcon.className = 'w-2 h-2 bg-white rounded-full animate-pulse-live';
+                    
+                    labelTxts.forEach(el => el.innerText = 'Kết thúc sau');
+                    actionBtns.forEach(btn => btn.classList.add('bg-highlight', 'text-slate-900', 'hover:bg-yellow-500'));
+                    actionTxts.forEach(txt => txt.innerHTML = '<i class="fa-solid fa-rotate-right"></i> Thi lại (Còn 1 lượt)');
+                    if(actionSubTxt) actionSubTxt.innerText = 'Điểm cao nhất: 8.5';
+                    
+                    examItemCards[0].querySelector('.exam-status-block').innerHTML = '<div class="flex items-center justify-between bg-green-50 dark:bg-green-900/20 px-4 py-2 rounded-xl mb-2"><span class="text-sm font-bold text-green-600">Đã làm (Lần 1)</span><span class="font-black text-green-600 text-lg">8.5 đ</span></div><button class="w-full h-10 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-sm rounded-xl hover:bg-slate-200 transition">Thi lại</button>';
+                    
+                    rewardBtns.forEach(btn => { btn.innerText = 'Dùng ngay'; btn.className = 'h-10 bg-white text-red-600 font-bold text-sm rounded-xl hover:bg-slate-50 transition shadow-sm w-max px-6 reward-btn'; });
+                    
+                    rankMeNum.innerText = '142';
+                    rankMeScore.innerText = '8.5';
+                    secTongQuan.classList.remove('order-last');
+                    break;
+
+                case 'live-done':
+                    badgeBlock.className = 'inline-flex items-center gap-2 bg-red-500/90 backdrop-blur text-white px-3 py-1.5 rounded-xl mb-4 text-xs font-bold uppercase tracking-wider shadow border border-red-400';
+                    badgeTxt.innerText = 'Đang diễn ra';
+                    badgeIcon.className = 'w-2 h-2 bg-white rounded-full animate-pulse-live';
+                    
+                    labelTxts.forEach(el => el.innerText = 'Kết thúc sau');
+                    actionBtns.forEach(btn => btn.classList.add('bg-white', 'text-primary', 'border-2', 'border-primary', 'hover:bg-blue-50'));
+                    actionTxts.forEach(txt => txt.innerText = 'Xem kết quả của bạn');
+                    if(actionSubTxt) actionSubTxt.innerText = 'Đã hết lượt làm bài.';
+                    
+                    examItemCards[0].querySelector('.exam-status-block').innerHTML = '<div class="flex items-center justify-between bg-green-50 dark:bg-green-900/20 px-4 py-2 rounded-xl"><span class="text-sm font-bold text-green-600">Đã hoàn thành</span><span class="font-black text-green-600 text-lg">8.5 đ</span></div>';
+                    
+                    rewardBtns.forEach(btn => { btn.innerText = 'Dùng ngay'; btn.className = 'h-10 bg-white text-red-600 font-bold text-sm rounded-xl hover:bg-slate-50 transition shadow-sm w-max px-6 reward-btn'; });
+                    
+                    rankMeNum.innerText = '142';
+                    rankMeScore.innerText = '8.5';
+                    secTongQuan.classList.remove('order-last');
+                    break;
+
+                case 'ended':
+                    badgeBlock.className = 'inline-flex items-center gap-2 bg-slate-500/90 backdrop-blur text-white px-3 py-1.5 rounded-xl mb-4 text-xs font-bold uppercase tracking-wider shadow border border-slate-400';
+                    badgeTxt.innerText = 'Đã kết thúc';
+                    badgeIcon.className = 'w-3 h-3 bg-white rounded-full flex items-center justify-center text-[8px] text-slate-500 fa-solid fa-check';
+                    
+                    labelTxts.forEach(el => el.innerText = 'Kỳ thi đã đóng');
+                    valueDisplays.forEach(el => el.innerHTML = '<span class="text-slate-500 text-sm font-medium">Hẹn gặp lại bạn ở kỳ thi sau</span>');
+                    
+                    actionBtns.forEach(btn => btn.classList.add('bg-slate-800', 'text-white', 'dark:bg-slate-700', 'hover:bg-slate-900'));
+                    actionTxts.forEach(txt => txt.innerHTML = '<i class="fa-solid fa-book-open mr-1"></i> Xem tài liệu ôn tập');
+                    if(actionSubTxt) actionSubTxt.innerText = 'Đáp án đã được cập nhật.';
+                    
+                    examItemCards[0].querySelector('.exam-status-block').innerHTML = '<button class="w-full h-12 bg-white border border-slate-200 text-primary font-bold text-sm rounded-xl hover:bg-slate-50 transition">Xem đáp án & Video chữa</button>';
+                    rewardBtns.forEach(btn => { btn.innerText = 'Dùng ngay'; btn.className = 'h-10 bg-white text-red-600 font-bold text-sm rounded-xl hover:bg-slate-50 transition shadow-sm w-max px-6 reward-btn'; });
+                    
+                    rankBlock.style.display = 'none'; // Ẩn rank cá nhân khi kết thúc (hoặc thay đổi tùy logic)
+                    
+                    // Đưa section Tài liệu lên đầu tiên bằng CSS Flex Order
+                    secTongQuan.classList.add('order-last'); // Giả sử order mặc định là 1,2,3,4,5. Đổi tài liệu lên đầu. 
+                    // Trong Flexbox column, để đưa tài liệu xuống cuối thì order-last. Để đưa lên đầu thì order-first.
+                    // Yêu cầu: "Khi kỳ thi đã kết thúc, mục này được đưa lên đầu trang."
+                    // Ah, 'sec-tongquan' đang là order-1 (đầu tiên). 
+                    // Okay, logic gốc là Tài liệu ở ĐẦU mặc định. Nếu Ended thì nó vẫn ở ĐẦU. 
+                    // Để demo sự thay đổi, ta đảo lại: Mặc định Tài liệu nằm CUỐI (order-6). Khi Ended thì đưa lên ĐẦU (order-first).
+                    secTongQuan.style.order = -1; // Đưa lên ưu tiên cao nhất.
+                    break;
+            }
+        }
+
+        // Bắt sự kiện thay đổi radio button
+        document.querySelectorAll('input[name="examState"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                updateUIState(e.target.value);
+            });
+        });
+
+        // Khởi tạo trạng thái mặc định
+        updateUIState('live-new');
+
+    </script>
+</body>
+</html>

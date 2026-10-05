@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="vi" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tổng quan Admin - ÔnThiPro</title>
+    
+    <!-- Google Fonts: Nunito -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Nunito', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#2563EB', 
+                        primaryHover: '#1D4ED8',
+                        accent: '#F97316', 
+                        highlight: '#FACC15', 
+                        darkBg: '#0F172A',
+                        darkCard: '#1E293B',
+                        bio: {
+                            50: '#f7fee7',
+                            100: '#ecfccb',
+                            600: '#65a30d',
+                            900: '#365314',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        /* Ẩn scrollbar mặc định, tùy chỉnh scrollbar cho bảng */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .dark .custom-scroll::-webkit-scrollbar-thumb { background: #475569; }
+
+        /* Menu active state */
+        .admin-nav-item.active {
+            background-color: #2563EB;
+            color: #ffffff;
+            font-weight: 700;
+        }
+        .admin-nav-item.active i { color: #ffffff; }
+
+        /* Sidebar transition */
+        #adminSidebar {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-darkBg text-slate-800 dark:text-slate-100 font-sans transition-colors duration-300 flex overflow-hidden h-screen">
+
+    <!-- Lớp phủ khi mở Sidebar trên Mobile -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/50 dark:bg-black/60 z-40 hidden md:hidden transition-opacity opacity-0" onclick="toggleSidebar()"></div>
+
+    <!-- ================= SIDEBAR (MENU TRÁI) ================= -->
+    <aside id="adminSidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-darkCard border-r border-slate-200 dark:border-slate-800 shadow-xl md:shadow-none transform -translate-x-full md:translate-x-0 flex flex-col h-full">
+        
+        <!-- Logo -->
+        <div class="h-16 flex items-center px-6 border-b border-slate-100 dark:border-slate-800 flex-shrink-0">
+            <a href="#" class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-primary text-white rounded-lg flex items-center justify-center font-bold text-lg shadow-md shadow-blue-200 dark:shadow-none">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <span class="font-extrabold text-xl tracking-tight text-primary">Admin Panel</span>
+            </a>
+            <button class="md:hidden ml-auto w-8 h-8 flex items-center justify-center text-slate-500 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" onclick="toggleSidebar()">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <!-- Menu Navigation -->
+        <nav class="flex-1 overflow-y-auto custom-scroll py-4 px-3 space-y-1">
+            <a href="#" class="admin-nav-item active flex items-center gap-3 w-full h-11 px-4 rounded-xl text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                <i class="fa-solid fa-border-all w-5 text-center text-slate-400"></i> Tổng quan
+            </a>
+            <a href="#" class="admin-nav-item flex items-center gap-3 w-full h-11 px-4 rounded-xl text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                <i class="fa-solid fa-book w-5 text-center text-slate-400"></i> Tài liệu
+            </a>
+            <a href="#" class="admin-nav-item flex items-center gap-3 w-full h-11 px-4 rounded-xl text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                <i class="fa-solid fa-file-signature w-5 text-center text-slate-400"></i> Đề thi
+            </a>
+            <a href="#" class="admin-nav-item flex items-center gap-3 w-full h-11 px-4 rounded-xl text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition relative">
+                <i class="fa-solid fa-trophy w-5 text-center text-slate-400"></i> Kỳ thi
+                <span class="absolute right-3 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+            </a>
+            <a href="#" class="admin-nav-item flex items-center gap-3 w-full h-11 px-4 rounded-xl text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                <i class="fa-solid fa-receipt w-5 text-center text-slate-400"></i> Đơn hàng
+            </a>
+            <a href="#" class="admin-nav-item flex items-center gap-3 w-full h-11 px-4 rounded-xl text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                <i class="fa-solid fa-ticket w-5 text-center text-slate-400"></i> Mã giảm giá
+            </a>
+            
+            <div class="h-px bg-slate-100 dark:bg-slate-800 my-2 mx-2"></div>
+            
+            <a href="#" class="admin-nav-item flex items-center gap-3 w-full h-11 px-4 rounded-xl text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                <i class="fa-solid fa-clipboard-check w-5 text-center text-slate-400"></i> Chờ duyệt
+                <span class="ml-auto bg-orange-100 text-orange-600 dark:bg-orange-900/40 dark:text-orange-400 text-[10px] font-bold px-2 py-0.5 rounded-full">12</span>
+            </a>
+            <a href="#" class="admin-nav-item flex items-center gap-3 w-full h-11 px-4 rounded-xl text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                <i class="fa-solid fa-users w-5 text-center text-slate-400"></i> Người dùng
+            </a>
+            <a href="#" class="admin-nav-item flex items-center gap-3 w-full h-11 px-4 rounded-xl text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                <i class="fa-solid fa-gear w-5 text-center text-slate-400"></i> Cài đặt
+            </a>
+        </nav>
+
+        <!-- Trạng thái Admin dưới cùng -->
+        <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+            <div class="flex items-center gap-3 bg-slate-50 dark:bg-slate-900/50 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 cursor-pointer hover:border-primary transition">
+                <img src="https://placehold.co/100x100/3B82F6/FFF?text=AD" alt="Admin" class="w-9 h-9 rounded-full shadow-sm border border-slate-200 dark:border-slate-700">
+                <div class="flex-1 min-w-0">
+                    <div class="font-bold text-sm text-slate-800 dark:text-slate-100 truncate">Hệ thống</div>
+                    <div class="text-[10px] text-green-500 font-bold flex items-center gap-1"><div class="w-1.5 h-1.5 rounded-full bg-green-500"></div> Online</div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ================= MAIN WRAPPER ================= -->
+    <div class="flex-1 flex flex-col min-w-0 md:ml-64 h-screen bg-slate-50 dark:bg-darkBg transition-all duration-300">
+        
+        <!-- Header Top -->
+        <header class="h-16 bg-white dark:bg-darkCard border-b border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between px-4 md:px-6 flex-shrink-0 z-30">
+            
+            <div class="flex items-center gap-3">
+                <button class="md:hidden w-11 h-11 flex items-center justify-center text-slate-600 dark:text-slate-300 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition -ml-2" onclick="toggleSidebar()">
+                    <i class="fa-solid fa-bars text-lg"></i>
+                </button>
+                <div class="hidden sm:flex relative w-64 lg:w-96">
+                    <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" placeholder="Tìm kiếm nhanh đơn hàng, người dùng..." class="w-full h-10 pl-9 pr-4 bg-slate-100 dark:bg-slate-800 border-none rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary text-slate-700 dark:text-slate-200">
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 md:gap-4">
+                <button class="w-11 h-11 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center transition relative">
+                    <i class="fa-regular fa-bell text-lg"></i>
+                    <span class="absolute top-2 right-2.5 w-2 h-2 rounded-full bg-red-500 border-2 border-white dark:border-darkCard"></span>
+                </button>
+                <button id="themeToggle" class="w-11 h-11 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition" aria-label="Đổi giao diện">
+                    <i class="fa-solid fa-moon dark:hidden text-lg"></i>
+                    <i class="fa-solid fa-sun hidden dark:block text-highlight text-lg"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 overflow-y-auto custom-scroll p-4 md:p-6 lg:p-8">
+            
+            <div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h1 class="text-2xl font-extrabold text-slate-800 dark:text-white">Tổng quan hệ thống</h1>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">Cập nhật lúc: 14:30 - 04/10/2026</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button class="h-10 px-4 bg-white dark:bg-darkCard border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition flex items-center gap-2 shadow-sm">
+                        <i class="fa-regular fa-calendar"></i> Hôm nay
+                    </button>
+                    <button class="h-10 px-4 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primaryHover transition flex items-center gap-2 shadow-sm">
+                        <i class="fa-solid fa-download"></i> Báo cáo
+                    </button>
+                </div>
+            </div>
+
+            <!-- ROW 1: STAT CARDS -->
+            <!-- Dùng Grid chuẩn, trên PC là 4 cột, Tablet 2 cột, Mobile 1 cột -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6 mb-6">
+                
+                <!-- Card Doanh thu -->
+                <div class="bg-white dark:bg-darkCard rounded-3xl p-5 md:p-6 border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden">
+                    <div class="absolute -right-6 -top-6 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl pointer-events-none"></div>
+                    <div class="flex justify-between items-start mb-4 relative z-10">
+                        <div>
+                            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Doanh thu hôm nay</p>
+                            <h3 class="text-2xl md:text-3xl font-black text-slate-800 dark:text-white leading-none">2.450.000đ</h3>
+                        </div>
+                        <div class="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-900/30 text-primary flex items-center justify-center text-xl flex-shrink-0">
+                            <i class="fa-solid fa-wallet"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 text-sm relative z-10">
+                        <span class="text-green-500 font-bold bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded-lg flex items-center gap-1"><i class="fa-solid fa-arrow-trend-up text-[10px]"></i> 15%</span>
+                        <span class="text-slate-500 text-xs">so với hôm qua</span>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between text-xs font-bold text-slate-600 dark:text-slate-400 relative z-10">
+                        <div>Tuần: <span class="text-slate-800 dark:text-slate-200">15.2M</span></div>
+                        <div>Tháng: <span class="text-slate-800 dark:text-slate-200">45.8M</span></div>
+                    </div>
+                </div>
+
+                <!-- Card Đơn hàng -->
+                <div class="bg-white dark:bg-darkCard rounded-3xl p-5 md:p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Đơn hàng (Hôm nay)</p>
+                            <h3 class="text-2xl md:text-3xl font-black text-slate-800 dark:text-white leading-none">152</h3>
+                        </div>
+                        <div class="w-12 h-12 rounded-2xl bg-orange-50 dark:bg-orange-900/30 text-accent flex items-center justify-center text-xl flex-shrink-0">
+                            <i class="fa-solid fa-basket-shopping"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 text-sm">
+                        <span class="text-green-500 font-bold bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded-lg flex items-center gap-1"><i class="fa-solid fa-arrow-trend-up text-[10px]"></i> 8%</span>
+                        <span class="text-slate-500 text-xs">so với hôm qua</span>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center gap-4 text-xs">
+                        <div class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full bg-green-500"></div> <span class="text-slate-500">Thành công: 140</span></div>
+                        <div class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full bg-yellow-500"></div> <span class="text-slate-500">Chờ: 12</span></div>
+                    </div>
+                </div>
+
+                <!-- Card Người dùng mới -->
+                <div class="bg-white dark:bg-darkCard rounded-3xl p-5 md:p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Người dùng mới</p>
+                            <h3 class="text-2xl md:text-3xl font-black text-slate-800 dark:text-white leading-none">+45</h3>
+                        </div>
+                        <div class="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-900/30 text-emerald-500 flex items-center justify-center text-xl flex-shrink-0">
+                            <i class="fa-solid fa-user-plus"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 text-sm">
+                        <span class="text-red-500 font-bold bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded-lg flex items-center gap-1"><i class="fa-solid fa-arrow-trend-down text-[10px]"></i> 2%</span>
+                        <span class="text-slate-500 text-xs">so với hôm qua</span>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 text-xs font-bold text-slate-600 dark:text-slate-400">
+                        Tổng thành viên: <span class="text-slate-800 dark:text-slate-200">24,580</span>
+                    </div>
+                </div>
+
+                <!-- Card Premium -->
+                <div class="bg-gradient-to-br from-slate-900 to-slate-800 dark:from-black dark:to-slate-900 rounded-3xl p-5 md:p-6 shadow-xl relative overflow-hidden">
+                    <div class="absolute -right-4 -bottom-4 w-20 h-20 bg-highlight/20 rounded-full blur-2xl pointer-events-none"></div>
+                    <div class="flex justify-between items-start mb-4 relative z-10">
+                        <div>
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 text-highlight">Premium Active</p>
+                            <h3 class="text-2xl md:text-3xl font-black text-white leading-none">1,245</h3>
+                        </div>
+                        <div class="w-12 h-12 rounded-2xl bg-white/10 text-highlight flex items-center justify-center text-xl flex-shrink-0 border border-white/10 backdrop-blur-sm">
+                            <i class="fa-solid fa-crown"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 text-sm relative z-10">
+                        <span class="text-white font-bold bg-white/20 px-2 py-0.5 rounded-lg flex items-center gap-1">+12 hôm nay</span>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-slate-700 flex justify-between text-xs text-slate-300 relative z-10">
+                        <span>Tỷ lệ chuyển đổi</span>
+                        <span class="font-bold text-white">5.06%</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ROW 2: CHARTS -->
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-4 md:gap-6 mb-6">
+                <!-- Biểu đồ Doanh thu (Chiếm 2 cột trên Desktop to) -->
+                <div class="xl:col-span-2 bg-white dark:bg-darkCard rounded-3xl p-5 md:p-6 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h3 class="font-extrabold text-lg">Doanh thu 30 ngày qua</h3>
+                            <div class="text-xs text-slate-500">Đơn vị: Triệu VNĐ</div>
+                        </div>
+                        <button class="w-8 h-8 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 flex items-center justify-center transition">
+                            <i class="fa-solid fa-ellipsis-vertical"></i>
+                        </button>
+                    </div>
+                    <div class="flex-1 relative w-full h-64 md:h-80">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Biểu đồ Tròn Nguồn Khách -->
+                <div class="xl:col-span-1 bg-white dark:bg-darkCard rounded-3xl p-5 md:p-6 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="font-extrabold text-lg">Nguồn truy cập</h3>
+                        <button class="w-8 h-8 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 flex items-center justify-center transition">
+                            <i class="fa-solid fa-ellipsis-vertical"></i>
+                        </button>
+                    </div>
+                    <div class="flex-1 relative w-full h-48 md:h-56 flex items-center justify-center">
+                        <canvas id="trafficChart"></canvas>
+                    </div>
+                    <div class="mt-6 grid grid-cols-2 gap-y-3 gap-x-2 text-xs font-bold text-slate-600 dark:text-slate-300">
+                        <div class="flex items-center gap-2"><div class="w-3 h-3 rounded bg-[#1877F2]"></div> Facebook (45%)</div>
+                        <div class="flex items-center gap-2"><div class="w-3 h-3 rounded bg-slate-900 dark:bg-slate-100"></div> TikTok (30%)</div>
+                        <div class="flex items-center gap-2"><div class="w-3 h-3 rounded bg-[#FF0000]"></div> YouTube (15%)</div>
+                        <div class="flex items-center gap-2"><div class="w-3 h-3 rounded bg-slate-300 dark:bg-slate-600"></div> Khác (10%)</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ROW 3: TABLES & LISTS -->
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-4 md:gap-6 pb-10">
+                
+                <!-- Top Sản Phẩm (Tài liệu bán chạy) -->
+                <div class="xl:col-span-1 bg-white dark:bg-darkCard rounded-3xl p-5 md:p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="font-extrabold text-lg">Tài liệu bán chạy</h3>
+                        <a href="#" class="text-sm font-bold text-primary hover:underline">Xem tất cả</a>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <!-- Item 1 -->
+                        <div class="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+                            <div class="w-12 h-16 rounded-lg bg-blue-100 flex-shrink-0 overflow-hidden">
+                                <img src="https://placehold.co/100x133/3B82F6/FFF?text=TOAN" class="w-full h-full object-cover">
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h4 class="font-bold text-sm text-slate-800 dark:text-slate-100 truncate mb-1">Bộ 50 đề Toán VDC</h4>
+                                <div class="text-[10px] text-slate-500"><span class="text-primary font-bold">320</span> lượt bán</div>
+                            </div>
+                            <div class="font-black text-sm text-slate-800 dark:text-white">15.6M</div>
+                        </div>
+                        <!-- Item 2 -->
+                        <div class="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+                            <div class="w-12 h-16 rounded-lg bg-green-100 flex-shrink-0 overflow-hidden">
+                                <img src="https://placehold.co/100x133/10B981/FFF?text=HOA" class="w-full h-full object-cover">
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h4 class="font-bold text-sm text-slate-800 dark:text-slate-100 truncate mb-1">Tổng ôn Hóa vô cơ 8+</h4>
+                                <div class="text-[10px] text-slate-500"><span class="text-primary font-bold">215</span> lượt bán</div>
+                            </div>
+                            <div class="font-black text-sm text-slate-800 dark:text-white">8.5M</div>
+                        </div>
+                        <!-- Item 3 -->
+                        <div class="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+                            <div class="w-12 h-16 rounded-lg bg-purple-100 flex-shrink-0 overflow-hidden">
+                                <img src="https://placehold.co/100x133/8B5CF6/FFF?text=LY" class="w-full h-full object-cover">
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h4 class="font-bold text-sm text-slate-800 dark:text-slate-100 truncate mb-1">Đồ thị Dao động cơ</h4>
+                                <div class="text-[10px] text-slate-500"><span class="text-primary font-bold">180</span> lượt bán</div>
+                            </div>
+                            <div class="font-black text-sm text-slate-800 dark:text-white">6.2M</div>
+                        </div>
+                        <!-- Item 4 -->
+                        <div class="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+                            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-highlight to-accent text-slate-900 flex items-center justify-center text-xl flex-shrink-0 shadow-sm">
+                                <i class="fa-solid fa-crown"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h4 class="font-bold text-sm text-slate-800 dark:text-slate-100 truncate mb-1">Gói Premium (Tháng)</h4>
+                                <div class="text-[10px] text-slate-500"><span class="text-primary font-bold">145</span> lượt đăng ký</div>
+                            </div>
+                            <div class="font-black text-sm text-slate-800 dark:text-white">8.5M</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Đơn hàng gần đây -->
+                <div class="xl:col-span-2 bg-white dark:bg-darkCard rounded-3xl p-5 md:p-6 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="font-extrabold text-lg">Đơn hàng mới nhất</h3>
+                        <a href="#" class="text-sm font-bold text-primary hover:underline">Xem tất cả</a>
+                    </div>
+                    
+                    <div class="overflow-x-auto custom-scroll -mx-4 px-4 md:mx-0 md:px-0">
+                        <table class="w-full text-left border-collapse min-w-[700px]">
+                            <thead>
+                                <tr class="text-xs uppercase tracking-wider text-slate-500 border-b border-slate-200 dark:border-slate-700">
+                                    <th class="pb-3 font-bold">Mã ĐH</th>
+                                    <th class="pb-3 font-bold">Khách hàng</th>
+                                    <th class="pb-3 font-bold">Sản phẩm</th>
+                                    <th class="pb-3 font-bold text-right">Tổng tiền</th>
+                                    <th class="pb-3 font-bold text-center">Trạng thái</th>
+                                    <th class="pb-3 font-bold text-right">Thời gian</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm divide-y divide-slate-100 dark:divide-slate-800">
+                                <!-- Đơn 1 -->
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/30 transition group">
+                                    <td class="py-3 font-mono font-bold">#OTP9921</td>
+                                    <td class="py-3">
+                                        <div class="flex items-center gap-2">
+                                            <img src="https://placehold.co/30x30/3B82F6/FFF?text=H" class="w-6 h-6 rounded-full">
+                                            <span class="font-bold text-slate-700 dark:text-slate-200">Hoàng Huy</span>
+                                        </div>
+                                    </td>
+                                    <td class="py-3">
+                                        <div class="truncate max-w-[180px] font-medium" title="Bộ 50 đề Toán VDC">Bộ 50 đề Toán VDC</div>
+                                    </td>
+                                    <td class="py-3 text-right font-black">49.000đ</td>
+                                    <td class="py-3 text-center">
+                                        <span class="inline-block bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-[10px] font-bold px-2 py-1 rounded">Thành công</span>
+                                    </td>
+                                    <td class="py-3 text-right text-xs text-slate-500">10 phút trước</td>
+                                </tr>
+                                <!-- Đơn 2 -->
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/30 transition group">
+                                    <td class="py-3 font-mono font-bold">#OTP9920</td>
+                                    <td class="py-3">
+                                        <div class="flex items-center gap-2">
+                                            <img src="https://placehold.co/30x30/EF4444/FFF?text=M" class="w-6 h-6 rounded-full">
+                                            <span class="font-bold text-slate-700 dark:text-slate-200">Minh Anh</span>
+                                        </div>
+                                    </td>
+                                    <td class="py-3">
+                                        <div class="truncate max-w-[180px] font-medium" title="Gói Premium 30 Ngày">Gói Premium 30 Ngày</div>
+                                    </td>
+                                    <td class="py-3 text-right font-black">59.000đ</td>
+                                    <td class="py-3 text-center">
+                                        <span class="inline-flex items-center gap-1 bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 text-[10px] font-bold px-2 py-1 rounded">
+                                            <i class="fa-solid fa-spinner animate-spin"></i> Chờ duyệt
+                                        </span>
+                                    </td>
+                                    <td class="py-3 text-right text-xs text-slate-500">25 phút trước</td>
+                                </tr>
+                                <!-- Đơn 3 -->
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/30 transition group">
+                                    <td class="py-3 font-mono font-bold">#OTP9919</td>
+                                    <td class="py-3">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 flex items-center justify-center text-xs font-bold">T</div>
+                                            <span class="font-bold text-slate-700 dark:text-slate-200">Trần Tùng</span>
+                                        </div>
+                                    </td>
+                                    <td class="py-3">
+                                        <div class="truncate max-w-[180px] font-medium" title="Combo 3 chuyên đề Hóa">Combo 3 chuyên đề Hóa</div>
+                                    </td>
+                                    <td class="py-3 text-right font-black">129.000đ</td>
+                                    <td class="py-3 text-center">
+                                        <span class="inline-block bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-[10px] font-bold px-2 py-1 rounded">Thành công</span>
+                                    </td>
+                                    <td class="py-3 text-right text-xs text-slate-500">1 giờ trước</td>
+                                </tr>
+                                <!-- Đơn 4 -->
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/30 transition group">
+                                    <td class="py-3 font-mono font-bold">#OTP9918</td>
+                                    <td class="py-3">
+                                        <div class="flex items-center gap-2">
+                                            <img src="https://placehold.co/30x30/10B981/FFF?text=L" class="w-6 h-6 rounded-full">
+                                            <span class="font-bold text-slate-700 dark:text-slate-200">Linh Chi</span>
+                                        </div>
+                                    </td>
+                                    <td class="py-3">
+                                        <div class="truncate max-w-[180px] font-medium" title="Tổng hợp từ vựng TA">Tổng hợp từ vựng TA</div>
+                                    </td>
+                                    <td class="py-3 text-right font-black">29.000đ</td>
+                                    <td class="py-3 text-center">
+                                        <span class="inline-block bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 text-[10px] font-bold px-2 py-1 rounded">Hủy bỏ</span>
+                                    </td>
+                                    <td class="py-3 text-right text-xs text-slate-500">2 giờ trước</td>
+                                </tr>
+                                <!-- Đơn 5 -->
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/30 transition group">
+                                    <td class="py-3 font-mono font-bold">#OTP9917</td>
+                                    <td class="py-3">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 flex items-center justify-center text-xs font-bold">P</div>
+                                            <span class="font-bold text-slate-700 dark:text-slate-200">Phương Phạm</span>
+                                        </div>
+                                    </td>
+                                    <td class="py-3">
+                                        <div class="truncate max-w-[180px] font-medium" title="Đề thi thử chuyên KHTN">Đề thi thử chuyên KHTN</div>
+                                    </td>
+                                    <td class="py-3 text-right font-black">19.000đ</td>
+                                    <td class="py-3 text-center">
+                                        <span class="inline-block bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-[10px] font-bold px-2 py-1 rounded">Thành công</span>
+                                    </td>
+                                    <td class="py-3 text-right text-xs text-slate-500">3 giờ trước</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Script điều khiển -->
+    <script>
+        // --- Dark Mode Toggle ---
+        const themeToggleBtn = document.getElementById('themeToggle');
+        themeToggleBtn.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+            // Cập nhật lại màu chữ trong biểu đồ nếu cần thiết lập lại hoàn toàn, 
+            // ở đây ta sẽ dùng CSS variable hoặc màu tĩnh để đơn giản.
+            initCharts(); // Re-render biểu đồ với màu phù hợp theme (Đơn giản hóa trong bản demo)
+        });
+
+        // --- Sidebar Toggle (Mobile) ---
+        const sidebar = document.getElementById('adminSidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+
+        function toggleSidebar() {
+            const isClosed = sidebar.classList.contains('-translate-x-full');
+            if (isClosed) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+                // Nhường 1 frame cho DOM
+                requestAnimationFrame(() => overlay.classList.remove('opacity-0'));
+                document.body.style.overflow = 'hidden';
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('opacity-0');
+                setTimeout(() => overlay.classList.add('hidden'), 300);
+                document.body.style.overflow = '';
+            }
+        }
+
+        // --- Khởi tạo Biểu đồ Chart.js ---
+        let revChartInstance = null;
+        let trafficChartInstance = null;
+
+        function initCharts() {
+            // Lấy theme hiện tại để tùy chỉnh màu label (slate-500 cho sáng, slate-400 cho tối)
+            const isDark = document.documentElement.classList.contains('dark');
+            const textColor = isDark ? '#94A3B8' : '#64748B'; 
+            const gridColor = isDark ? '#334155' : '#E2E8F0';
+
+            // 1. Biểu đồ Doanh thu (Line Chart)
+            const ctxRev = document.getElementById('revenueChart');
+            
+            if (revChartInstance) revChartInstance.destroy(); // Hủy chart cũ nếu đang re-render
+
+            // Dữ liệu mô phỏng 30 ngày qua (mỗi 3 ngày 1 điểm)
+            const labelsRev = ['1/9', '4/9', '7/9', '10/9', '13/9', '16/9', '19/9', '22/9', '25/9', '28/9', '1/10'];
+            const dataRev = [1.2, 1.5, 1.8, 1.4, 2.1, 2.5, 2.2, 2.8, 3.2, 2.9, 2.45]; // Đơn vị: Triệu
+
+            revChartInstance = new Chart(ctxRev, {
+                type: 'line',
+                data: {
+                    labels: labelsRev,
+                    datasets: [{
+                        label: 'Doanh thu (Tr VNĐ)',
+                        data: dataRev,
+                        borderColor: '#2563EB', // Primary
+                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#ffffff',
+                        pointBorderColor: '#2563EB',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        fill: true,
+                        tension: 0.4 // Đường cong mượt
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: isDark ? '#1E293B' : '#ffffff',
+                            titleColor: isDark ? '#ffffff' : '#0F172A',
+                            bodyColor: isDark ? '#94A3B8' : '#475569',
+                            borderColor: isDark ? '#334155' : '#E2E8F0',
+                            borderWidth: 1,
+                            padding: 10,
+                            boxPadding: 4,
+                            callbacks: {
+                                label: function(context) { return context.raw + ' Triệu VNĐ'; }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: textColor, font: { family: 'Nunito', size: 11 } }
+                        },
+                        y: {
+                            grid: { color: gridColor, borderDash: [5, 5] },
+                            ticks: { color: textColor, font: { family: 'Nunito', size: 11 }, stepSize: 1 }
+                        }
+                    },
+                    interaction: { mode: 'index', intersect: false }
+                }
+            });
+
+            // 2. Biểu đồ Tròn Nguồn Khách (Doughnut)
+            const ctxTraffic = document.getElementById('trafficChart');
+            
+            if (trafficChartInstance) trafficChartInstance.destroy();
+
+            trafficChartInstance = new Chart(ctxTraffic, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Facebook', 'TikTok', 'YouTube', 'Khác'],
+                    datasets: [{
+                        data: [45, 30, 15, 10],
+                        backgroundColor: [
+                            '#1877F2', // Facebook Blue
+                            isDark ? '#FFFFFF' : '#0F172A', // TikTok Black/White
+                            '#FF0000', // YouTube Red
+                            isDark ? '#475569' : '#CBD5E1'  // Khác (Slate)
+                        ],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '75%', // Độ rỗng giữa
+                    plugins: {
+                        legend: { display: false }, // Đã tạo custom legend bằng HTML ở dưới
+                        tooltip: {
+                            backgroundColor: isDark ? '#1E293B' : '#ffffff',
+                            titleColor: isDark ? '#ffffff' : '#0F172A',
+                            bodyColor: isDark ? '#94A3B8' : '#475569',
+                            borderColor: isDark ? '#334155' : '#E2E8F0',
+                            borderWidth: 1,
+                            callbacks: {
+                                label: function(context) { return ' ' + context.label + ': ' + context.raw + '%'; }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Chạy khởi tạo Chart khi trang load xong
+        window.addEventListener('DOMContentLoaded', () => {
+            initCharts();
+        });
+
+    </script>
+</body>
+</html>

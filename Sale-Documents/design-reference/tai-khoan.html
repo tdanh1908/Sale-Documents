@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="vi" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tài khoản của tôi - ÔnThiPro</title>
+    
+    <!-- Google Fonts: Nunito -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Nunito', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#2563EB', 
+                        primaryHover: '#1D4ED8',
+                        accent: '#F97316', 
+                        highlight: '#FACC15', 
+                        darkBg: '#0F172A',
+                        darkCard: '#1E293B',
+                        bio: {
+                            50: '#f7fee7',
+                            100: '#ecfccb',
+                            600: '#65a30d', // Lime
+                            900: '#365314',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Hiệu ứng nảy Zalo 1 lần */
+        @keyframes bounce-intro {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-15px); }
+            60% { transform: translateY(-7px); }
+        }
+        .animate-bounce-intro {
+            animation: bounce-intro 2s ease-in-out 1;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .animate-bounce-intro { animation: none; }
+        }
+
+        /* Ẩn thanh cuộn */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Menu active state */
+        .nav-item.active {
+            background-color: #eff6ff; /* blue-50 */
+            color: #2563EB;
+            border-color: #2563EB;
+            font-weight: 800;
+        }
+        .dark .nav-item.active {
+            background-color: rgba(37, 99, 235, 0.1);
+        }
+
+        /* Tab Transition */
+        .tab-pane {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        .tab-pane.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Thẻ copy */
+        .copy-feedback {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #10B981;
+            color: white;
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            opacity: 0;
+            transition: opacity 0.2s;
+            pointer-events: none;
+        }
+        .copy-feedback.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-darkBg text-slate-800 dark:text-slate-100 font-sans transition-colors duration-300 pb-20 md:pb-0 relative">
+
+    <!-- HEADER -->
+    <header class="sticky top-0 z-40 bg-white dark:bg-darkCard shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <a href="#" class="flex items-center gap-2 h-11">
+                <div class="w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center font-bold text-xl shadow-lg shadow-blue-200 dark:shadow-none">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <span class="font-extrabold text-2xl tracking-tight text-primary hidden sm:block">ÔnThiPro</span>
+            </a>
+
+            <div class="hidden md:flex flex-1 max-w-xl mx-8 relative">
+                <input type="text" placeholder="Tìm tài liệu, đề thi, môn học..." 
+                       class="w-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-5 h-11 rounded-full outline-none focus:ring-2 focus:ring-primary border-none">
+                <button class="absolute right-1 top-1 bottom-1 w-10 h-9 bg-primary text-white rounded-full hover:bg-primaryHover transition flex items-center justify-center m-auto">
+                    <i class="fa-solid fa-search"></i>
+                </button>
+            </div>
+
+            <div class="flex items-center gap-2 md:gap-4">
+                <button id="themeToggle" class="w-11 h-11 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition" aria-label="Đổi giao diện">
+                    <i class="fa-solid fa-moon dark:hidden text-lg"></i>
+                    <i class="fa-solid fa-sun hidden dark:block text-highlight text-lg"></i>
+                </button>
+                
+                <a href="#" class="relative w-11 h-11 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition">
+                    <i class="fa-solid fa-cart-shopping text-lg"></i>
+                </a>
+
+                <div class="hidden md:flex items-center h-11 cursor-pointer">
+                    <img src="https://placehold.co/100x100/3B82F6/FFF?text=Huy" alt="User" class="w-9 h-9 rounded-full border-2 border-slate-200 dark:border-slate-700">
+                    <span class="ml-2 font-bold text-sm">Trần Ngọc Huy</span>
+                </div>
+
+                <button class="md:hidden w-11 h-11 flex items-center justify-center text-slate-600 dark:text-slate-300 text-xl rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-6 md:py-8 flex flex-col md:flex-row gap-8 items-start relative min-h-[70vh]">
+        
+        <!-- ================= CỘT TRÁI: MENU (Desktop) / TABS (Mobile) ================= -->
+        <aside class="w-full md:w-64 lg:w-72 flex-shrink-0 md:sticky md:top-24 z-30">
+            <!-- Mobile Tabs -->
+            <div class="md:hidden flex overflow-x-auto hide-scrollbar gap-2 pb-2 -mx-4 px-4 border-b border-slate-200 dark:border-slate-800 mb-6 bg-slate-50 dark:bg-darkBg sticky top-16 pt-2">
+                <button class="nav-item active flex items-center gap-2 h-11 px-4 rounded-full font-bold text-sm text-slate-600 dark:text-slate-300 whitespace-nowrap bg-white dark:bg-darkCard border border-slate-200 dark:border-slate-700 transition flex-shrink-0" data-target="tab-overview">
+                    <i class="fa-solid fa-border-all"></i> Tổng quan
+                </button>
+                <button class="nav-item flex items-center gap-2 h-11 px-4 rounded-full font-bold text-sm text-slate-600 dark:text-slate-300 whitespace-nowrap bg-white dark:bg-darkCard border border-slate-200 dark:border-slate-700 transition flex-shrink-0" data-target="tab-docs">
+                    <i class="fa-solid fa-book"></i> Tài liệu
+                </button>
+                <button class="nav-item flex items-center gap-2 h-11 px-4 rounded-full font-bold text-sm text-slate-600 dark:text-slate-300 whitespace-nowrap bg-white dark:bg-darkCard border border-slate-200 dark:border-slate-700 transition flex-shrink-0" data-target="tab-orders">
+                    <i class="fa-solid fa-receipt"></i> Đơn hàng
+                </button>
+                <button class="nav-item flex items-center gap-2 h-11 px-4 rounded-full font-bold text-sm text-slate-600 dark:text-slate-300 whitespace-nowrap bg-white dark:bg-darkCard border border-slate-200 dark:border-slate-700 transition flex-shrink-0" data-target="tab-results">
+                    <i class="fa-solid fa-ranking-star"></i> Kết quả thi
+                </button>
+                <button class="nav-item flex items-center gap-2 h-11 px-4 rounded-full font-bold text-sm text-slate-600 dark:text-slate-300 whitespace-nowrap bg-white dark:bg-darkCard border border-slate-200 dark:border-slate-700 transition flex-shrink-0" data-target="tab-coupons">
+                    <i class="fa-solid fa-ticket"></i> Mã của tôi
+                </button>
+                <button class="nav-item flex items-center gap-2 h-11 px-4 rounded-full font-bold text-sm text-slate-600 dark:text-slate-300 whitespace-nowrap bg-white dark:bg-darkCard border border-slate-200 dark:border-slate-700 transition flex-shrink-0" data-target="tab-referral">
+                    <i class="fa-solid fa-users-viewfinder"></i> Giới thiệu
+                </button>
+                <button class="nav-item flex items-center gap-2 h-11 px-4 rounded-full font-bold text-sm text-slate-600 dark:text-slate-300 whitespace-nowrap bg-white dark:bg-darkCard border border-slate-200 dark:border-slate-700 transition flex-shrink-0" data-target="tab-security">
+                    <i class="fa-solid fa-shield-halved"></i> Hồ sơ
+                </button>
+            </div>
+
+            <!-- Desktop Menu -->
+            <div class="hidden md:flex flex-col bg-white dark:bg-darkCard rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden p-2 space-y-1">
+                <button class="nav-item active flex items-center gap-3 w-full h-12 px-4 rounded-2xl text-left font-bold text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition border border-transparent" data-target="tab-overview">
+                    <i class="fa-solid fa-border-all w-5 text-center"></i> Tổng quan
+                </button>
+                <button class="nav-item flex items-center gap-3 w-full h-12 px-4 rounded-2xl text-left font-bold text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition border border-transparent" data-target="tab-docs">
+                    <i class="fa-solid fa-book w-5 text-center"></i> Tài liệu của tôi
+                </button>
+                <button class="nav-item flex items-center gap-3 w-full h-12 px-4 rounded-2xl text-left font-bold text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition border border-transparent" data-target="tab-orders">
+                    <i class="fa-solid fa-receipt w-5 text-center"></i> Đơn hàng
+                </button>
+                <button class="nav-item flex items-center gap-3 w-full h-12 px-4 rounded-2xl text-left font-bold text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition border border-transparent" data-target="tab-results">
+                    <i class="fa-solid fa-ranking-star w-5 text-center"></i> Kết quả thi thử
+                </button>
+                <button class="nav-item flex items-center gap-3 w-full h-12 px-4 rounded-2xl text-left font-bold text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition border border-transparent" data-target="tab-coupons">
+                    <i class="fa-solid fa-ticket w-5 text-center"></i> Mã của tôi <span class="ml-auto bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">2</span>
+                </button>
+                <div class="h-px bg-slate-100 dark:bg-slate-800 my-2"></div>
+                <button class="nav-item flex items-center gap-3 w-full h-12 px-4 rounded-2xl text-left font-bold text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition border border-transparent" data-target="tab-referral">
+                    <i class="fa-solid fa-users-viewfinder w-5 text-center"></i> Giới thiệu bạn bè
+                </button>
+                <button class="nav-item flex items-center gap-3 w-full h-12 px-4 rounded-2xl text-left font-bold text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition border border-transparent" data-target="tab-security">
+                    <i class="fa-solid fa-shield-halved w-5 text-center"></i> Hồ sơ & Bảo mật
+                </button>
+                <div class="h-px bg-slate-100 dark:bg-slate-800 my-2"></div>
+                <button class="flex items-center gap-3 w-full h-12 px-4 rounded-2xl text-left font-bold text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition border border-transparent">
+                    <i class="fa-solid fa-right-from-bracket w-5 text-center"></i> Đăng xuất
+                </button>
+            </div>
+        </aside>
+
+        <!-- ================= CỘT PHẢI: NỘI DUNG TABS ================= -->
+        <div class="flex-1 w-full min-w-0">
+            
+            <!-- 1. TỔNG QUAN -->
+            <div id="tab-overview" class="tab-pane active space-y-6">
+                
+                <!-- Profile Card -->
+                <div class="bg-white dark:bg-darkCard rounded-3xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row items-center sm:items-start gap-6 relative overflow-hidden">
+                    <div class="absolute right-0 top-0 w-32 h-32 bg-primary/5 rounded-bl-full pointer-events-none"></div>
+                    
+                    <div class="relative group cursor-pointer">
+                        <img src="https://placehold.co/150x150/3B82F6/FFF?text=Huy" alt="Avatar" class="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-4 border-slate-100 dark:border-slate-800 shadow-md">
+                        <div class="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition">
+                            <i class="fa-solid fa-camera text-xl"></i>
+                        </div>
+                    </div>
+
+                    <div class="flex-1 text-center sm:text-left">
+                        <h2 class="text-2xl font-black text-slate-900 dark:text-white mb-1">Trần Ngọc Huy</h2>
+                        
+                        <!-- Biệt danh & Trạng thái -->
+                        <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-3">
+                            <span class="text-sm font-bold text-slate-500">@Cậu Bé Vàng</span>
+                            <!-- Đã duyệt -->
+                            <span class="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-[10px] font-bold px-2 py-0.5 rounded-md border border-green-200 dark:border-green-800" title="Biệt danh đang hiển thị công khai trên Bảng xếp hạng">Đã duyệt</span>
+                            
+                            <!-- Ví dụ trạng thái khác (ẩn đi): -->
+                            <!-- <span class="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 text-[10px] font-bold px-2 py-0.5 rounded-md border border-yellow-200 dark:border-yellow-800">Chờ duyệt</span> -->
+                            <!-- <span class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-bold px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-700">Đã che</span> -->
+                        </div>
+
+                        <div class="text-sm text-slate-600 dark:text-slate-400 font-medium mb-4 flex items-center justify-center sm:justify-start gap-2">
+                            <i class="fa-solid fa-school text-primary"></i> THPT Chuyên KHTN
+                        </div>
+
+                        <button class="h-9 px-4 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-sm font-bold rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition" onclick="document.querySelector('[data-target=tab-security]').click()">
+                            Chỉnh sửa hồ sơ
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Premium Status -->
+                    <div class="bg-gradient-to-br from-slate-900 to-slate-800 dark:from-black dark:to-slate-900 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden group">
+                        <div class="absolute -right-10 -top-10 w-32 h-32 bg-highlight opacity-20 rounded-full blur-2xl group-hover:opacity-40 transition"></div>
+                        
+                        <div class="flex items-center gap-3 mb-4 relative z-10">
+                            <div class="w-12 h-12 bg-white/10 backdrop-blur rounded-full flex items-center justify-center text-highlight text-xl shadow-inner border border-white/10"><i class="fa-solid fa-crown"></i></div>
+                            <div>
+                                <h3 class="font-extrabold text-lg text-white">Gói Premium</h3>
+                                <div class="text-xs text-blue-200 font-medium">Đang hoạt động</div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4 relative z-10">
+                            <div>
+                                <div class="flex justify-between text-sm mb-1 font-bold">
+                                    <span>Thời gian còn lại</span>
+                                    <span class="text-highlight">23 ngày</span>
+                                </div>
+                                <div class="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
+                                    <div class="bg-highlight h-full" style="width: 76%"></div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <div class="flex justify-between text-sm mb-1 font-bold">
+                                    <span>Suất tải tài liệu</span>
+                                    <span class="text-green-400">2 / 5</span>
+                                </div>
+                                <div class="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
+                                    <div class="bg-green-500 h-full" style="width: 40%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="w-full mt-5 h-11 bg-white/10 hover:bg-white/20 border border-white/20 backdrop-blur rounded-xl text-sm font-bold transition flex items-center justify-center gap-2">Gia hạn ngay</button>
+                    </div>
+
+                    <!-- Stats Quick View -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-white dark:bg-darkCard rounded-3xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-center items-center text-center">
+                            <div class="w-12 h-12 bg-blue-50 dark:bg-blue-900/30 text-primary rounded-full flex items-center justify-center text-xl mb-3"><i class="fa-solid fa-book"></i></div>
+                            <div class="font-black text-2xl text-slate-800 dark:text-white mb-1">12</div>
+                            <div class="text-xs text-slate-500 font-bold uppercase tracking-wider">Tài liệu sở hữu</div>
+                        </div>
+                        <div class="bg-white dark:bg-darkCard rounded-3xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-center items-center text-center">
+                            <div class="w-12 h-12 bg-orange-50 dark:bg-orange-900/30 text-accent rounded-full flex items-center justify-center text-xl mb-3"><i class="fa-solid fa-pen-to-square"></i></div>
+                            <div class="font-black text-2xl text-slate-800 dark:text-white mb-1">45</div>
+                            <div class="text-xs text-slate-500 font-bold uppercase tracking-wider">Lượt làm bài</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. TÀI LIỆU CỦA TÔI -->
+            <div id="tab-docs" class="tab-pane space-y-6">
+                <h2 class="text-2xl font-extrabold mb-6 hidden md:block">Tài liệu của tôi</h2>
+                
+                <div class="flex flex-col sm:flex-row gap-4 mb-6">
+                    <div class="relative flex-1">
+                        <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" placeholder="Tìm tên tài liệu..." class="w-full bg-white dark:bg-darkCard border border-slate-200 dark:border-slate-700 h-11 rounded-xl pl-11 pr-4 text-sm outline-none focus:border-primary">
+                    </div>
+                    <select class="h-11 px-4 bg-white dark:bg-darkCard border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 outline-none cursor-pointer">
+                        <option>Tất cả môn</option>
+                        <option>Toán</option>
+                        <option>Lý</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Item: Có tải về -->
+                    <div class="bg-white dark:bg-darkCard rounded-2xl p-3 border border-slate-200 dark:border-slate-700 flex flex-col shadow-sm">
+                        <div class="flex gap-3 mb-3">
+                            <div class="w-16 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-blue-50">
+                                <img src="https://placehold.co/150x200/3B82F6/FFF?text=TOAN" class="w-full h-full object-cover">
+                            </div>
+                            <div class="flex flex-col justify-center">
+                                <span class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded mb-1 w-max">Môn Toán</span>
+                                <h4 class="font-bold text-sm line-clamp-2 leading-snug">Bộ 50 đề thi thử THPT QG Môn Toán 2026</h4>
+                                <div class="text-[10px] text-slate-400 mt-1">Đã mua: 01/10/2026</div>
+                            </div>
+                        </div>
+                        <div class="mt-auto flex gap-2">
+                            <button class="flex-1 h-9 bg-primary text-white text-xs font-bold rounded-lg hover:bg-primaryHover transition flex items-center justify-center gap-1.5"><i class="fa-solid fa-book-open"></i> Đọc</button>
+                            <button class="flex-1 h-9 bg-slate-800 text-white text-xs font-bold rounded-lg hover:bg-slate-900 transition flex items-center justify-center gap-1.5"><i class="fa-solid fa-download"></i> Tải PDF</button>
+                        </div>
+                    </div>
+
+                    <!-- Item: Chỉ đọc online -->
+                    <div class="bg-white dark:bg-darkCard rounded-2xl p-3 border border-slate-200 dark:border-slate-700 flex flex-col shadow-sm">
+                        <div class="flex gap-3 mb-3">
+                            <div class="w-16 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-green-50">
+                                <img src="https://placehold.co/150x200/10B981/FFF?text=HOA" class="w-full h-full object-cover">
+                            </div>
+                            <div class="flex flex-col justify-center">
+                                <span class="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded mb-1 w-max">Môn Hóa</span>
+                                <h4 class="font-bold text-sm line-clamp-2 leading-snug">Chuyên đề Vận dụng cao Hóa học vô cơ</h4>
+                                <div class="text-[10px] text-slate-400 mt-1">Gói: Chỉ xem Online</div>
+                            </div>
+                        </div>
+                        <div class="mt-auto flex gap-2">
+                            <button class="flex-1 h-9 bg-primary text-white text-xs font-bold rounded-lg hover:bg-primaryHover transition flex items-center justify-center gap-1.5"><i class="fa-solid fa-book-open"></i> Đọc</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. ĐƠN HÀNG -->
+            <div id="tab-orders" class="tab-pane space-y-6">
+                <h2 class="text-2xl font-extrabold mb-6 hidden md:block">Lịch sử Đơn hàng</h2>
+                
+                <div class="bg-white dark:bg-darkCard rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto hide-scrollbar">
+                        <table class="w-full text-sm text-left min-w-[600px]">
+                            <thead class="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700 text-slate-500 uppercase tracking-wider text-[10px] font-bold">
+                                <tr>
+                                    <th class="p-4">Mã ĐH</th>
+                                    <th class="p-4">Ngày mua</th>
+                                    <th class="p-4">Sản phẩm</th>
+                                    <th class="p-4 text-right">Tổng tiền</th>
+                                    <th class="p-4 text-center">Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 dark:divide-slate-800 font-medium text-sm">
+                                <!-- Trạng thái: Thành công -->
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/30 transition">
+                                    <td class="p-4 font-mono font-bold text-slate-800 dark:text-slate-200">OTP2026A</td>
+                                    <td class="p-4 text-slate-500 text-xs">04/10/2026<br>15:30</td>
+                                    <td class="p-4 text-xs">2 tài liệu<br><a href="#" class="text-primary hover:underline">Xem chi tiết</a></td>
+                                    <td class="p-4 text-right font-bold">84.000đ</td>
+                                    <td class="p-4 text-center">
+                                        <span class="inline-block bg-green-100 text-green-700 text-[10px] font-bold px-2 py-1 rounded">Thành công</span>
+                                    </td>
+                                </tr>
+                                <!-- Trạng thái: Đang kiểm tra -->
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/30 transition">
+                                    <td class="p-4 font-mono font-bold text-slate-800 dark:text-slate-200">OTP9988B</td>
+                                    <td class="p-4 text-slate-500 text-xs">04/10/2026<br>16:00</td>
+                                    <td class="p-4 text-xs">Gói Premium 30 Ngày</td>
+                                    <td class="p-4 text-right font-bold">59.000đ</td>
+                                    <td class="p-4 text-center">
+                                        <span class="inline-flex items-center gap-1 bg-orange-100 text-orange-700 text-[10px] font-bold px-2 py-1 rounded">
+                                            <i class="fa-solid fa-spinner animate-spin-slow"></i> Đang kiểm tra
+                                        </span>
+                                    </td>
+                                </tr>
+                                <!-- Trạng thái: Chờ thanh toán -->
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/30 transition">
+                                    <td class="p-4 font-mono font-bold text-slate-800 dark:text-slate-200">OTP1122C</td>
+                                    <td class="p-4 text-slate-500 text-xs">03/10/2026<br>10:15</td>
+                                    <td class="p-4 text-xs">1 tài liệu</td>
+                                    <td class="p-4 text-right font-bold">39.000đ</td>
+                                    <td class="p-4 text-center">
+                                        <div class="flex flex-col items-center gap-1">
+                                            <span class="inline-block bg-yellow-100 text-yellow-700 text-[10px] font-bold px-2 py-1 rounded">Chờ thanh toán</span>
+                                            <a href="#" class="text-[10px] text-primary hover:underline">Thanh toán ngay</a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. KẾT QUẢ THI THỬ -->
+            <div id="tab-results" class="tab-pane space-y-6">
+                <h2 class="text-2xl font-extrabold mb-6 hidden md:block">Kết quả thi thử</h2>
+                
+                <div class="bg-white dark:bg-darkCard rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto hide-scrollbar">
+                        <table class="w-full text-sm text-left min-w-[700px]">
+                            <thead class="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700 text-slate-500 uppercase tracking-wider text-xs font-bold">
+                                <tr>
+                                    <th class="p-4">Ngày thi</th>
+                                    <th class="p-4">Tên đề thi</th>
+                                    <th class="p-4">Môn</th>
+                                    <th class="p-4 text-center">Điểm số</th>
+                                    <th class="p-4 text-center">Thứ hạng</th>
+                                    <th class="p-4 text-right">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/30 transition">
+                                    <td class="p-4 text-slate-500">10/10/2026<br><span class="text-xs">14:30</span></td>
+                                    <td class="p-4 font-bold text-slate-800 dark:text-slate-200 max-w-[250px] truncate" title="Đề thi thử THPT QG Sở Hà Nội 2026">Đề thi thử THPT QG Sở Hà Nội 2026</td>
+                                    <td class="p-4"><span class="bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs px-2 py-1 rounded">Toán</span></td>
+                                    <td class="p-4 text-center"><span class="font-black text-lg text-green-500">8.5</span> <span class="text-xs text-slate-400">/10</span></td>
+                                    <td class="p-4 text-center font-bold text-slate-700 dark:text-slate-300">#42<br><span class="text-[10px] text-slate-400 font-normal">/ 1,245</span></td>
+                                    <td class="p-4 text-right">
+                                        <button class="h-9 px-4 bg-slate-100 dark:bg-slate-800 text-primary font-bold rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition text-xs">Xem chi tiết</button>
+                                    </td>
+                                </tr>
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/30 transition">
+                                    <td class="p-4 text-slate-500">05/10/2026<br><span class="text-xs">09:15</span></td>
+                                    <td class="p-4 font-bold text-slate-800 dark:text-slate-200 max-w-[250px] truncate" title="Đề thi thử chuyên KHTN lần 1">Đề thi thử chuyên KHTN lần 1</td>
+                                    <td class="p-4"><span class="bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 text-xs px-2 py-1 rounded">Lý</span></td>
+                                    <td class="p-4 text-center"><span class="font-black text-lg text-primary">7.25</span> <span class="text-xs text-slate-400">/10</span></td>
+                                    <td class="p-4 text-center font-bold text-slate-700 dark:text-slate-300">--</td>
+                                    <td class="p-4 text-right">
+                                        <button class="h-9 px-4 bg-slate-100 dark:bg-slate-800 text-primary font-bold rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition text-xs">Xem chi tiết</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. MÃ CỦA TÔI -->
+            <div id="tab-coupons" class="tab-pane space-y-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-extrabold hidden md:block">Mã giảm giá cá nhân</h2>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Coupon 1: Active -->
+                    <div class="bg-white dark:bg-darkCard rounded-2xl border border-slate-200 dark:border-slate-700 flex overflow-hidden shadow-sm hover:shadow-md transition">
+                        <div class="w-1/3 bg-gradient-to-br from-red-500 to-orange-500 flex flex-col justify-center items-center text-white p-3 border-r border-dashed border-slate-300 relative">
+                            <!-- Bán nguyệt cắt 2 bên -->
+                            <div class="absolute -top-3 -right-3 w-6 h-6 bg-white dark:bg-darkCard rounded-full"></div>
+                            <div class="absolute -bottom-3 -right-3 w-6 h-6 bg-white dark:bg-darkCard rounded-full"></div>
+                            
+                            <div class="text-xs font-bold uppercase tracking-wider mb-1 opacity-90">Giảm</div>
+                            <div class="text-2xl sm:text-3xl font-black leading-none text-white drop-shadow-sm">20%</div>
+                        </div>
+                        <div class="w-2/3 p-4 flex flex-col justify-between">
+                            <div>
+                                <div class="flex justify-between items-start mb-1">
+                                    <span class="font-mono font-black text-slate-800 dark:text-white text-lg">GIOITOAN20</span>
+                                    <span class="bg-green-100 text-green-600 text-[9px] font-bold px-1.5 py-0.5 rounded">Còn hạn</span>
+                                </div>
+                                <div class="text-[11px] text-slate-500 leading-tight mb-2">Thưởng thi thử điểm cao. Áp dụng cho tài liệu môn Toán.</div>
+                                <div class="text-[10px] font-bold text-red-500 bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded w-max">
+                                    Hết hạn sau: <span class="font-mono" data-countdown="172800">48:00:00</span>
+                                </div>
+                            </div>
+                            <button class="mt-3 h-9 bg-slate-100 dark:bg-slate-800 text-primary font-bold text-xs rounded-lg hover:bg-slate-200 transition">Dùng ngay</button>
+                        </div>
+                    </div>
+
+                    <!-- Coupon 2: Expired -->
+                    <div class="bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 flex overflow-hidden shadow-sm opacity-60 grayscale">
+                        <div class="w-1/3 bg-slate-400 flex flex-col justify-center items-center text-white p-3 border-r border-dashed border-slate-300 relative">
+                            <div class="absolute -top-3 -right-3 w-6 h-6 bg-slate-50 dark:bg-slate-900 rounded-full"></div>
+                            <div class="absolute -bottom-3 -right-3 w-6 h-6 bg-slate-50 dark:bg-slate-900 rounded-full"></div>
+                            <div class="text-xs font-bold uppercase tracking-wider mb-1 opacity-90">Giảm</div>
+                            <div class="text-2xl sm:text-3xl font-black leading-none text-white drop-shadow-sm">50K</div>
+                        </div>
+                        <div class="w-2/3 p-4 flex flex-col justify-between">
+                            <div>
+                                <div class="flex justify-between items-start mb-1">
+                                    <span class="font-mono font-black text-slate-800 dark:text-white text-lg line-through">FRIEND50</span>
+                                    <span class="bg-slate-200 text-slate-500 text-[9px] font-bold px-1.5 py-0.5 rounded">Hết hạn</span>
+                                </div>
+                                <div class="text-[11px] text-slate-500 leading-tight mb-2">Giới thiệu bạn bè thành công.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. GIỚI THIỆU BẠN BÈ -->
+            <div id="tab-referral" class="tab-pane space-y-6">
+                
+                <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-3xl p-6 md:p-10 text-white shadow-xl relative overflow-hidden text-center">
+                    <div class="absolute -left-10 -top-10 w-40 h-40 bg-white opacity-10 rounded-full blur-2xl pointer-events-none"></div>
+                    
+                    <div class="w-16 h-16 bg-white/20 backdrop-blur rounded-full flex items-center justify-center text-3xl mx-auto mb-4 border border-white/30"><i class="fa-solid fa-handshake-angle text-highlight"></i></div>
+                    <h2 class="text-2xl md:text-3xl font-black mb-2">Mời Bạn Bè, Nhận Quà Khủng!</h2>
+                    <p class="text-blue-100 text-sm mb-6 max-w-md mx-auto">Nhận ngay voucher <span class="font-bold text-highlight">50.000đ</span> cho mỗi người bạn đăng ký và mua tài liệu thành công qua link của bạn.</p>
+                    
+                    <div class="bg-white/10 p-2 rounded-2xl backdrop-blur border border-white/20 flex items-center max-w-sm mx-auto relative">
+                        <input type="text" value="https://onthipro.vn/ref/OTP_HUY99" readonly class="bg-transparent border-none text-white font-mono text-sm pl-4 pr-2 outline-none flex-1 truncate">
+                        <button class="h-11 px-5 bg-white text-primary font-bold rounded-xl hover:bg-slate-50 transition shadow relative" onclick="copyReferral(this)">
+                            Sao chép
+                            <div class="copy-feedback">Đã chép!</div>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-white dark:bg-darkCard rounded-3xl p-5 border border-slate-200 dark:border-slate-700 text-center">
+                        <div class="text-xs text-slate-500 font-bold uppercase tracking-wider mb-2">Đã đăng ký</div>
+                        <div class="font-black text-3xl text-slate-800 dark:text-white">3 <span class="text-sm text-slate-400 font-normal">bạn</span></div>
+                    </div>
+                    <div class="bg-white dark:bg-darkCard rounded-3xl p-5 border border-slate-200 dark:border-slate-700 text-center">
+                        <div class="text-xs text-slate-500 font-bold uppercase tracking-wider mb-2">Mã đã nhận</div>
+                        <div class="font-black text-3xl text-accent">1 <span class="text-sm text-slate-400 font-normal">mã</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 7. HỒ SƠ & BẢO MẬT -->
+            <div id="tab-security" class="tab-pane space-y-8">
+                <h2 class="text-2xl font-extrabold hidden md:block">Hồ sơ & Bảo mật</h2>
+
+                <!-- Form Thông tin cá nhân -->
+                <div class="bg-white dark:bg-darkCard rounded-3xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <h3 class="font-bold text-lg mb-4 border-b border-slate-100 dark:border-slate-800 pb-2">Thông tin cá nhân</h3>
+                    <form class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase">Họ và tên</label>
+                                <input type="text" value="Trần Ngọc Huy" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 h-11 rounded-xl px-4 text-sm focus:border-primary outline-none text-slate-800 dark:text-slate-100 transition">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase">Số điện thoại</label>
+                                <input type="tel" value="0987654321" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 h-11 rounded-xl px-4 text-sm focus:border-primary outline-none text-slate-800 dark:text-slate-100 transition">
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between items-end mb-1.5">
+                                <label class="block text-xs font-bold text-slate-500 uppercase">Biệt danh hiển thị</label>
+                                <span class="text-[10px] text-green-500 font-bold"><i class="fa-solid fa-check"></i> Đã duyệt</span>
+                            </div>
+                            <input type="text" value="Cậu Bé Vàng" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 h-11 rounded-xl px-4 text-sm focus:border-primary outline-none text-slate-800 dark:text-slate-100 transition">
+                            <p class="text-[10px] text-slate-400 mt-1">Lưu ý: Nếu bạn đổi biệt danh, hệ thống sẽ cần Admin duyệt lại trước khi hiển thị công khai.</p>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase">Trường THPT</label>
+                            <input type="text" value="THPT Chuyên KHTN" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 h-11 rounded-xl px-4 text-sm focus:border-primary outline-none text-slate-800 dark:text-slate-100 transition">
+                        </div>
+
+                        <div class="pt-2">
+                            <button type="button" class="h-11 px-6 bg-primary text-white font-bold rounded-xl hover:bg-primaryHover transition shadow-sm">Lưu thay đổi</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Form Đổi mật khẩu -->
+                <div class="bg-white dark:bg-darkCard rounded-3xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <h3 class="font-bold text-lg mb-4 border-b border-slate-100 dark:border-slate-800 pb-2">Đổi mật khẩu</h3>
+                    <form class="space-y-4 max-w-md">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase">Mật khẩu hiện tại</label>
+                            <input type="password" placeholder="••••••••" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 h-11 rounded-xl px-4 text-sm focus:border-primary outline-none text-slate-800 dark:text-slate-100 transition">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase">Mật khẩu mới</label>
+                            <input type="password" placeholder="Tối thiểu 8 ký tự" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 h-11 rounded-xl px-4 text-sm focus:border-primary outline-none text-slate-800 dark:text-slate-100 transition">
+                        </div>
+                        <div class="pt-2">
+                            <button type="button" class="h-11 px-6 bg-slate-800 text-white dark:bg-slate-700 font-bold rounded-xl hover:bg-slate-900 dark:hover:bg-slate-600 transition shadow-sm">Cập nhật mật khẩu</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Danger Zone -->
+                <div class="bg-red-50 dark:bg-red-900/10 rounded-3xl p-6 border border-red-200 dark:border-red-900/30">
+                    <h3 class="font-bold text-lg text-red-600 dark:text-red-500 mb-2">Vùng nguy hiểm</h3>
+                    <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">Khi bạn xóa tài khoản, toàn bộ dữ liệu lịch sử thi, tài liệu đã mua và gói Premium sẽ bị xóa vĩnh viễn và không thể khôi phục.</p>
+                    <button class="h-11 px-6 bg-white dark:bg-darkCard text-red-500 border border-red-200 dark:border-red-800 font-bold rounded-xl hover:bg-red-50 dark:hover:bg-red-900/30 transition">Xóa tài khoản và dữ liệu của tôi</button>
+                </div>
+
+            </div>
+
+        </div>
+    </main>
+
+    <!-- FAB -->
+    <div class="fixed bottom-6 right-4 md:right-8 flex flex-col gap-3 z-50">
+        <a href="#" class="w-12 h-12 md:w-[56px] md:h-[56px] rounded-full bg-blue-500 text-white flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition animate-bounce-intro" title="Chat Zalo">
+            <div class="font-bold text-[10px] md:text-sm">Zalo</div>
+        </a>
+        <a href="#" class="w-12 h-12 md:w-[56px] md:h-[56px] rounded-full bg-gradient-to-tr from-blue-500 to-rose-500 text-white flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition" title="Chat Messenger">
+            <i class="fa-brands fa-facebook-messenger"></i>
+        </a>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white dark:bg-darkCard pt-12 pb-6 border-t border-slate-200 dark:border-slate-800 mt-10">
+        <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+            <div class="col-span-1 md:col-span-1">
+                <a href="#" class="flex items-center gap-2 mb-4 h-11">
+                    <div class="w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center font-bold text-xl shadow-lg">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </div>
+                    <span class="font-extrabold text-2xl tracking-tight text-primary">ÔnThiPro</span>
+                </a>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Nền tảng chia sẻ và mua bán tài liệu luyện thi THPT Quốc Gia uy tín, chất lượng hàng đầu Việt Nam.</p>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4 text-slate-800 dark:text-slate-200">Về chúng tôi</h4>
+                <ul class="text-sm text-slate-500 dark:text-slate-400 space-y-3">
+                    <li><a href="#" class="hover:text-primary transition block py-1">Giới thiệu</a></li>
+                    <li><a href="#" class="hover:text-primary transition block py-1">Điều khoản sử dụng</a></li>
+                    <li><a href="#" class="hover:text-primary transition block py-1">Chính sách bảo mật</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4 text-slate-800 dark:text-slate-200">Hỗ trợ học sinh</h4>
+                <ul class="text-sm text-slate-500 dark:text-slate-400 space-y-3">
+                    <li><a href="#" class="hover:text-primary transition block py-1">Hướng dẫn thanh toán</a></li>
+                    <li><a href="#" class="hover:text-primary transition block py-1 flex items-center">Gói Premium <span class="bg-highlight text-slate-900 text-[10px] font-bold px-1.5 py-0.5 rounded ml-2">HOT</span></a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4 text-slate-800 dark:text-slate-200">Liên hệ</h4>
+                <ul class="text-sm text-slate-500 dark:text-slate-400 space-y-3">
+                    <li class="flex items-center py-1"><i class="fa-solid fa-phone w-6 text-center"></i> 0123.456.789</li>
+                    <li class="flex items-center py-1"><i class="fa-solid fa-envelope w-6 text-center"></i> hotro@onthipro.vn</li>
+                </ul>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto px-4 text-center text-sm text-slate-500 border-t border-slate-100 dark:border-slate-800 pt-6">
+            &copy; 2026 ÔnThiPro. All rights reserved.
+        </div>
+    </footer>
+
+    <script>
+        // --- Dark Mode ---
+        const themeToggleBtn = document.getElementById('themeToggle');
+        themeToggleBtn.addEventListener('click', () => document.documentElement.classList.toggle('dark'));
+
+        // --- Tabs Logic ---
+        const navItems = document.querySelectorAll('.nav-item');
+        const tabPanes = document.querySelectorAll('.tab-pane');
+
+        navItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                const targetId = item.getAttribute('data-target');
+                
+                // Tránh lỗi click vào span/icon bên trong button
+                const btn = e.currentTarget;
+
+                // Deactivate all
+                navItems.forEach(nav => {
+                    nav.classList.remove('active', 'bg-slate-50', 'dark:bg-slate-800/50');
+                    if(nav.parentElement.classList.contains('md:hidden')) {
+                        // Mobile specific un-active logic
+                        nav.classList.remove('bg-blue-50', 'text-primary', 'border-primary', 'font-bold');
+                        nav.classList.add('bg-white', 'dark:bg-darkCard', 'text-slate-600', 'dark:text-slate-300', 'border-slate-200', 'dark:border-slate-700');
+                    }
+                });
+                tabPanes.forEach(pane => pane.classList.remove('active'));
+
+                // Activate clicked
+                // Sync mobile and desktop tabs if one is clicked
+                document.querySelectorAll(`[data-target="${targetId}"]`).forEach(syncBtn => {
+                     syncBtn.classList.add('active');
+                     if(syncBtn.parentElement.classList.contains('md:hidden')) {
+                         syncBtn.classList.remove('bg-white', 'dark:bg-darkCard', 'text-slate-600', 'dark:text-slate-300', 'border-slate-200', 'dark:border-slate-700');
+                     } else {
+                         syncBtn.classList.add('bg-slate-50', 'dark:bg-slate-800/50');
+                     }
+                });
+               
+                document.getElementById(targetId).classList.add('active');
+                
+                // Scroll tab list on mobile to keep active item in view
+                if(window.innerWidth < 768) {
+                    btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                }
+            });
+        });
+
+        // --- Copy to clipboard (Referral) ---
+        function copyReferral(btn) {
+            const input = btn.previousElementSibling;
+            input.select();
+            input.setSelectionRange(0, 99999); // Mobile
+            navigator.clipboard.writeText(input.value);
+            
+            const feedback = btn.querySelector('.copy-feedback');
+            feedback.classList.add('show');
+            setTimeout(() => feedback.classList.remove('show'), 2000);
+        }
+
+        // --- Countdown Timers (Coupons) ---
+        function formatTime(seconds) {
+            const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
+            const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
+            const s = Math.floor(seconds % 60).toString().padStart(2, '0');
+            return `${h}:${m}:${s}`;
+        }
+
+        document.querySelectorAll('[data-countdown]').forEach(element => {
+            let timeLeft = parseInt(element.getAttribute('data-countdown'));
+            
+            const timer = setInterval(() => {
+                timeLeft--;
+                if (timeLeft < 0) {
+                    clearInterval(timer);
+                    element.textContent = "00:00:00";
+                    // Update state to expired visually if needed
+                } else {
+                    element.textContent = formatTime(timeLeft);
+                }
+            }, 1000);
+        });
+
+    </script>
+</body>
+</html>

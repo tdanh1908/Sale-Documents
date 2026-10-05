@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="vi" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bảng xếp hạng - ÔnThiPro</title>
+    
+    <!-- Google Fonts: Nunito -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Nunito', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#2563EB', 
+                        primaryHover: '#1D4ED8',
+                        accent: '#F97316', 
+                        highlight: '#FACC15', 
+                        darkBg: '#0F172A',
+                        darkCard: '#1E293B',
+                        bio: {
+                            50: '#f7fee7',
+                            100: '#ecfccb',
+                            600: '#65a30d', // Lime
+                            900: '#365314',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Hiệu ứng nảy Zalo 1 lần */
+        @keyframes bounce-intro {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-15px); }
+            60% { transform: translateY(-7px); }
+        }
+        .animate-bounce-intro {
+            animation: bounce-intro 2s ease-in-out 1;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .animate-bounce-intro { animation: none; }
+        }
+
+        /* Ẩn thanh cuộn */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Carousel Animation */
+        .carousel-track {
+            display: flex;
+            transition: transform 0.5s ease-in-out;
+        }
+
+        /* Custom Tabs */
+        .mode-tab.active {
+            background-color: #2563EB;
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+        }
+        
+        .sub-tab.active {
+            border-color: #2563EB;
+            color: #2563EB;
+            background-color: #eff6ff; /* blue-50 */
+        }
+        .dark .sub-tab.active {
+            background-color: rgba(37, 99, 235, 0.1);
+        }
+
+        /* Podium Animations */
+        @keyframes riseUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .podium-enter {
+            animation: riseUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+        .delay-3 { animation-delay: 0.3s; }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-darkBg text-slate-800 dark:text-slate-100 font-sans transition-colors duration-300 pb-24 md:pb-0 relative">
+
+    <!-- HEADER -->
+    <header class="sticky top-0 z-40 bg-white dark:bg-darkCard shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <a href="#" class="flex items-center gap-2 h-11">
+                <div class="w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center font-bold text-xl shadow-lg shadow-blue-200 dark:shadow-none">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <span class="font-extrabold text-2xl tracking-tight text-primary hidden sm:block">ÔnThiPro</span>
+            </a>
+
+            <div class="hidden md:flex flex-1 max-w-xl mx-8 relative">
+                <input type="text" placeholder="Tìm tài liệu, đề thi, môn học..." 
+                       class="w-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-5 h-11 rounded-full outline-none focus:ring-2 focus:ring-primary border-none">
+                <button class="absolute right-1 top-1 bottom-1 w-10 h-9 bg-primary text-white rounded-full hover:bg-primaryHover transition flex items-center justify-center m-auto">
+                    <i class="fa-solid fa-search"></i>
+                </button>
+            </div>
+
+            <div class="flex items-center gap-2 md:gap-4">
+                <button id="themeToggle" class="w-11 h-11 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition" aria-label="Đổi giao diện">
+                    <i class="fa-solid fa-moon dark:hidden text-lg"></i>
+                    <i class="fa-solid fa-sun hidden dark:block text-highlight text-lg"></i>
+                </button>
+                
+                <a href="#" class="relative w-11 h-11 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition">
+                    <i class="fa-solid fa-cart-shopping text-lg"></i>
+                </a>
+
+                <div class="hidden md:flex items-center h-11 cursor-pointer">
+                    <img src="https://placehold.co/100x100/3B82F6/FFF?text=US" alt="User" class="w-9 h-9 rounded-full border-2 border-slate-200 dark:border-slate-700">
+                    <span class="ml-2 font-bold text-sm">Học sinh A</span>
+                </div>
+
+                <button class="md:hidden w-11 h-11 flex items-center justify-center text-slate-600 dark:text-slate-300 text-xl rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 py-6 md:py-8 min-h-[70vh]">
+        
+        <!-- ================= MẪU BANNER VINH DANH (DÙNG ĐƯỢC CHO TRANG CHỦ) ================= -->
+        <div class="mb-8 md:mb-10 relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 shadow-lg border border-white/10">
+            <!-- Background Decors -->
+            <div class="absolute -left-10 -top-10 w-40 h-40 bg-white opacity-10 rounded-full blur-2xl"></div>
+            <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-highlight opacity-20 rounded-full blur-2xl"></div>
+            
+            <div class="relative overflow-hidden w-full h-16 md:h-20 flex items-center" id="honorCarouselWrapper">
+                <div class="carousel-track items-center w-full" id="honorTrack">
+                    <!-- Slide 1 -->
+                    <div class="w-full flex-shrink-0 flex items-center justify-center gap-3 px-4 text-white">
+                        <div class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-highlight text-slate-900 flex items-center justify-center text-lg md:text-xl shadow flex-shrink-0">🏆</div>
+                        <div class="text-sm md:text-base font-medium truncate text-center">
+                            Chúc mừng <span class="font-extrabold text-highlight">Cậu Bé Vàng</span> (THPT Chuyên KHTN) đạt Top 1 <span class="font-bold" id="bannerTopic1">Môn Toán</span> với <span class="font-black text-highlight" id="bannerScore1">10</span> điểm!
+                        </div>
+                    </div>
+                    <!-- Slide 2 -->
+                    <div class="w-full flex-shrink-0 flex items-center justify-center gap-3 px-4 text-white">
+                        <div class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-slate-300 text-slate-900 flex items-center justify-center text-lg md:text-xl shadow flex-shrink-0">🥈</div>
+                        <div class="text-sm md:text-base font-medium truncate text-center">
+                            <span class="font-extrabold text-white">Ngọc Mai 99</span> (THPT Ams) xuất sắc bứt phá lên Top 2 <span class="font-bold" id="bannerTopic2">Môn Toán</span>.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- ================= KẾT THÚC BANNER MẪU ================= -->
+
+        <!-- Tiêu đề & Cập nhật -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white mb-3">Bảng xếp hạng</h1>
+            <div class="inline-flex items-center gap-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-4 py-2 rounded-xl text-xs md:text-sm font-medium border border-slate-200 dark:border-slate-700">
+                <i class="fa-solid fa-clock-rotate-left text-primary"></i> 
+                <span>Bảng xếp hạng cập nhật mỗi 5 phút. <span class="hidden sm:inline">Khối được tính bằng tổng điểm cao nhất của 3 môn.</span></span>
+            </div>
+            <div class="sm:hidden mt-2 text-[10px] text-slate-500">Khối được tính bằng tổng 3 môn.</div>
+        </div>
+
+        <!-- TABS MÔN / KHỐI -->
+        <div class="flex justify-center mb-6">
+            <div class="bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl flex gap-1 shadow-inner border border-slate-200 dark:border-slate-700 w-full max-w-sm">
+                <button class="mode-tab flex-1 h-11 rounded-xl font-bold text-sm text-slate-500 transition active" onclick="switchMode('subject')">Theo môn</button>
+                <button class="mode-tab flex-1 h-11 rounded-xl font-bold text-sm text-slate-500 transition" onclick="switchMode('block')">Theo khối</button>
+            </div>
+        </div>
+
+        <!-- SUB TABS (Các môn hoặc Các khối) -->
+        <div class="mb-10 relative">
+            <!-- Nút cuộn (chỉ hiện trên Desktop nếu tràn) -->
+            <div class="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-slate-50 dark:from-darkBg to-transparent z-10 pointer-events-none"></div>
+            <div class="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-slate-50 dark:from-darkBg to-transparent z-10 pointer-events-none"></div>
+            
+            <div class="flex overflow-x-auto hide-scrollbar gap-2 px-2" id="subTabsContainer">
+                <!-- Nội dung sẽ được render bằng JS -->
+            </div>
+        </div>
+
+        <!-- KHU VỰC BẢNG XẾP HẠNG CHÍNH -->
+        <div class="bg-white dark:bg-darkCard rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden relative" id="leaderboardArea">
+            
+            <!-- Podium Top 3 -->
+            <div class="pt-10 pb-6 px-4 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-b from-blue-50/50 to-white dark:from-slate-900/50 dark:to-darkCard relative">
+                <!-- Decor nền -->
+                <div class="absolute top-0 inset-x-0 h-32 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjIiIGZpbGw9IiMzQjgyRjYiIGZpbGwtb3BhY2l0eT0iMC4wNSIvPjwvc3ZnPg==')] opacity-50 pointer-events-none"></div>
+
+                <div class="flex justify-center items-end gap-2 sm:gap-6 relative z-10 min-h-[220px]" id="podiumContainer">
+                    <!-- Sẽ render bằng JS -->
+                </div>
+            </div>
+
+            <!-- List Top 4 - 10 -->
+            <div class="px-2 sm:px-4 py-4 pb-20 md:pb-24" id="listContainer">
+                <!-- Sẽ render bằng JS -->
+            </div>
+
+            <!-- Thứ hạng của bạn (Sticky Bottom) -->
+            <div class="absolute bottom-0 left-0 right-0 bg-slate-900 text-white p-3 sm:p-4 flex items-center justify-between shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.3)] z-20">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center font-bold font-mono">142</div>
+                    <img src="https://placehold.co/100x100/3B82F6/FFF?text=US" class="w-10 h-10 rounded-full border-2 border-slate-700">
+                    <div>
+                        <div class="font-bold text-sm">Học sinh A (Bạn)</div>
+                        <div class="text-[10px] text-slate-400">THPT Võ Thị Sáu</div>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <div class="font-black text-highlight text-lg" id="myScoreTxt">8.20</div>
+                    <div class="text-[10px] text-slate-400">Cố lên nhé!</div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- FAB -->
+    <div class="fixed bottom-[90px] md:bottom-6 right-4 md:right-8 flex flex-col gap-3 z-50">
+        <a href="#" class="w-11 h-11 md:w-[56px] md:h-[56px] rounded-full bg-blue-500 text-white flex items-center justify-center text-xl shadow-lg hover:scale-110 transition animate-bounce-intro" title="Chat Zalo">
+            <div class="font-bold text-[10px] md:text-sm">Zalo</div>
+        </a>
+        <a href="#" class="w-11 h-11 md:w-[56px] md:h-[56px] rounded-full bg-gradient-to-tr from-blue-500 to-rose-500 text-white flex items-center justify-center text-xl shadow-lg hover:scale-110 transition" title="Chat Messenger">
+            <i class="fa-brands fa-facebook-messenger"></i>
+        </a>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white dark:bg-darkCard pt-12 pb-6 border-t border-slate-200 dark:border-slate-800 mt-10">
+        <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+            <div class="col-span-1 md:col-span-1">
+                <a href="#" class="flex items-center gap-2 mb-4 h-11">
+                    <div class="w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center font-bold text-xl shadow-lg">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </div>
+                    <span class="font-extrabold text-2xl tracking-tight text-primary">ÔnThiPro</span>
+                </a>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Nền tảng chia sẻ và mua bán tài liệu luyện thi THPT Quốc Gia uy tín, chất lượng hàng đầu Việt Nam.</p>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4 text-slate-800 dark:text-slate-200">Về chúng tôi</h4>
+                <ul class="text-sm text-slate-500 dark:text-slate-400 space-y-3">
+                    <li><a href="#" class="hover:text-primary transition block py-1">Giới thiệu</a></li>
+                    <li><a href="#" class="hover:text-primary transition block py-1">Điều khoản sử dụng</a></li>
+                    <li><a href="#" class="hover:text-primary transition block py-1">Chính sách bảo mật</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4 text-slate-800 dark:text-slate-200">Hỗ trợ học sinh</h4>
+                <ul class="text-sm text-slate-500 dark:text-slate-400 space-y-3">
+                    <li><a href="#" class="hover:text-primary transition block py-1">Hướng dẫn thanh toán</a></li>
+                    <li><a href="#" class="hover:text-primary transition block py-1 flex items-center">Gói Premium <span class="bg-highlight text-slate-900 text-[10px] font-bold px-1.5 py-0.5 rounded ml-2">HOT</span></a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4 text-slate-800 dark:text-slate-200">Liên hệ</h4>
+                <ul class="text-sm text-slate-500 dark:text-slate-400 space-y-3">
+                    <li class="flex items-center py-1"><i class="fa-solid fa-phone mr-3 w-4 text-center"></i> 0123.456.789</li>
+                    <li class="flex items-center py-1"><i class="fa-solid fa-envelope mr-3 w-4 text-center"></i> hotro@onthipro.vn</li>
+                </ul>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto px-4 text-center text-sm text-slate-500 border-t border-slate-100 dark:border-slate-800 pt-6">
+            &copy; 2026 ÔnThiPro. All rights reserved.
+        </div>
+    </footer>
+
+    <script>
+        // --- Dark Mode ---
+        const themeToggleBtn = document.getElementById('themeToggle');
+        themeToggleBtn.addEventListener('click', () => document.documentElement.classList.toggle('dark'));
+
+        // --- Data Mock ---
+        const config = {
+            subjects: [
+                { id: 'toan', name: 'Toán', color: 'bg-blue-100 text-blue-600', max: 10 },
+                { id: 'ly', name: 'Vật Lý', color: 'bg-purple-100 text-purple-600', max: 10 },
+                { id: 'hoa', name: 'Hóa học', color: 'bg-green-100 text-green-600', max: 10 },
+                { id: 'sinh', name: 'Sinh học', color: 'bg-lime-100 text-lime-600', max: 10 }, // Bio = Lime
+                { id: 'su', name: 'Lịch sử', color: 'bg-orange-100 text-orange-600', max: 10 },
+                { id: 'dia', name: 'Địa lý', color: 'bg-teal-100 text-teal-600', max: 10 },
+                { id: 'ktpl', name: 'KTPL', color: 'bg-indigo-100 text-indigo-600', max: 10 },
+                { id: 'anh', name: 'Tiếng Anh', color: 'bg-red-100 text-red-600', max: 10 },
+                { id: 'tin', name: 'Tin học', color: 'bg-cyan-100 text-cyan-600', max: 10 },
+            ],
+            blocks: [
+                { id: 'a00', name: 'A00', sub: 'Toán - Lý - Hóa', color: 'bg-slate-100 text-slate-700', max: 30 },
+                { id: 'a01', name: 'A01', sub: 'Toán - Lý - Anh', color: 'bg-slate-100 text-slate-700', max: 30 },
+                { id: 'a02', name: 'A02', sub: 'Toán - Lý - Sinh', color: 'bg-slate-100 text-slate-700', max: 30 },
+                { id: 'b00', name: 'B00', sub: 'Toán - Hóa - Sinh', color: 'bg-slate-100 text-slate-700', max: 30 },
+                { id: 'd07', name: 'D07', sub: 'Toán - Hóa - Anh', color: 'bg-slate-100 text-slate-700', max: 30 },
+                { id: 'd08', name: 'D08', sub: 'Toán - Sinh - Anh', color: 'bg-slate-100 text-slate-700', max: 30 },
+            ]
+        };
+
+        const firstNames = ["Cậu Bé", "Cô Bé", "Học sinh", "Chiến thần", "Chúa tể"];
+        const lastNames = ["Vàng", "Chăm Chỉ", "A", "Toán Học", "Bí Ẩn", "Minh H.", "Ngọc M."];
+        const schools = ["THPT Chuyên KHTN", "THPT Ams", "THPT Lê Hồng Phong", "THPT Trần Đại Nghĩa", "THPT Năng Khiếu", "THPT Chuyên Sư Phạm"];
+        const avatars = ['EF4444', '3B82F6', '10B981', 'F59E0B', '8B5CF6', 'EC4899', '06B6D4'];
+
+        let currentMode = 'subject'; // 'subject' or 'block'
+        let currentTabId = 'toan';
+
+        // --- Logic ---
+        function generateRandomData(maxScore) {
+            let data = [];
+            let currentScore = maxScore === 10 ? 10.0 : 30.0;
+            
+            for(let i = 1; i <= 10; i++) {
+                const name = `${firstNames[Math.floor(Math.random() * firstNames.length)]} ${lastNames[Math.floor(Math.random() * lastNames.length)]}`;
+                const color = avatars[Math.floor(Math.random() * avatars.length)];
+                
+                // Random giảm điểm một chút
+                if (i > 1) {
+                    const drop = maxScore === 10 ? (Math.random() * 0.2) : (Math.random() * 0.5);
+                    currentScore = currentScore - drop;
+                }
+
+                data.push({
+                    rank: i,
+                    name: name,
+                    school: schools[Math.floor(Math.random() * schools.length)],
+                    score: currentScore.toFixed(2),
+                    avatar: `https://placehold.co/100x100/${color}/FFF?text=${name.charAt(0)}`
+                });
+            }
+            return data;
+        }
+
+        function switchMode(mode) {
+            currentMode = mode;
+            
+            // Update mode tabs UI
+            const modeTabs = document.querySelectorAll('.mode-tab');
+            modeTabs[0].classList.toggle('active', mode === 'subject');
+            modeTabs[0].classList.toggle('text-slate-500', mode !== 'subject');
+            modeTabs[1].classList.toggle('active', mode === 'block');
+            modeTabs[1].classList.toggle('text-slate-500', mode !== 'block');
+
+            // Render Sub Tabs
+            renderSubTabs();
+        }
+
+        function renderSubTabs() {
+            const container = document.getElementById('subTabsContainer');
+            const items = currentMode === 'subject' ? config.subjects : config.blocks;
+            
+            // Auto select first item if mode changed
+            currentTabId = items[0].id; 
+            
+            let html = '';
+            items.forEach(item => {
+                const isActive = item.id === currentTabId;
+                const activeClass = isActive ? 'active border-primary text-primary' : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 bg-white dark:bg-darkCard hover:border-blue-300 transition';
+                
+                if (currentMode === 'subject') {
+                    html += `
+                        <button class="sub-tab h-11 px-5 rounded-xl font-bold text-sm border-2 whitespace-nowrap flex-shrink-0 ${activeClass}" onclick="selectSubTab('${item.id}')">
+                            ${item.name}
+                        </button>
+                    `;
+                } else {
+                    html += `
+                        <button class="sub-tab min-h-[44px] h-auto py-2 px-4 rounded-xl font-bold text-sm border-2 whitespace-nowrap flex-shrink-0 flex flex-col items-center justify-center ${activeClass}" onclick="selectSubTab('${item.id}')">
+                            <span class="block leading-tight">${item.name}</span>
+                            <span class="text-[10px] font-normal opacity-70">${item.sub}</span>
+                        </button>
+                    `;
+                }
+            });
+            container.innerHTML = html;
+            
+            renderLeaderboard();
+        }
+
+        function selectSubTab(id) {
+            currentTabId = id;
+            // Update active state in DOM
+            document.querySelectorAll('.sub-tab').forEach(tab => {
+                tab.classList.remove('active', 'border-primary', 'text-primary');
+                tab.classList.add('border-slate-200', 'dark:border-slate-700', 'text-slate-600', 'dark:text-slate-300', 'bg-white', 'dark:bg-darkCard');
+                // Very basic re-apply, proper way is re-render but this is lighter for UI click
+            });
+            // Let's just re-render subtabs to be safe and clean
+            renderSubTabs();
+        }
+
+        function renderLeaderboard() {
+            // Remove animation classes to restart them
+            const podium = document.getElementById('podiumContainer');
+            const list = document.getElementById('listContainer');
+            
+            podium.innerHTML = '';
+            list.innerHTML = '';
+            
+            // Get current max score
+            let maxScore = 10;
+            let currentItem = null;
+            if (currentMode === 'subject') {
+                currentItem = config.subjects.find(s => s.id === currentTabId);
+            } else {
+                currentItem = config.blocks.find(b => b.id === currentTabId);
+                maxScore = 30;
+            }
+            
+            const data = generateRandomData(maxScore);
+            
+            // Update Banner & My Score
+            document.getElementById('bannerTopic1').textContent = currentMode === 'subject' ? `Môn ${currentItem.name}` : `Khối ${currentItem.name}`;
+            document.getElementById('bannerTopic2').textContent = currentMode === 'subject' ? `Môn ${currentItem.name}` : `Khối ${currentItem.name}`;
+            document.getElementById('bannerScore1').textContent = data[0].score;
+            document.getElementById('myScoreTxt').textContent = maxScore === 10 ? '8.20' : '24.50';
+
+            // --- RENDER PODIUM (Trình tự: 2 - 1 - 3) ---
+            const p2 = data[1];
+            const p1 = data[0];
+            const p3 = data[2];
+
+            // Huy chương: 1-Vàng, 2-Bạc, 3-Đồng
+            const podiumHtml = `
+                <!-- Hạng 2 -->
+                <div class="flex flex-col items-center w-24 sm:w-32 relative podium-enter delay-1">
+                    <div class="absolute -top-3 sm:-top-4 -right-1 sm:-right-2 w-7 h-7 sm:w-9 sm:h-9 bg-gradient-to-br from-slate-200 to-slate-400 border-2 border-white dark:border-slate-800 rounded-full flex items-center justify-center font-black text-slate-800 text-xs sm:text-sm shadow-md z-20">2</div>
+                    <img src="${p2.avatar}" class="w-12 h-12 sm:w-16 sm:h-16 rounded-full border-4 border-slate-300 dark:border-slate-500 shadow-lg relative z-10 bg-white">
+                    <div class="w-full bg-gradient-to-t from-slate-200 to-white dark:from-slate-700 dark:to-slate-600 rounded-t-2xl shadow-xl mt-[-10px] sm:mt-[-16px] pt-4 sm:pt-6 pb-2 px-1 flex flex-col items-center h-28 sm:h-36 border border-slate-300 dark:border-slate-500 border-b-0 relative z-0">
+                        <div class="font-bold text-[10px] sm:text-xs text-center line-clamp-1 w-full text-slate-800 dark:text-slate-100">${p2.name}</div>
+                        <div class="text-[9px] text-slate-500 dark:text-slate-400 line-clamp-1 text-center w-full mb-auto">${p2.school}</div>
+                        <div class="font-black text-sm sm:text-lg text-primary">${p2.score}</div>
+                    </div>
+                </div>
+
+                <!-- Hạng 1 -->
+                <div class="flex flex-col items-center w-28 sm:w-40 relative podium-enter delay-2 z-20">
+                    <div class="absolute -top-4 sm:-top-5 -right-2 sm:-right-3 w-8 h-8 sm:w-11 sm:h-11 bg-gradient-to-br from-yellow-300 to-yellow-500 border-2 border-white dark:border-slate-800 rounded-full flex items-center justify-center font-black text-yellow-900 text-sm sm:text-lg shadow-md z-20"><i class="fa-solid fa-crown text-[10px] sm:text-sm mb-0.5"></i></div>
+                    <img src="${p1.avatar}" class="w-14 h-14 sm:w-20 sm:h-20 rounded-full border-4 border-highlight shadow-xl relative z-10 bg-white">
+                    <div class="w-full bg-gradient-to-t from-yellow-100 to-white dark:from-slate-800 dark:to-slate-700 rounded-t-2xl shadow-2xl mt-[-12px] sm:mt-[-20px] pt-5 sm:pt-7 pb-3 px-2 flex flex-col items-center h-36 sm:h-48 border border-highlight border-b-0 relative z-0">
+                        <div class="font-bold text-xs sm:text-sm text-center line-clamp-1 w-full text-slate-900 dark:text-white">${p1.name}</div>
+                        <div class="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 line-clamp-1 text-center w-full mb-auto">${p1.school}</div>
+                        <div class="font-black text-lg sm:text-2xl text-accent drop-shadow-sm">${p1.score}</div>
+                    </div>
+                </div>
+
+                <!-- Hạng 3 -->
+                <div class="flex flex-col items-center w-24 sm:w-32 relative podium-enter delay-3">
+                    <div class="absolute -top-3 sm:-top-4 -right-1 sm:-right-2 w-7 h-7 sm:w-9 sm:h-9 bg-gradient-to-br from-orange-200 to-orange-400 border-2 border-white dark:border-slate-800 rounded-full flex items-center justify-center font-black text-orange-900 text-xs sm:text-sm shadow-md z-20">3</div>
+                    <img src="${p3.avatar}" class="w-12 h-12 sm:w-16 sm:h-16 rounded-full border-4 border-orange-300 dark:border-orange-500 shadow-lg relative z-10 bg-white">
+                    <div class="w-full bg-gradient-to-t from-orange-100 to-white dark:from-slate-700 dark:to-slate-600 rounded-t-2xl shadow-xl mt-[-10px] sm:mt-[-16px] pt-4 sm:pt-6 pb-2 px-1 flex flex-col items-center h-24 sm:h-32 border border-orange-300 dark:border-orange-500 border-b-0 relative z-0">
+                        <div class="font-bold text-[10px] sm:text-xs text-center line-clamp-1 w-full text-slate-800 dark:text-slate-100">${p3.name}</div>
+                        <div class="text-[9px] text-slate-500 dark:text-slate-400 line-clamp-1 text-center w-full mb-auto">${p3.school}</div>
+                        <div class="font-black text-sm sm:text-lg text-primary">${p3.score}</div>
+                    </div>
+                </div>
+            `;
+            podium.innerHTML = podiumHtml;
+
+            // --- RENDER LIST (Hạng 4-10) ---
+            let listHtml = '<div class="space-y-2 sm:space-y-3">';
+            for(let i = 3; i < data.length; i++) {
+                const p = data[i];
+                listHtml += `
+                    <div class="flex items-center p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition border border-transparent hover:border-slate-200 dark:hover:border-slate-700 group">
+                        <div class="w-8 sm:w-10 font-bold text-slate-400 text-center sm:text-lg group-hover:text-primary transition">${p.rank}</div>
+                        <img src="${p.avatar}" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-slate-200 dark:border-slate-700 ml-2 mr-3 sm:mr-4">
+                        <div class="flex-1 min-w-0 pr-2">
+                            <div class="font-bold text-sm sm:text-base text-slate-800 dark:text-slate-200 truncate group-hover:text-primary transition">${p.name}</div>
+                            <div class="text-xs text-slate-500 dark:text-slate-400 truncate">${p.school}</div>
+                        </div>
+                        <div class="font-black text-base sm:text-xl text-slate-800 dark:text-slate-100 w-16 sm:w-24 text-right">${p.score}</div>
+                    </div>
+                `;
+            }
+            listHtml += '</div>';
+            list.innerHTML = listHtml;
+        }
+
+        // --- Banner Carousel Logic ---
+        const track = document.getElementById('honorTrack');
+        let currentSlide = 0;
+        
+        setInterval(() => {
+            currentSlide = currentSlide === 0 ? 1 : 0;
+            track.style.transform = `translateX(-${currentSlide * 100}%)`;
+        }, 4000);
+
+        // --- Init ---
+        renderSubTabs(); // Sẽ gọi luôn renderLeaderboard()
+
+    </script>
+</body>
+</html>

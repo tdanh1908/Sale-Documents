@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="vi" class="light" style="scroll-behavior: smooth;">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Làm bài thi - ÔnThiPro</title>
+    
+    <!-- Google Fonts: Nunito -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Nunito', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#2563EB', 
+                        primaryHover: '#1D4ED8',
+                        accent: '#F97316', 
+                        highlight: '#FACC15', 
+                        darkBg: '#0F172A',
+                        darkCard: '#1E293B',
+                        bio: {
+                            50: '#f7fee7',
+                            100: '#ecfccb',
+                            600: '#65a30d', // Lime
+                            900: '#365314',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Hiệu ứng nảy Zalo 1 lần */
+        @keyframes bounce-intro {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-15px); }
+            60% { transform: translateY(-7px); }
+        }
+        .animate-bounce-intro {
+            animation: bounce-intro 2s ease-in-out 1;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .animate-bounce-intro { animation: none; }
+        }
+
+        /* Ẩn thanh cuộn */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Custom Radio Buttons cho Đáp án (Làm bài) */
+        .answer-radio:checked + div {
+            background-color: #eff6ff; /* blue-50 */
+            border-color: #2563EB;
+        }
+        .dark .answer-radio:checked + div {
+            background-color: rgba(37, 99, 235, 0.1);
+            border-color: #2563EB;
+        }
+        .answer-radio:checked + div .letter-circle {
+            background-color: #2563EB;
+            color: white;
+            border-color: #2563EB;
+        }
+
+        /* Custom Checkbox cho Cờ đánh dấu */
+        .flag-checkbox:checked + div {
+            color: #F97316; /* accent */
+            background-color: #fff7ed; /* orange-50 */
+            border-color: #F97316;
+        }
+        .dark .flag-checkbox:checked + div {
+            color: #F97316;
+            background-color: rgba(249, 115, 22, 0.1);
+            border-color: #F97316;
+        }
+
+        /* Trạng thái trong Bảng số câu */
+        .grid-item { transition: all 0.2s; }
+        .grid-item.answered {
+            background-color: #2563EB;
+            color: white;
+            border-color: #2563EB;
+        }
+        .grid-item.flagged {
+            border-bottom: 4px solid #F97316;
+        }
+        .grid-item.active {
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
+        }
+
+        /* Styling cho phần Kết quả (Review) */
+        .review-correct {
+            background-color: #f0fdf4 !important; /* green-50 */
+            border-color: #22c55e !important; /* green-500 */
+        }
+        .dark .review-correct {
+            background-color: rgba(34, 197, 94, 0.1) !important;
+        }
+        .review-correct .letter-circle {
+            background-color: #22c55e !important;
+            color: white !important;
+            border-color: #22c55e !important;
+        }
+        
+        .review-wrong {
+            background-color: #fef2f2 !important; /* red-50 */
+            border-color: #ef4444 !important; /* red-500 */
+        }
+        .dark .review-wrong {
+            background-color: rgba(239, 68, 68, 0.1) !important;
+        }
+        .review-wrong .letter-circle {
+            background-color: #ef4444 !important;
+            color: white !important;
+            border-color: #ef4444 !important;
+        }
+
+        .review-dimmed {
+            opacity: 0.5;
+        }
+
+        /* Modal Transitions */
+        .modal-overlay {
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        .modal-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-content {
+            transform: translateY(20px) scale(0.95);
+            transition: all 0.3s ease;
+        }
+        .modal-overlay.open .modal-content {
+            transform: translateY(0) scale(1);
+        }
+
+        /* Mobile Drawer Transition */
+        #mobileGridDrawer {
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        #mobileGridDrawer.open {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-darkBg text-slate-800 dark:text-slate-100 font-sans transition-colors duration-300 pb-20 md:pb-0 relative overflow-x-hidden">
+
+    <!-- HEADER -->
+    <header class="sticky top-0 z-40 bg-white dark:bg-darkCard shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <a href="#" class="flex items-center gap-2 h-11">
+                <div class="w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center font-bold text-xl shadow-lg shadow-blue-200 dark:shadow-none">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <span class="font-extrabold text-2xl tracking-tight text-primary hidden sm:block">ÔnThiPro</span>
+            </a>
+
+            <!-- Tiêu đề kỳ thi trên Header (Desktop) -->
+            <div class="hidden md:flex flex-1 mx-8 items-center justify-center">
+                <h1 class="font-bold text-slate-700 dark:text-slate-200 truncate max-w-lg" id="headerTitle">Đề thi thử THPT Quốc Gia môn Toán - Lần 3</h1>
+            </div>
+
+            <div class="flex items-center gap-2 md:gap-4">
+                <button id="themeToggle" class="w-11 h-11 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition" aria-label="Đổi giao diện">
+                    <i class="fa-solid fa-moon dark:hidden text-lg"></i>
+                    <i class="fa-solid fa-sun hidden dark:block text-highlight text-lg"></i>
+                </button>
+                
+                <div class="hidden md:flex items-center h-11 cursor-pointer">
+                    <img src="https://placehold.co/100x100/3B82F6/FFF?text=US" alt="User" class="w-9 h-9 rounded-full border-2 border-slate-200 dark:border-slate-700">
+                    <span class="ml-2 font-bold text-sm">Học sinh A</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ==================== GIAO DIỆN LÀM BÀI (EXAM VIEW) ==================== -->
+    <div id="examView" class="block">
+        
+        <!-- Sticky Sub-header: Timer & Status -->
+        <div class="bg-white dark:bg-darkCard border-b border-slate-200 dark:border-slate-800 sticky top-16 z-30 shadow-sm">
+            <div class="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
+                
+                <!-- Desktop: Tên đề / Mobile: Chỉ hiện Tên đề ngắn -->
+                <div class="font-bold text-sm md:hidden truncate pr-4">Đề Toán Lần 3</div>
+                <div class="hidden md:flex items-center gap-2 text-sm text-green-600 dark:text-green-500 font-bold bg-green-50 dark:bg-green-900/20 px-3 py-1.5 rounded-lg border border-green-200 dark:border-green-800/50">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Bài làm được tự lưu trên máy, mất mạng không mất bài
+                </div>
+
+                <!-- Timer & Nộp bài -->
+                <div class="flex items-center gap-3 md:gap-6 flex-shrink-0">
+                    <div class="flex items-center gap-2 text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700">
+                        <i class="fa-regular fa-clock text-primary animate-pulse"></i>
+                        <span class="font-mono font-black text-lg tracking-wider" id="examTimer">89:59</span>
+                    </div>
+                    <!-- Nút nộp bài Desktop -->
+                    <button class="hidden md:flex h-11 px-6 bg-primary text-white font-bold rounded-xl hover:bg-primaryHover transition items-center gap-2 shadow-md shadow-blue-200 dark:shadow-none" onclick="openSubmitModal()">
+                        Nộp bài ngay
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <main class="max-w-7xl mx-auto px-4 py-6 md:py-8 flex gap-8 items-start relative">
+            
+            <!-- Cột trái: Danh sách câu hỏi -->
+            <div class="flex-1 w-full space-y-6 md:space-y-10 pb-10" id="questionList">
+                
+                <!-- Question 1 -->
+                <div class="question-block bg-white dark:bg-darkCard rounded-3xl p-5 md:p-8 border border-slate-200 dark:border-slate-700 shadow-sm relative" id="q1" data-id="1">
+                    <div class="flex justify-between items-start mb-4 gap-4">
+                        <h3 class="font-extrabold text-lg md:text-xl"><span class="text-primary">Câu 1:</span> Cho hàm số $y = f(x)$ có bảng biến thiên như sau. Hàm số đã cho đồng biến trên khoảng nào dưới đây?</h3>
+                        
+                        <!-- Cờ đánh dấu -->
+                        <label class="relative cursor-pointer flex-shrink-0" title="Đánh dấu xem lại">
+                            <input type="checkbox" class="flag-checkbox absolute opacity-0 w-0 h-0" onchange="toggleFlag(1, this.checked)">
+                            <div class="w-11 h-11 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+                                <i class="fa-solid fa-flag"></i>
+                            </div>
+                        </label>
+                    </div>
+                    
+                    <!-- Giả lập hình ảnh đề bài -->
+                    <div class="mb-6 bg-slate-50 dark:bg-slate-900 rounded-xl p-4 flex justify-center border border-slate-100 dark:border-slate-800">
+                        <img src="https://placehold.co/600x200/F1F5F9/94A3B8?text=Bang+Bien+Thien+Minh+Hoa" alt="Bảng biến thiên" class="max-w-full h-auto rounded">
+                    </div>
+
+                    <!-- Options Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                        <label class="relative cursor-pointer block">
+                            <input type="radio" name="ans_1" value="A" class="answer-radio absolute opacity-0 w-0 h-0" onchange="answerSelected(1)">
+                            <div class="flex items-center gap-3 p-3 md:p-4 border-2 border-slate-200 dark:border-slate-700 rounded-2xl transition hover:border-blue-300 dark:hover:border-blue-800 bg-white dark:bg-darkCard min-h-[56px]">
+                                <div class="w-8 h-8 rounded-full border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center font-bold text-sm text-slate-500 letter-circle transition">A</div>
+                                <div class="font-medium text-slate-700 dark:text-slate-200 text-sm md:text-base">$(0; +\infty)$</div>
+                            </div>
+                        </label>
+                        <label class="relative cursor-pointer block">
+                            <input type="radio" name="ans_1" value="B" class="answer-radio absolute opacity-0 w-0 h-0" onchange="answerSelected(1)">
+                            <div class="flex items-center gap-3 p-3 md:p-4 border-2 border-slate-200 dark:border-slate-700 rounded-2xl transition hover:border-blue-300 dark:hover:border-blue-800 bg-white dark:bg-darkCard min-h-[56px]">
+                                <div class="w-8 h-8 rounded-full border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center font-bold text-sm text-slate-500 letter-circle transition">B</div>
+                                <div class="font-medium text-slate-700 dark:text-slate-200 text-sm md:text-base">$(-1; 0)$</div>
+                            </div>
+                        </label>
+                        <label class="relative cursor-pointer block">
+                            <input type="radio" name="ans_1" value="C" class="answer-radio absolute opacity-0 w-0 h-0" onchange="answerSelected(1)">
+                            <div class="flex items-center gap-3 p-3 md:p-4 border-2 border-slate-200 dark:border-slate-700 rounded-2xl transition hover:border-blue-300 dark:hover:border-blue-800 bg-white dark:bg-darkCard min-h-[56px]">
+                                <div class="w-8 h-8 rounded-full border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center font-bold text-sm text-slate-500 letter-circle transition">C</div>
+                                <div class="font-medium text-slate-700 dark:text-slate-200 text-sm md:text-base">$(-\infty; 2)$</div>
+                            </div>
+                        </label>
+                        <label class="relative cursor-pointer block">
+                            <input type="radio" name="ans_1" value="D" class="answer-radio absolute opacity-0 w-0 h-0" onchange="answerSelected(1)">
+                            <div class="flex items-center gap-3 p-3 md:p-4 border-2 border-slate-200 dark:border-slate-700 rounded-2xl transition hover:border-blue-300 dark:hover:border-blue-800 bg-white dark:bg-darkCard min-h-[56px]">
+                                <div class="w-8 h-8 rounded-full border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center font-bold text-sm text-slate-500 letter-circle transition">D</div>
+                                <div class="font-medium text-slate-700 dark:text-slate-200 text-sm md:text-base">$(0; 2)$</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Question 2 -->
+                <div class="question-block bg-white dark:bg-darkCard rounded-3xl p-5 md:p-8 border border-slate-200 dark:border-slate-700 shadow-sm relative" id="q2" data-id="2">
+                    <div class="flex justify-between items-start mb-4 gap-4">
+                        <h3 class="font-extrabold text-lg md:text-xl"><span class="text-primary">Câu 2:</span> Trong không gian $Oxyz$, cho mặt cầu $(S): x^2 + (y - 1)^2 + (z + 2)^2 = 9$. Bán kính của $(S)$ bằng:</h3>
+                        <label class="relative cursor-pointer flex-shrink-0" title="Đánh dấu xem lại">
+                            <input type="checkbox" class="flag-checkbox absolute opacity-0 w-0 h-0" onchange="toggleFlag(2, this.checked)">
+                            <div class="w-11 h-11 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+                                <i class="fa-solid fa-flag"></i>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                        <label class="relative cursor-pointer block">
+                            <input type="radio" name="ans_2" value="A" class="answer-radio absolute opacity-0 w-0 h-0" onchange="answerSelected(2)">
+                            <div class="flex items-center gap-3 p-3 md:p-4 border-2 border-slate-200 dark:border-slate-700 rounded-2xl transition hover:border-blue-300 dark:hover:border-blue-800 bg-white dark:bg-darkCard min-h-[56px]"><div class="w-8 h-8 rounded-full border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center font-bold text-sm text-slate-500 letter-circle transition">A</div><div class="font-medium text-slate-700 dark:text-slate-200">9</div></div>
+                        </label>
+                        <label class="relative cursor-pointer block">
+                            <input type="radio" name="ans_2" value="B" class="answer-radio absolute opacity-0 w-0 h-0" onchange="answerSelected(2)">
+                            <div class="flex items-center gap-3 p-3 md:p-4 border-2 border-slate-200 dark:border-slate-700 rounded-2xl transition hover:border-blue-300 dark:hover:border-blue-800 bg-white dark:bg-darkCard min-h-[56px]"><div class="w-8 h-8 rounded-full border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center font-bold text-sm text-slate-500 letter-circle transition">B</div><div class="font-medium text-slate-700 dark:text-slate-200">81</div></div>
+                        </label>
+                        <label class="relative cursor-pointer block">
+                            <input type="radio" name="ans_2" value="C" class="answer-radio absolute opacity-0 w-0 h-0" onchange="answerSelected(2)">
+                            <div class="flex items-center gap-3 p-3 md:p-4 border-2 border-slate-200 dark:border-slate-700 rounded-2xl transition hover:border-blue-300 dark:hover:border-blue-800 bg-white dark:bg-darkCard min-h-[56px]"><div class="w-8 h-8 rounded-full border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center font-bold text-sm text-slate-500 letter-circle transition">C</div><div class="font-medium text-slate-700 dark:text-slate-200">3</div></div>
+                        </label>
+                        <label class="relative cursor-pointer block">
+                            <input type="radio" name="ans_2" value="D" class="answer-radio absolute opacity-0 w-0 h-0" onchange="answerSelected(2)">
+                            <div class="flex items-center gap-3 p-3 md:p-4 border-2 border-slate-200 dark:border-slate-700 rounded-2xl transition hover:border-blue-300 dark:hover:border-blue-800 bg-white dark:bg-darkCard min-h-[56px]"><div class="w-8 h-8 rounded-full border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center font-bold text-sm text-slate-500 letter-circle transition">D</div><div class="font-medium text-slate-700 dark:text-slate-200">6</div></div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Question 3 -->
+                <div class="question-block bg-white dark:bg-darkCard rounded-3xl p-5 md:p-8 border border-slate-200 dark:border-slate-700 shadow-sm relative" id="q3" data-id="3">
+                    <div class="flex justify-between items-start mb-4 gap-4">
+                        <h3 class="font-extrabold text-lg md:text-xl"><span class="text-primary">Câu 3:</span> Thể tích khối lập phương cạnh $2a$ bằng:</h3>
+                        <label class="relative cursor-pointer flex-shrink-0">
+                            <input type="checkbox" class="flag-checkbox absolute opacity-0 w-0 h-0" onchange="toggleFlag(3, this.checked)">
+                            <div class="w-11 h-11 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition"><i class="fa-solid fa-flag"></i></div>
+                        </label>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                        <label class="relative cursor-pointer block"><input type="radio" name="ans_3" value="A" class="answer-radio absolute opacity-0 w-0 h-0" onchange="answerSelected(3)"><div class="flex items-center gap-3 p-3 md:p-4 border-2 border-slate-200 dark:border-slate-700 rounded-2xl transition hover:border-blue-300 dark:hover:border-blue-800 bg-white dark:bg-darkCard min-h-[56px]"><div class="w-8 h-8 rounded-full border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center font-bold text-sm text-slate-500 letter-circle transition">A</div><div class="font-medium text-slate-700 dark:text-slate-200">$8a^3$</div></div></label>
+                        <label class="relative cursor-pointer block"><input type="radio" name="ans_3" value="B" class="answer-radio absolute opacity-0 w-0 h-0" onchange="answerSelected(3)"><div class="flex items-center gap-3 p-3 md:p-4 border-2 border-slate-200 dark:border-slate-700 rounded-2xl transition hover:border-blue-300 dark:hover:border-blue-800 bg-white dark:bg-darkCard min-h-[56px]"><div class="w-8 h-8 rounded-full border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center font-bold text-sm text-slate-500 letter-circle transition">B</div><div class="font-medium text-slate-700 dark:text-slate-200">$2a^3$</div></div></label>
+                        <label class="relative cursor-pointer block"><input type="radio" name="ans_3" value="C" class="answer-radio absolute opacity-0 w-0 h-0" onchange="answerSelected(3)"><div class="flex items-center gap-3 p-3 md:p-4 border-2 border-slate-200 dark:border-slate-700 rounded-2xl transition hover:border-blue-300 dark:hover:border-blue-800 bg-white dark:bg-darkCard min-h-[56px]"><div class="w-8 h-8 rounded-full border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center font-bold text-sm text-slate-500 letter-circle transition">C</div><div class="font-medium text-slate-700 dark:text-slate-200">$a^3$</div></div></label>
+                        <label class="relative cursor-pointer block"><input type="radio" name="ans_3" value="D" class="answer-radio absolute opacity-0 w-0 h-0" onchange="answerSelected(3)"><div class="flex items-center gap-3 p-3 md:p-4 border-2 border-slate-200 dark:border-slate-700 rounded-2xl transition hover:border-blue-300 dark:hover:border-blue-800 bg-white dark:bg-darkCard min-h-[56px]"><div class="w-8 h-8 rounded-full border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center font-bold text-sm text-slate-500 letter-circle transition">D</div><div class="font-medium text-slate-700 dark:text-slate-200">$6a^3$</div></div></label>
+                    </div>
+                </div>
+                
+                <!-- Ghi chú giả lập số lượng câu hỏi -->
+                <div class="text-center py-6 text-slate-400 text-sm font-bold border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-3xl">
+                    (Giao diện minh họa 3 câu. Thực tế cuộn liên tục 50 câu)
+                </div>
+
+            </div>
+
+            <!-- Cột phải: Bảng số câu (Sticky on Desktop) -->
+            <div class="hidden md:block w-72 lg:w-80 flex-shrink-0 relative">
+                <div class="sticky top-[130px] bg-white dark:bg-darkCard rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden flex flex-col max-h-[calc(100vh-150px)]">
+                    
+                    <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-900/50">
+                        <h3 class="font-extrabold text-lg text-slate-800 dark:text-slate-100">Bảng số câu</h3>
+                        <span class="text-sm font-bold text-primary"><span id="desktopDoneCount">0</span>/50</span>
+                    </div>
+
+                    <!-- Chú thích -->
+                    <div class="px-4 py-3 border-b border-slate-100 dark:border-slate-800 text-xs flex justify-between text-slate-600 dark:text-slate-400 font-medium bg-white dark:bg-darkCard z-10">
+                        <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded-full border border-slate-300 dark:border-slate-600"></div> Chưa làm</div>
+                        <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded-full bg-primary"></div> Đã làm</div>
+                        <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded-full bg-orange-100 border border-orange-500"></div> Xem lại</div>
+                    </div>
+
+                    <!-- Lưới số câu -->
+                    <div class="p-4 overflow-y-auto hide-scrollbar flex-1">
+                        <div class="grid grid-cols-5 gap-2" id="desktopGrid">
+                            <!-- JS sẽ render 50 ô vuông vào đây -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Thanh cố định dưới Mobile -->
+        <div class="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-darkCard border-t border-slate-200 dark:border-slate-700 p-3 flex items-center justify-between z-40 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+            <button class="flex items-center gap-2 h-11 px-4 bg-slate-100 dark:bg-slate-800 rounded-xl font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition" onclick="toggleMobileGrid()">
+                <i class="fa-solid fa-grid-2"></i> Câu hỏi (<span id="mobileDoneCount">0</span>/50)
+            </button>
+            <button class="h-11 px-6 bg-primary text-white font-bold rounded-xl hover:bg-primaryHover transition shadow-lg shadow-blue-200 dark:shadow-none" onclick="openSubmitModal()">
+                Nộp bài
+            </button>
+        </div>
+
+        <!-- Ngăn kéo Bảng số câu Mobile -->
+        <div id="mobileGridOverlay" class="fixed inset-0 bg-slate-900/50 dark:bg-black/60 z-50 hidden opacity-0 transition-opacity" onclick="toggleMobileGrid()"></div>
+        <div id="mobileGridDrawer" class="fixed bottom-0 left-0 right-0 bg-white dark:bg-darkCard rounded-t-3xl z-50 h-[80vh] flex flex-col shadow-2xl">
+            <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-900/50 rounded-t-3xl">
+                <h3 class="font-extrabold text-lg text-slate-800 dark:text-slate-100">Danh sách câu hỏi</h3>
+                <button class="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300" onclick="toggleMobileGrid()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="px-4 py-3 border-b border-slate-100 dark:border-slate-800 text-xs flex justify-between text-slate-600 dark:text-slate-400 font-medium">
+                <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded-full border border-slate-300"></div> Chưa làm</div>
+                <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded-full bg-primary"></div> Đã làm</div>
+                <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded-full bg-orange-100 border border-orange-500"></div> Xem lại</div>
+            </div>
+            <div class="p-4 overflow-y-auto flex-1">
+                <div class="grid grid-cols-5 sm:grid-cols-8 gap-3" id="mobileGrid">
+                    <!-- JS sẽ render -->
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==================== GIAO DIỆN KẾT QUẢ (RESULT VIEW) ==================== -->
+    <div id="resultView" class="hidden">
+        
+        <main class="max-w-7xl mx-auto px-4 py-8 md:py-12 relative">
+            
+            <div class="text-center mb-10">
+                <h1 class="text-3xl md:text-4xl font-extrabold text-slate-800 dark:text-white mb-2">Kết quả làm bài</h1>
+                <p class="text-slate-500 dark:text-slate-400 font-medium">Đề thi thử THPT Quốc Gia môn Toán - Lần 3</p>
+            </div>
+
+            <div class="flex flex-col lg:flex-row gap-8 items-start">
+                
+                <!-- Cột trái: Điểm số & Thống kê -->
+                <div class="w-full lg:w-2/5 space-y-6">
+                    
+                    <!-- Khối Điểm lớn -->
+                    <div class="bg-gradient-to-b from-blue-600 to-indigo-700 rounded-3xl p-8 text-center text-white shadow-xl relative overflow-hidden">
+                        <div class="absolute -right-10 -top-10 w-40 h-40 bg-white opacity-10 rounded-full blur-2xl pointer-events-none"></div>
+                        
+                        <div class="text-blue-100 font-bold mb-2 uppercase tracking-wider text-sm">Điểm của bạn</div>
+                        <div class="flex items-baseline justify-center gap-1 mb-2 drop-shadow-md">
+                            <span class="font-black text-8xl leading-none tracking-tighter" id="finalScore">8.6</span>
+                            <span class="font-bold text-2xl text-blue-200">/10</span>
+                        </div>
+                        <div class="inline-block px-4 py-1.5 bg-white/20 backdrop-blur-sm rounded-full text-sm font-bold mt-2">
+                            Tuyệt vời! Bạn nằm trong Top 15% 🏆
+                        </div>
+                    </div>
+
+                    <!-- Bảng Thống kê -->
+                    <div class="bg-white dark:bg-darkCard rounded-3xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                                <div class="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Thời gian</div>
+                                <div class="font-black text-xl text-slate-800 dark:text-white" id="timeTaken">75p 12s</div>
+                            </div>
+                            <div class="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                                <div class="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Thứ hạng</div>
+                                <div class="font-black text-xl text-primary">#142 <span class="text-sm text-slate-400 font-medium">/ 1,245</span></div>
+                            </div>
+                            <div class="bg-green-50 dark:bg-green-900/20 p-4 rounded-2xl border border-green-100 dark:border-green-800/50">
+                                <div class="text-xs text-green-600 dark:text-green-500 font-bold uppercase tracking-wider mb-1">Câu đúng</div>
+                                <div class="font-black text-xl text-green-700 dark:text-green-400">43</div>
+                            </div>
+                            <div class="bg-red-50 dark:bg-red-900/20 p-4 rounded-2xl border border-red-100 dark:border-red-800/50">
+                                <div class="text-xs text-red-600 dark:text-red-500 font-bold uppercase tracking-wider mb-1">Sai / Bỏ trống</div>
+                                <div class="font-black text-xl text-red-700 dark:text-red-400">5 / 2</div>
+                            </div>
+                        </div>
+                        <button class="w-full mt-4 h-11 bg-slate-100 dark:bg-slate-800 text-primary font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-trophy"></i> Xem bảng xếp hạng
+                        </button>
+                    </div>
+
+                    <!-- Chia sẻ (Card mô phỏng) -->
+                    <div class="bg-white dark:bg-darkCard rounded-3xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm text-center">
+                        <h3 class="font-extrabold text-lg mb-4">Chia sẻ thành tích</h3>
+                        
+                        <!-- Preview Card -->
+                        <div class="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl p-4 text-white text-left mb-4 shadow-inner relative overflow-hidden h-32 flex flex-col justify-center">
+                            <div class="absolute right-[-20px] bottom-[-20px] text-white/10 text-9xl leading-none font-black"><i class="fa-solid fa-graduation-cap"></i></div>
+                            <div class="font-bold text-xs uppercase tracking-widest text-blue-200 mb-1">ÔnThiPro</div>
+                            <div class="font-black text-lg leading-tight mb-2 z-10 relative">Học sinh A <br>vừa hoàn thành đề Toán</div>
+                            <div class="inline-block px-3 py-1 bg-highlight text-slate-900 font-black rounded-lg text-sm z-10 relative shadow-sm">Điểm: 8.6</div>
+                        </div>
+
+                        <div class="flex justify-center gap-3">
+                            <button class="w-12 h-12 rounded-full bg-[#1877F2] text-white text-xl hover:scale-110 transition shadow-md"><i class="fa-brands fa-facebook-f"></i></button>
+                            <button class="w-12 h-12 rounded-full bg-[#0068FF] text-white font-bold hover:scale-110 transition shadow-md text-xs">Zalo</button>
+                            <button class="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition" onclick="copyResultLink(this)"><i class="fa-solid fa-link"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cột phải: Upsell & Chi tiết -->
+                <div class="flex-1 w-full space-y-6">
+                    
+                    <!-- Quà tặng -->
+                    <div class="bg-gradient-to-r from-orange-500 to-red-500 rounded-3xl p-6 flex flex-col sm:flex-row items-center gap-6 shadow-xl relative overflow-hidden">
+                        <div class="absolute -left-6 -bottom-6 w-24 h-24 bg-white opacity-20 rounded-full blur-xl pointer-events-none"></div>
+                        <div class="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white text-3xl flex-shrink-0 border border-white/30">
+                            <i class="fa-solid fa-gift"></i>
+                        </div>
+                        <div class="flex-1 text-white text-center sm:text-left">
+                            <h3 class="font-black text-xl mb-1">Mã giảm giá tặng riêng cho bạn!</h3>
+                            <p class="text-orange-100 text-sm mb-3">Tặng 20% khi mua tài liệu môn Toán. Hết hạn sau: <span class="font-mono font-bold bg-black/20 px-2 py-0.5 rounded" id="giftTimer">47:59:59</span></p>
+                            <div class="flex flex-wrap items-center gap-2 justify-center sm:justify-start">
+                                <div class="bg-white text-slate-900 font-mono font-black px-4 py-2 rounded-xl text-lg tracking-widest border-2 border-dashed border-red-300">GIOITOAN20</div>
+                                <button class="h-10 px-4 bg-slate-900 text-white font-bold rounded-xl text-sm hover:bg-black transition shadow-md">Dùng ngay</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Gợi ý môn yếu -->
+                    <div class="bg-white dark:bg-darkCard rounded-3xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
+                        <h3 class="font-extrabold text-xl mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-bullseye text-accent"></i> Chủ đề cần ôn thêm
+                        </h3>
+                        <p class="text-sm text-slate-500 mb-4">Dựa trên kết quả bài thi, bạn trả lời sai nhiều ở 2 chuyên đề sau. Hãy cải thiện ngay nhé!</p>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <!-- Upsell Card 1 -->
+                            <div class="flex gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-primary transition">
+                                <div class="w-20 h-28 rounded-lg overflow-hidden flex-shrink-0 bg-blue-50">
+                                    <img src="https://placehold.co/150x200/3B82F6/FFF?text=HINH" class="w-full h-full object-cover">
+                                </div>
+                                <div class="flex flex-col justify-between flex-1 py-1">
+                                    <div>
+                                        <div class="text-[10px] text-red-500 font-bold uppercase mb-1">Sai 3/4 câu</div>
+                                        <h5 class="font-bold text-sm line-clamp-2 leading-snug">Hình học không gian Oxyz</h5>
+                                    </div>
+                                    <div class="mt-2 flex items-center justify-between">
+                                        <span class="font-extrabold text-primary">39.000đ</span>
+                                        <button class="h-8 px-3 bg-primary text-white text-xs font-bold rounded-lg hover:bg-primaryHover transition">Mua</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Upsell Card 2 -->
+                            <div class="flex gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-primary transition">
+                                <div class="w-20 h-28 rounded-lg overflow-hidden flex-shrink-0 bg-blue-50">
+                                    <img src="https://placehold.co/150x200/3B82F6/FFF?text=TICH+PHAN" class="w-full h-full object-cover">
+                                </div>
+                                <div class="flex flex-col justify-between flex-1 py-1">
+                                    <div>
+                                        <div class="text-[10px] text-red-500 font-bold uppercase mb-1">Sai 2/3 câu</div>
+                                        <h5 class="font-bold text-sm line-clamp-2 leading-snug">Tuyển tập 50 bài Tích phân VDC</h5>
+                                    </div>
+                                    <div class="mt-2 flex items-center justify-between">
+                                        <span class="font-extrabold text-primary">29.000đ</span>
+                                        <button class="h-8 px-3 bg-primary text-white text-xs font-bold rounded-lg hover:bg-primaryHover transition">Mua</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Xem lại chi tiết bài làm -->
+                    <div class="bg-white dark:bg-darkCard rounded-3xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="font-extrabold text-xl flex items-center gap-2">
+                                <i class="fa-solid fa-list-check text-primary"></i> Xem lại bài làm
+                            </h3>
+                            <!-- Lọc nhanh -->
+                            <select class="bg-slate-100 dark:bg-slate-800 border-none text-sm font-bold rounded-xl h-10 px-3 outline-none focus:ring-2 focus:ring-primary cursor-pointer text-slate-700 dark:text-slate-200">
+                                <option>Tất cả câu</option>
+                                <option>Chỉ câu sai</option>
+                            </select>
+                        </div>
+
+                        <div class="space-y-6">
+                            <!-- Result Q1 (Đúng) -->
+                            <div class="pb-6 border-b border-slate-100 dark:border-slate-800">
+                                <div class="flex justify-between items-start mb-3 gap-2">
+                                    <h4 class="font-bold"><span class="text-primary">Câu 1:</span> Cho hàm số $y = f(x)$... đồng biến trên khoảng nào dưới đây?</h4>
+                                    <div class="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center flex-shrink-0 text-sm"><i class="fa-solid fa-check"></i></div>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                                    <!-- Options đã khóa -->
+                                    <div class="flex items-center gap-3 p-3 border-2 border-slate-200 dark:border-slate-700 rounded-xl review-dimmed"><div class="w-7 h-7 rounded-full border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center font-bold text-xs text-slate-500">A</div><div class="font-medium text-sm">$(0; +\infty)$</div></div>
+                                    <div class="flex items-center gap-3 p-3 border-2 border-slate-200 dark:border-slate-700 rounded-xl review-dimmed"><div class="w-7 h-7 rounded-full border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center font-bold text-xs text-slate-500">B</div><div class="font-medium text-sm">$(-1; 0)$</div></div>
+                                    <!-- Câu D đúng và user chọn D -->
+                                    <div class="flex items-center gap-3 p-3 border-2 rounded-xl review-correct shadow-sm relative overflow-hidden">
+                                        <div class="absolute right-2 top-1/2 -translate-y-1/2 text-green-500 font-bold text-[10px] bg-green-100 px-2 py-0.5 rounded">Bạn chọn</div>
+                                        <div class="w-7 h-7 rounded-full border-2 flex items-center justify-center font-bold text-xs letter-circle">D</div><div class="font-bold text-sm">$(0; 2)$</div>
+                                    </div>
+                                </div>
+                                <!-- Giải thích -->
+                                <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-900/50 text-sm text-slate-700 dark:text-slate-300">
+                                    <span class="font-bold text-primary mr-1">Giải thích:</span> Dựa vào bảng biến thiên, $f'(x) > 0$ khi $x \in (0; 2)$. Do đó hàm số đồng biến trên $(0; 2)$.
+                                </div>
+                            </div>
+
+                            <!-- Result Q2 (Sai) -->
+                            <div class="pb-6 border-b border-slate-100 dark:border-slate-800">
+                                <div class="flex justify-between items-start mb-3 gap-2">
+                                    <h4 class="font-bold"><span class="text-primary">Câu 2:</span> Trong không gian $Oxyz$, cho mặt cầu $(S)$... Bán kính của $(S)$ bằng:</h4>
+                                    <div class="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center flex-shrink-0 text-sm"><i class="fa-solid fa-xmark"></i></div>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                                    <!-- Câu A user chọn nhưng sai -->
+                                    <div class="flex items-center gap-3 p-3 border-2 rounded-xl review-wrong relative overflow-hidden">
+                                        <div class="absolute right-2 top-1/2 -translate-y-1/2 text-red-500 font-bold text-[10px] bg-red-100 px-2 py-0.5 rounded">Bạn chọn sai</div>
+                                        <div class="w-7 h-7 rounded-full border-2 flex items-center justify-center font-bold text-xs letter-circle">A</div><div class="font-medium text-sm">9</div>
+                                    </div>
+                                    <!-- Câu C là đáp án đúng -->
+                                    <div class="flex items-center gap-3 p-3 border-2 rounded-xl review-correct shadow-sm relative overflow-hidden">
+                                        <div class="absolute right-2 top-1/2 -translate-y-1/2 text-green-500 font-bold text-[10px] bg-green-100 px-2 py-0.5 rounded">Đáp án đúng</div>
+                                        <div class="w-7 h-7 rounded-full border-2 flex items-center justify-center font-bold text-xs letter-circle">C</div><div class="font-bold text-sm">3</div>
+                                    </div>
+                                </div>
+                                <!-- Giải thích -->
+                                <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-900/50 text-sm text-slate-700 dark:text-slate-300">
+                                    <span class="font-bold text-primary mr-1">Giải thích:</span> Phương trình mặt cầu dạng $(x-a)^2 + (y-b)^2 + (z-c)^2 = R^2$. Suy ra $R^2 = 9 \Rightarrow R = 3$. Bạn nhầm lẫn lấy trực tiếp giá trị vế phải.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ==================== MODALS ==================== -->
+    <div id="submitModal" class="fixed inset-0 bg-slate-900/60 dark:bg-black/70 z-50 flex items-center justify-center modal-overlay">
+        <div class="bg-white dark:bg-darkCard w-[90%] max-w-md rounded-3xl p-6 md:p-8 shadow-2xl modal-content">
+            <div class="w-16 h-16 bg-orange-100 text-orange-500 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h3 class="text-2xl font-extrabold text-center mb-2">Xác nhận nộp bài?</h3>
+            <p class="text-slate-500 dark:text-slate-400 text-center mb-6">
+                Bạn còn <strong class="text-accent" id="unansweredCount">47</strong> câu chưa làm. Bạn có chắc chắn muốn nộp bài kết thúc kỳ thi ngay bây giờ?
+            </p>
+            <div class="flex flex-col-reverse sm:flex-row gap-3">
+                <button class="w-full h-12 rounded-xl border-2 border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition" onclick="closeSubmitModal()">Quay lại làm tiếp</button>
+                <button class="w-full h-12 bg-primary text-white font-bold rounded-xl hover:bg-primaryHover transition shadow-lg" onclick="confirmSubmit()">Nộp bài ngay</button>
+            </div>
+        </div>
+    </div>
+
+
+    <footer class="bg-white dark:bg-darkCard pt-12 pb-6 border-t border-slate-200 dark:border-slate-800 mt-10">
+        <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+            <div class="col-span-1 md:col-span-1">
+                <a href="#" class="flex items-center gap-2 mb-4 h-11">
+                    <div class="w-8 h-8 bg-primary text-white rounded-lg flex items-center justify-center font-bold shadow-lg">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </div>
+                    <span class="font-extrabold text-xl text-primary">ÔnThiPro</span>
+                </a>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Nền tảng chia sẻ và mua bán tài liệu luyện thi THPT Quốc Gia uy tín.</p>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4">Về chúng tôi</h4>
+                <ul class="text-sm text-slate-500 space-y-3">
+                    <li><a href="#" class="hover:text-primary transition block py-1">Giới thiệu</a></li>
+                    <li><a href="#" class="hover:text-primary transition block py-1">Chính sách bảo mật</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4">Hỗ trợ</h4>
+                <ul class="text-sm text-slate-500 space-y-3">
+                    <li><a href="#" class="hover:text-primary transition block py-1">Hướng dẫn thanh toán</a></li>
+                    <li><a href="#" class="hover:text-primary transition block py-1 flex items-center">Gói Premium <span class="bg-highlight text-slate-900 text-[10px] font-bold px-1.5 py-0.5 rounded ml-2">HOT</span></a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4">Liên hệ</h4>
+                <ul class="text-sm text-slate-500 space-y-3">
+                    <li class="flex items-center py-1"><i class="fa-solid fa-phone mr-3 w-4 text-center"></i> 0123.456.789</li>
+                    <li class="flex items-center py-1"><i class="fa-solid fa-envelope mr-3 w-4 text-center"></i> hotro@onthipro.vn</li>
+                </ul>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto px-4 text-center text-sm text-slate-500 border-t border-slate-100 dark:border-slate-800 pt-6">
+            &copy; 2026 ÔnThiPro. All rights reserved.
+        </div>
+    </footer>
+
+    <script>
+        // --- Dark Mode ---
+        const themeToggleBtn = document.getElementById('themeToggle');
+        themeToggleBtn.addEventListener('click', () => document.documentElement.classList.toggle('dark'));
+
+        // --- Core Variables ---
+        const TOTAL_QUESTIONS = 50;
+        let answers = {}; // Dữ liệu câu đã chọn (ID: 'A')
+        let flags = {};   // Dữ liệu cờ (ID: true)
+        let examTimeLeft = 90 * 60; // 90 mins
+        let timerInterval;
+
+        // --- Render Question Grid ---
+        function initGrids() {
+            const deskGrid = document.getElementById('desktopGrid');
+            const mobGrid = document.getElementById('mobileGrid');
+            let gridHTML = '';
+
+            for (let i = 1; i <= TOTAL_QUESTIONS; i++) {
+                gridHTML += `
+                    <button class="grid-item w-10 h-10 rounded-lg border-2 border-slate-200 dark:border-slate-700 flex items-center justify-center font-bold text-sm text-slate-600 dark:text-slate-300 hover:border-primary hover:text-primary transition bg-white dark:bg-darkCard" id="btn-q${i}" onclick="scrollToQuestion(${i})">
+                        ${i}
+                    </button>
+                `;
+            }
+            deskGrid.innerHTML = gridHTML;
+            mobGrid.innerHTML = gridHTML;
+        }
+
+        // --- User Actions ---
+        function answerSelected(qId) {
+            answers[qId] = true;
+            updateGridState(qId);
+            updateProgress();
+        }
+
+        function toggleFlag(qId, isChecked) {
+            flags[qId] = isChecked;
+            updateGridState(qId);
+        }
+
+        function updateGridState(qId) {
+            const btns = document.querySelectorAll(`#btn-q${qId}`);
+            btns.forEach(btn => {
+                // Clear old specific states, keep base classes
+                btn.className = 'grid-item w-10 h-10 rounded-lg border-2 flex items-center justify-center font-bold text-sm transition';
+                
+                if (answers[qId]) {
+                    btn.classList.add('answered', 'border-primary'); // CSS handles background
+                } else {
+                    btn.classList.add('border-slate-200', 'dark:border-slate-700', 'text-slate-600', 'dark:text-slate-300', 'bg-white', 'dark:bg-darkCard');
+                }
+
+                if (flags[qId]) {
+                    btn.classList.add('flagged');
+                }
+            });
+        }
+
+        function updateProgress() {
+            const doneCount = Object.keys(answers).length;
+            document.getElementById('desktopDoneCount').textContent = doneCount;
+            document.getElementById('mobileDoneCount').textContent = doneCount;
+            document.getElementById('unansweredCount').textContent = TOTAL_QUESTIONS - doneCount;
+        }
+
+        function scrollToQuestion(qId) {
+            // Đóng drawer nếu trên mobile
+            if (document.getElementById('mobileGridDrawer').classList.contains('open')) {
+                toggleMobileGrid();
+            }
+            // Logic cuộn cơ bản (Trong demo này chỉ có 3 câu thật, nếu click câu 4-50 thì ko cuộn)
+            const target = document.getElementById(`q${qId}`);
+            if (target) {
+                // Offset cho sticky header
+                const offset = 140; 
+                const targetPosition = target.getBoundingClientRect().top + window.scrollY - offset;
+                window.scrollTo({ top: targetPosition, behavior: 'smooth' });
+                
+                // Highlight temporary
+                target.classList.add('ring-4', 'ring-primary/50');
+                setTimeout(() => target.classList.remove('ring-4', 'ring-primary/50'), 1500);
+            }
+        }
+
+        // --- Mobile Grid Drawer ---
+        function toggleMobileGrid() {
+            const drawer = document.getElementById('mobileGridDrawer');
+            const overlay = document.getElementById('mobileGridOverlay');
+            
+            if (drawer.classList.contains('open')) {
+                drawer.classList.remove('open');
+                overlay.classList.add('opacity-0');
+                setTimeout(() => overlay.classList.add('hidden'), 300);
+                document.body.style.overflow = '';
+            } else {
+                overlay.classList.remove('hidden');
+                // Force reflow
+                void overlay.offsetWidth;
+                overlay.classList.remove('opacity-0');
+                drawer.classList.add('open');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        // --- Modal & Submission ---
+        function openSubmitModal() {
+            const modal = document.getElementById('submitModal');
+            modal.classList.add('open');
+        }
+        function closeSubmitModal() {
+            document.getElementById('submitModal').classList.remove('open');
+        }
+
+        function confirmSubmit() {
+            closeSubmitModal();
+            clearInterval(timerInterval); // Stop exam timer
+            
+            // Switch views
+            document.getElementById('examView').classList.remove('block');
+            document.getElementById('examView').classList.add('hidden');
+            
+            document.getElementById('resultView').classList.remove('hidden');
+            document.getElementById('resultView').classList.add('block');
+            
+            window.scrollTo(0, 0);
+
+            // Start Gift Timer
+            startGiftTimer();
+        }
+
+        // --- Timers ---
+        function formatTime(seconds) {
+            const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+            const s = (seconds % 60).toString().padStart(2, '0');
+            return `${m}:${s}`;
+        }
+
+        function startExamTimer() {
+            const display = document.getElementById('examTimer');
+            timerInterval = setInterval(() => {
+                examTimeLeft--;
+                display.textContent = formatTime(examTimeLeft);
+                if (examTimeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    confirmSubmit(); // Auto submit when time is up
+                }
+            }, 1000);
+        }
+
+        function startGiftTimer() {
+            let giftTime = 48 * 60 * 60; // 48h
+            const display = document.getElementById('giftTimer');
+            setInterval(() => {
+                giftTime--;
+                const h = Math.floor(giftTime / 3600).toString().padStart(2, '0');
+                const m = Math.floor((giftTime % 3600) / 60).toString().padStart(2, '0');
+                const s = (giftTime % 60).toString().padStart(2, '0');
+                display.textContent = `${h}:${m}:${s}`;
+            }, 1000);
+        }
+
+        // --- Utils ---
+        function copyResultLink(btn) {
+            const originalIcon = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-check text-green-500"></i>';
+            setTimeout(() => { btn.innerHTML = originalIcon; }, 2000);
+        }
+
+        // --- Init ---
+        initGrids();
+        startExamTimer();
+        updateProgress();
+
+    </script>
+</body>
+</html>

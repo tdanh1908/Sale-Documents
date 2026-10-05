@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="vi" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cộng đồng - ÔnThiPro</title>
+    
+    <!-- Google Fonts: Nunito -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Nunito', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#2563EB', 
+                        primaryHover: '#1D4ED8',
+                        accent: '#F97316', 
+                        highlight: '#FACC15', 
+                        darkBg: '#0F172A',
+                        darkCard: '#1E293B',
+                        bio: {
+                            50: '#f7fee7',
+                            100: '#ecfccb',
+                            600: '#65a30d', // Lime
+                            900: '#365314',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Hiệu ứng nảy Zalo 1 lần */
+        @keyframes bounce-intro {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-15px); }
+            60% { transform: translateY(-7px); }
+        }
+        .animate-bounce-intro {
+            animation: bounce-intro 2s ease-in-out 1;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .animate-bounce-intro { animation: none; }
+        }
+
+        /* Ẩn thanh cuộn */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Custom Scrollbar cho vùng Chat */
+        .chat-scroll::-webkit-scrollbar { width: 6px; }
+        .chat-scroll::-webkit-scrollbar-track { background: transparent; }
+        .chat-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .dark .chat-scroll::-webkit-scrollbar-thumb { background: #475569; }
+
+        /* Tabs UI */
+        .tab-btn { transition: all 0.3s ease; }
+        .tab-btn.active {
+            background-color: #2563EB;
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+        }
+
+        /* Responsive Chat Layout Transitions */
+        .chat-pane { transition: transform 0.3s ease, opacity 0.3s ease; }
+        
+        @media (max-width: 767px) {
+            .mobile-hidden { display: none !important; }
+            .mobile-show-flex { display: flex !important; }
+        }
+
+        /* Modals */
+        .modal-overlay {
+            opacity: 0; visibility: hidden; transition: all 0.3s ease;
+        }
+        .modal-overlay.open {
+            opacity: 1; visibility: visible;
+        }
+        .modal-content {
+            transform: translateY(20px) scale(0.95); transition: all 0.3s ease;
+        }
+        .modal-overlay.open .modal-content {
+            transform: translateY(0) scale(1);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-darkBg text-slate-800 dark:text-slate-100 font-sans transition-colors duration-300 pb-20 md:pb-0 h-screen flex flex-col overflow-hidden">
+
+    <!-- HEADER -->
+    <header class="flex-shrink-0 z-40 bg-white dark:bg-darkCard shadow-sm relative">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <a href="#" class="flex items-center gap-2 h-11">
+                <div class="w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center font-bold text-xl shadow-lg shadow-blue-200 dark:shadow-none">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <span class="font-extrabold text-2xl tracking-tight text-primary hidden sm:block">ÔnThiPro</span>
+            </a>
+
+            <div class="hidden md:flex flex-1 max-w-xl mx-8 relative">
+                <input type="text" placeholder="Tìm tài liệu, đề thi, môn học..." 
+                       class="w-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-5 h-11 rounded-full outline-none focus:ring-2 focus:ring-primary border-none">
+                <button class="absolute right-1 top-1 bottom-1 w-10 h-9 bg-primary text-white rounded-full hover:bg-primaryHover transition flex items-center justify-center m-auto">
+                    <i class="fa-solid fa-search"></i>
+                </button>
+            </div>
+
+            <div class="flex items-center gap-2 md:gap-4">
+                <button id="themeToggle" class="w-11 h-11 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition" aria-label="Đổi giao diện">
+                    <i class="fa-solid fa-moon dark:hidden text-lg"></i>
+                    <i class="fa-solid fa-sun hidden dark:block text-highlight text-lg"></i>
+                </button>
+                
+                <div class="hidden md:flex items-center h-11 cursor-pointer">
+                    <img src="https://placehold.co/100x100/3B82F6/FFF?text=US" alt="User" class="w-9 h-9 rounded-full border-2 border-slate-200 dark:border-slate-700">
+                    <span class="ml-2 font-bold text-sm">Học sinh A</span>
+                </div>
+
+                <button class="md:hidden w-11 h-11 flex items-center justify-center text-slate-600 dark:text-slate-300 text-xl rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER (Sử dụng flex-1 để lấp đầy h-screen trừ header) -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:py-6 flex flex-col min-h-0">
+        
+        <div class="flex items-center justify-between mb-4 md:mb-6 flex-shrink-0">
+            <h1 class="text-2xl md:text-3xl font-extrabold text-slate-800 dark:text-white">Cộng đồng</h1>
+        </div>
+
+        <!-- TABS -->
+        <div class="flex overflow-x-auto hide-scrollbar gap-2 mb-4 flex-shrink-0">
+            <button class="tab-btn active h-11 px-5 rounded-full font-bold text-sm bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 whitespace-nowrap flex-shrink-0" onclick="switchTab('adminChat', this)">
+                <i class="fa-solid fa-headset mr-1"></i> Chat với Admin
+            </button>
+            <button class="tab-btn h-11 px-5 rounded-full font-bold text-sm bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 whitespace-nowrap flex-shrink-0" onclick="switchTab('studentGroups', this)">
+                <i class="fa-solid fa-users mr-1"></i> Nhóm học tập
+            </button>
+            <button class="tab-btn h-11 px-5 rounded-full font-bold text-sm bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 whitespace-nowrap flex-shrink-0" onclick="switchTab('zaloGroups', this)">
+                <i class="fa-solid fa-comment-dots mr-1"></i> Fanpage & Zalo
+            </button>
+        </div>
+
+        <!-- ================= TAB 1: CHAT VỚI ADMIN ================= -->
+        <div id="adminChat" class="tab-content flex-1 bg-white dark:bg-darkCard rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm flex overflow-hidden min-h-0 relative">
+            
+            <!-- Cột trái: Danh sách Chat -->
+            <div id="adminChatList" class="w-full md:w-80 border-r border-slate-100 dark:border-slate-800 flex flex-col flex-shrink-0 transition-transform">
+                <div class="p-4 border-b border-slate-100 dark:border-slate-800">
+                    <div class="relative w-full">
+                        <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                        <input type="text" placeholder="Tìm tin nhắn, tài liệu..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 h-11 rounded-xl pl-9 pr-4 text-sm outline-none focus:border-primary transition">
+                    </div>
+                </div>
+                
+                <div class="flex-1 overflow-y-auto chat-scroll p-2 space-y-1">
+                    <!-- Item 1 -->
+                    <button class="w-full text-left p-3 rounded-2xl bg-blue-50 dark:bg-slate-800 border border-blue-100 dark:border-slate-700 flex gap-3 items-center transition" onclick="openAdminChatDetail('doc1')">
+                        <div class="w-12 h-16 rounded-lg overflow-hidden bg-blue-100 flex-shrink-0 border border-slate-200 dark:border-slate-600">
+                            <img src="https://placehold.co/100x133/3B82F6/FFF?text=Toán" class="w-full h-full object-cover">
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-baseline mb-1">
+                                <h4 class="font-bold text-sm text-slate-800 dark:text-slate-100 truncate pr-2">Bộ 50 đề Toán VDC</h4>
+                                <span class="text-[10px] text-slate-400 flex-shrink-0">10:45</span>
+                            </div>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 truncate">Dạ, em cảm ơn thầy nhiều ạ.</p>
+                        </div>
+                    </button>
+                    <!-- Item 2 -->
+                    <button class="w-full text-left p-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-transparent flex gap-3 items-center transition" onclick="openAdminChatDetail('doc2')">
+                        <div class="w-12 h-16 rounded-lg overflow-hidden bg-purple-100 flex-shrink-0 border border-slate-200 dark:border-slate-600">
+                            <img src="https://placehold.co/100x133/8B5CF6/FFF?text=Lý" class="w-full h-full object-cover">
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-baseline mb-1">
+                                <h4 class="font-bold text-sm text-slate-800 dark:text-slate-100 truncate pr-2">Chuyên đề Dao động cơ</h4>
+                                <span class="text-[10px] text-slate-400 flex-shrink-0">Hôm qua</span>
+                            </div>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 truncate font-bold text-slate-800 dark:text-white">Admin: Chào em, tài liệu này...</p>
+                        </div>
+                    </button>
+                    <!-- Item 3 (Hỗ trợ chung) -->
+                    <button class="w-full text-left p-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-transparent flex gap-3 items-center transition" onclick="openAdminChatDetail('general')">
+                        <div class="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-xl text-primary flex-shrink-0 border border-slate-200 dark:border-slate-600">
+                            <i class="fa-solid fa-headset"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-baseline mb-1">
+                                <h4 class="font-bold text-sm text-slate-800 dark:text-slate-100 truncate pr-2">Hỗ trợ thanh toán / Lỗi</h4>
+                                <span class="text-[10px] text-slate-400 flex-shrink-0">2 ngày trước</span>
+                            </div>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 truncate">Bạn đã gửi 1 ảnh.</p>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Cột phải: Khung Chat Chi Tiết -->
+            <div id="adminChatDetail" class="mobile-hidden md:flex flex-1 flex-col absolute md:static inset-0 bg-slate-50 dark:bg-darkBg md:bg-white md:dark:bg-darkCard z-10 md:z-auto">
+                <!-- Header Chat -->
+                <div class="h-16 border-b border-slate-200 dark:border-slate-700 px-4 flex items-center gap-3 bg-white dark:bg-darkCard">
+                    <!-- Nút Back (Chỉ Mobile) -->
+                    <button class="md:hidden w-11 h-11 flex items-center justify-center text-slate-600 dark:text-slate-300 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition -ml-2" onclick="closeAdminChatDetail()">
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </button>
+                    
+                    <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                        AD
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-sm text-slate-800 dark:text-slate-100">Admin ÔnThiPro</h3>
+                        <div class="text-[10px] text-slate-500">Tư vấn tài liệu: Bộ 50 đề Toán VDC</div>
+                    </div>
+                </div>
+
+                <!-- Messages -->
+                <div class="flex-1 overflow-y-auto chat-scroll p-4 space-y-4 bg-slate-50 dark:bg-darkBg md:bg-transparent">
+                    <!-- Date divider -->
+                    <div class="flex justify-center"><span class="text-[10px] font-bold text-slate-400 bg-slate-200 dark:bg-slate-800 px-3 py-1 rounded-full">10:20 Hôm nay</span></div>
+                    
+                    <!-- User Message -->
+                    <div class="flex flex-col items-end">
+                        <div class="bg-primary text-white px-4 py-2 rounded-2xl rounded-tr-sm text-sm max-w-[80%] shadow-sm">
+                            Thầy ơi, cho em hỏi câu 45 trong đề số 2, cách giải bằng Casio có áp dụng được nếu hàm số bậc 4 không ạ?
+                        </div>
+                        <span class="text-[10px] text-slate-400 mt-1 mr-1">Đã xem</span>
+                    </div>
+
+                    <!-- Admin Message -->
+                    <div class="flex items-end gap-2">
+                        <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-xs font-bold flex-shrink-0 mb-1">AD</div>
+                        <div class="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 px-4 py-2.5 rounded-2xl rounded-tl-sm text-sm max-w-[80%] shadow-sm leading-relaxed">
+                            Chào em, cách giải Casio ở câu 45 là dùng tính năng Table để tìm min max trên đoạn. Nếu hàm bậc 4 có chứa tham số m thì em không dùng bảng trực tiếp được nhé, em cần cô lập m trước. Em xem lại chuyên đề 3 trang 80 có hướng dẫn kỹ dạng này.
+                        </div>
+                    </div>
+
+                    <!-- User Message -->
+                    <div class="flex flex-col items-end">
+                        <div class="bg-primary text-white px-4 py-2 rounded-2xl rounded-tr-sm text-sm max-w-[80%] shadow-sm">
+                            Dạ, em cảm ơn thầy nhiều ạ. Em hiểu rồi.
+                        </div>
+                        <span class="text-[10px] text-slate-400 mt-1 mr-1">10:45</span>
+                    </div>
+                </div>
+
+                <!-- Input Area -->
+                <div class="p-3 bg-white dark:bg-darkCard border-t border-slate-200 dark:border-slate-700">
+                    <div class="flex items-center gap-2">
+                        <button class="w-11 h-11 rounded-full text-slate-400 hover:text-primary hover:bg-blue-50 dark:hover:bg-slate-800 flex items-center justify-center transition flex-shrink-0">
+                            <i class="fa-solid fa-paperclip"></i>
+                        </button>
+                        <div class="flex-1 bg-slate-100 dark:bg-slate-800 rounded-3xl flex items-center px-4 min-h-[44px]">
+                            <input type="text" placeholder="Nhập tin nhắn..." class="w-full bg-transparent border-none text-sm outline-none py-2 text-slate-800 dark:text-slate-200">
+                        </div>
+                        <button class="w-11 h-11 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primaryHover transition flex-shrink-0 shadow-md">
+                            <i class="fa-solid fa-paper-plane text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB 2: NHÓM HỌC SINH ================= -->
+        <div id="studentGroups" class="tab-content hidden flex-1 flex flex-col min-h-0">
+            
+            <!-- Danh sách Phòng -->
+            <div id="groupListView" class="flex-1 flex flex-col">
+                <div class="flex justify-between items-center mb-4">
+                    <div class="relative max-w-sm w-full">
+                        <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                        <input type="text" placeholder="Tìm tên phòng..." class="w-full bg-white dark:bg-darkCard border border-slate-200 dark:border-slate-700 h-11 rounded-xl pl-9 pr-4 text-sm outline-none focus:border-primary shadow-sm transition">
+                    </div>
+                    <button class="h-11 px-4 sm:px-6 bg-primary text-white font-bold text-sm rounded-xl hover:bg-primaryHover transition flex items-center gap-2 shadow-sm flex-shrink-0 ml-2" onclick="openCreateRoomModal()">
+                        <i class="fa-solid fa-plus"></i> <span class="hidden sm:inline">Tạo phòng</span>
+                    </button>
+                </div>
+
+                <div class="flex-1 overflow-y-auto hide-scrollbar grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-4">
+                    
+                    <!-- Card Phòng Toán -->
+                    <div class="bg-white dark:bg-darkCard p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-700 transition flex flex-col">
+                        <div class="flex justify-between items-start mb-3">
+                            <span class="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-[10px] font-bold px-2 py-1 rounded border border-blue-200 dark:border-blue-800">Toán học</span>
+                            <div class="flex items-center text-xs text-slate-500 font-bold bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg">
+                                <i class="fa-solid fa-users mr-1"></i> 145
+                            </div>
+                        </div>
+                        <h3 class="font-bold text-base mb-1 line-clamp-1">Giải đề thi thử liên trường</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-4">Phòng dành riêng cho thảo luận đáp án, tìm lời giải ngắn các đề sở giáo dục...</p>
+                        <div class="mt-auto pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                            <div class="flex -space-x-2">
+                                <img src="https://placehold.co/30x30/3B82F6/FFF?text=A" class="w-8 h-8 rounded-full border-2 border-white dark:border-darkCard">
+                                <img src="https://placehold.co/30x30/EF4444/FFF?text=B" class="w-8 h-8 rounded-full border-2 border-white dark:border-darkCard">
+                                <img src="https://placehold.co/30x30/10B981/FFF?text=C" class="w-8 h-8 rounded-full border-2 border-white dark:border-darkCard">
+                                <div class="w-8 h-8 rounded-full border-2 border-white dark:border-darkCard bg-slate-200 dark:bg-slate-700 text-slate-500 text-[10px] flex items-center justify-center font-bold">+14</div>
+                            </div>
+                            <button class="h-10 px-5 bg-slate-100 dark:bg-slate-800 text-primary font-bold text-sm rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition" onclick="enterRoom('Toán học')">
+                                Vào phòng
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Card Phòng Sinh (Lime) -->
+                    <div class="bg-white dark:bg-darkCard p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 hover:border-lime-300 dark:hover:border-lime-700 transition flex flex-col">
+                        <div class="flex justify-between items-start mb-3">
+                            <span class="bg-lime-100 dark:bg-lime-900/30 text-lime-700 dark:text-lime-400 text-[10px] font-bold px-2 py-1 rounded border border-lime-200 dark:border-lime-800">Sinh học</span>
+                            <div class="flex items-center text-xs text-slate-500 font-bold bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg">
+                                <i class="fa-solid fa-users mr-1"></i> 89
+                            </div>
+                        </div>
+                        <h3 class="font-bold text-base mb-1 line-clamp-1">Hỏi đáp quy luật di truyền</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-4">Mọi người ơi vào đây thảo luận phả hệ và tích hợp quy luật nha.</p>
+                        <div class="mt-auto pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                            <div class="flex -space-x-2">
+                                <img src="https://placehold.co/30x30/F59E0B/FFF?text=H" class="w-8 h-8 rounded-full border-2 border-white dark:border-darkCard">
+                                <img src="https://placehold.co/30x30/8B5CF6/FFF?text=K" class="w-8 h-8 rounded-full border-2 border-white dark:border-darkCard">
+                            </div>
+                            <button class="h-10 px-5 bg-slate-100 dark:bg-slate-800 text-primary font-bold text-sm rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition" onclick="enterRoom('Sinh học')">
+                                Vào phòng
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Card Phòng Hóa (Green) -->
+                    <div class="bg-white dark:bg-darkCard p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 hover:border-green-300 dark:hover:border-green-700 transition flex flex-col">
+                        <div class="flex justify-between items-start mb-3">
+                            <span class="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-[10px] font-bold px-2 py-1 rounded border border-green-200 dark:border-green-800">Hóa học</span>
+                            <div class="flex items-center text-xs text-slate-500 font-bold bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg">
+                                <i class="fa-solid fa-users mr-1"></i> 210
+                            </div>
+                        </div>
+                        <h3 class="font-bold text-base mb-1 line-clamp-1">Hóa vô cơ 8+</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-4">Chuyên giải bài tập phân bón, điện phân, đồ thị kết tủa...</p>
+                        <div class="mt-auto pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                            <div class="flex -space-x-2">
+                                <img src="https://placehold.co/30x30/EC4899/FFF?text=N" class="w-8 h-8 rounded-full border-2 border-white dark:border-darkCard">
+                                <img src="https://placehold.co/30x30/06B6D4/FFF?text=M" class="w-8 h-8 rounded-full border-2 border-white dark:border-darkCard">
+                                <div class="w-8 h-8 rounded-full border-2 border-white dark:border-darkCard bg-slate-200 dark:bg-slate-700 text-slate-500 text-[10px] flex items-center justify-center font-bold">+28</div>
+                            </div>
+                            <button class="h-10 px-5 bg-slate-100 dark:bg-slate-800 text-primary font-bold text-sm rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition" onclick="enterRoom('Hóa học')">
+                                Vào phòng
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Giao diện Trong Phòng Chat (Mặc định ẩn) -->
+            <div id="groupChatView" class="hidden flex-1 bg-white dark:bg-darkCard rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm flex-col overflow-hidden relative">
+                
+                <!-- Group Header -->
+                <div class="h-16 border-b border-slate-200 dark:border-slate-700 px-4 flex items-center justify-between bg-slate-50 dark:bg-slate-900/50">
+                    <div class="flex items-center gap-3">
+                        <button class="w-11 h-11 flex items-center justify-center text-slate-600 dark:text-slate-300 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition -ml-2" onclick="exitRoom()">
+                            <i class="fa-solid fa-arrow-left"></i>
+                        </button>
+                        <div>
+                            <h3 class="font-bold text-sm md:text-base text-slate-800 dark:text-slate-100">Giải đề thi thử liên trường</h3>
+                            <div class="text-[10px] md:text-xs text-slate-500 flex items-center gap-2">
+                                <span class="text-blue-600 font-bold">Môn Toán</span> • 145 thành viên
+                            </div>
+                        </div>
+                    </div>
+                    <button class="w-11 h-11 flex items-center justify-center text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition">
+                        <i class="fa-solid fa-ellipsis-vertical"></i>
+                    </button>
+                </div>
+
+                <!-- Messages -->
+                <div class="flex-1 overflow-y-auto chat-scroll p-4 space-y-4">
+                    <div class="text-center text-[10px] text-slate-400 mb-4">Chào mừng đến với phòng chat! Mọi người hãy cùng nhau học tập nhé.</div>
+
+                    <!-- Other User Msg -->
+                    <div class="flex items-start gap-2 group">
+                        <img src="https://placehold.co/32x32/EF4444/FFF?text=H" class="w-8 h-8 rounded-full flex-shrink-0 mt-1 border border-slate-200 dark:border-slate-700">
+                        <div class="flex flex-col">
+                            <span class="text-[10px] text-slate-500 ml-2 mb-0.5 font-bold">Hoàng Anh</span>
+                            <div class="flex items-center gap-2">
+                                <div class="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 px-4 py-2.5 rounded-2xl rounded-tl-sm text-sm shadow-sm max-w-sm md:max-w-md">
+                                    Có ai biết giải câu 40 đề sở Hà Nội hôm qua bằng hàm đặc trưng không? Mình biến đổi mãi không ra.
+                                </div>
+                                <!-- Nút Báo cáo (Hiện khi hover trên Desktop, luôn có thể chạm trên Mobile) -->
+                                <button class="text-slate-300 hover:text-red-500 transition opacity-0 group-hover:opacity-100 w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0" title="Báo cáo tin nhắn">
+                                    <i class="fa-solid fa-flag text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- My Msg -->
+                    <div class="flex flex-col items-end">
+                        <div class="bg-primary text-white px-4 py-2 rounded-2xl rounded-tr-sm text-sm shadow-sm max-w-sm md:max-w-md">
+                            Bài đó đặt $t = x^2 + 1$ rồi xét hàm $f(t)$ là ra luôn đó bạn. Hàm đồng biến trên khoảng $(0, +\infty)$.
+                        </div>
+                        <span class="text-[10px] text-slate-400 mt-1 mr-2">Vừa xong</span>
+                    </div>
+                </div>
+
+                <!-- Input -->
+                <div class="p-3 bg-white dark:bg-darkCard border-t border-slate-200 dark:border-slate-700">
+                    <div class="flex items-center gap-2">
+                        <button class="w-11 h-11 rounded-full text-slate-400 hover:text-primary hover:bg-blue-50 dark:hover:bg-slate-800 flex items-center justify-center transition flex-shrink-0">
+                            <i class="fa-solid fa-image"></i>
+                        </button>
+                        <div class="flex-1 bg-slate-100 dark:bg-slate-800 rounded-3xl flex items-center px-4 min-h-[44px]">
+                            <input type="text" placeholder="Nhập tin nhắn vào nhóm..." class="w-full bg-transparent border-none text-sm outline-none py-2 text-slate-800 dark:text-slate-200">
+                        </div>
+                        <button class="w-11 h-11 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primaryHover transition flex-shrink-0 shadow-md">
+                            <i class="fa-solid fa-paper-plane text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB 3: FANPAGE & ZALO ================= -->
+        <div id="zaloGroups" class="tab-content hidden flex-1 min-h-0 overflow-y-auto hide-scrollbar">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto py-4">
+                
+                <!-- Thẻ Zalo -->
+                <div class="bg-white dark:bg-darkCard rounded-3xl p-6 md:p-8 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col items-center text-center relative overflow-hidden group">
+                    <div class="absolute -top-20 -right-20 w-48 h-48 bg-blue-500 opacity-10 rounded-full blur-3xl pointer-events-none group-hover:opacity-20 transition"></div>
+                    
+                    <div class="w-16 h-16 rounded-2xl bg-blue-500 text-white flex items-center justify-center text-3xl font-bold mb-4 shadow-lg shadow-blue-200 dark:shadow-none">
+                        Zalo
+                    </div>
+                    <h2 class="text-xl font-extrabold mb-2">Tham gia nhóm Zalo</h2>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 mb-6 max-w-xs">Nhận thông báo tài liệu mới, flash sale và trao đổi học tập cùng hàng ngàn bạn khác.</p>
+                    
+                    <div class="bg-slate-50 dark:bg-slate-900 p-2 rounded-2xl border border-slate-200 dark:border-slate-700 mb-6 shadow-inner">
+                        <!-- Giả lập QR Code -->
+                        <img src="https://placehold.co/150x150/FFF/3B82F6?text=QR+Zalo" alt="QR Zalo" class="w-32 h-32 rounded-xl">
+                    </div>
+                    
+                    <button class="w-full h-12 bg-blue-500 text-white font-bold rounded-xl hover:bg-blue-600 transition shadow flex items-center justify-center gap-2">
+                        Vào nhóm ngay
+                    </button>
+                </div>
+
+                <!-- Thẻ Messenger -->
+                <div class="bg-gradient-to-b from-white to-slate-50 dark:from-darkCard dark:to-slate-900/50 rounded-3xl p-6 md:p-8 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col items-center text-center relative overflow-hidden group">
+                    <div class="absolute -top-20 -left-20 w-48 h-48 bg-rose-500 opacity-10 rounded-full blur-3xl pointer-events-none group-hover:opacity-20 transition"></div>
+                    
+                    <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-500 to-rose-500 text-white flex items-center justify-center text-3xl font-bold mb-4 shadow-lg">
+                        <i class="fa-brands fa-facebook-messenger"></i>
+                    </div>
+                    <h2 class="text-xl font-extrabold mb-2">Chat với Fanpage</h2>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 mb-8 max-w-xs">Theo dõi Fanpage để cập nhật mẹo học tập. Nhắn tin cho Admin nếu bạn cần hỗ trợ nhanh.</p>
+                    
+                    <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-2xl p-4 mb-auto text-left flex items-center gap-3">
+                        <div class="w-12 h-12 bg-primary text-white rounded-full flex items-center justify-center flex-shrink-0 shadow"><i class="fa-solid fa-graduation-cap"></i></div>
+                        <div>
+                            <div class="font-bold text-sm">ÔnThiPro - Luyện thi THPT</div>
+                            <div class="text-[10px] text-slate-500">150K người theo dõi</div>
+                        </div>
+                    </div>
+                    
+                    <button class="w-full h-12 mt-6 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold rounded-xl hover:opacity-90 transition shadow flex items-center justify-center gap-2">
+                        Mở Messenger
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Cảnh báo dưới cùng (Hiển thị cố định cuối Main) -->
+        <div class="mt-4 bg-slate-100 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 p-3 rounded-xl border border-slate-200 dark:border-slate-700 text-xs sm:text-sm text-center flex items-center justify-center gap-2 font-medium flex-shrink-0">
+            <i class="fa-solid fa-circle-info"></i> Vui lòng nói chuyện lịch sự. Tin nhắn vi phạm, phản cảm sẽ bị xóa mà không cần báo trước.
+        </div>
+
+    </main>
+
+    <!-- Modal Tạo phòng -->
+    <div id="createRoomModal" class="fixed inset-0 bg-slate-900/60 dark:bg-black/70 z-50 flex items-center justify-center modal-overlay">
+        <div class="bg-white dark:bg-darkCard w-[90%] max-w-sm rounded-3xl p-6 shadow-2xl modal-content border border-slate-200 dark:border-slate-700">
+            <div class="flex justify-between items-center mb-5">
+                <h3 class="text-lg font-extrabold">Tạo phòng mới</h3>
+                <button class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-800 dark:hover:text-white transition" onclick="closeCreateRoomModal()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Tên phòng thảo luận</label>
+                    <input type="text" placeholder="Ví dụ: Giúp mình bài Tích phân..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 h-11 rounded-xl px-4 text-sm outline-none focus:border-primary transition">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Chọn môn học</label>
+                    <select class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 h-11 rounded-xl px-4 text-sm outline-none focus:border-primary transition cursor-pointer appearance-none">
+                        <option>Toán học</option>
+                        <option>Vật lý</option>
+                        <option>Hóa học</option>
+                        <option>Sinh học</option>
+                        <option>Ngữ văn</option>
+                        <option>Lịch sử</option>
+                        <option>Địa lý</option>
+                        <option>KTPL</option>
+                        <option>Tiếng Anh</option>
+                        <option>Tin học</option>
+                    </select>
+                </div>
+            </div>
+            
+            <button class="w-full h-11 mt-6 bg-primary text-white font-bold rounded-xl hover:bg-primaryHover transition shadow-md" onclick="closeCreateRoomModal()">Tạo & Vào phòng ngay</button>
+        </div>
+    </div>
+
+    <!-- FAB -->
+    <div class="fixed bottom-6 right-4 md:right-8 flex flex-col gap-3 z-50">
+        <a href="#" class="w-12 h-12 md:w-[56px] md:h-[56px] rounded-full bg-blue-500 text-white flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition animate-bounce-intro" title="Chat Zalo">
+            <div class="font-bold text-[10px] md:text-sm">Zalo</div>
+        </a>
+        <a href="#" class="w-12 h-12 md:w-[56px] md:h-[56px] rounded-full bg-gradient-to-tr from-blue-500 to-rose-500 text-white flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition" title="Chat Messenger">
+            <i class="fa-brands fa-facebook-messenger"></i>
+        </a>
+    </div>
+
+    <script>
+        // --- Dark Mode ---
+        const themeToggleBtn = document.getElementById('themeToggle');
+        themeToggleBtn.addEventListener('click', () => document.documentElement.classList.toggle('dark'));
+
+        // --- Tabs Logic ---
+        function switchTab(tabId, btnElement) {
+            // Update buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active', 'bg-primary', 'text-white', 'shadow-md');
+                btn.classList.add('bg-slate-100', 'dark:bg-slate-800', 'text-slate-600', 'dark:text-slate-300');
+            });
+            btnElement.classList.remove('bg-slate-100', 'dark:bg-slate-800', 'text-slate-600', 'dark:text-slate-300');
+            btnElement.classList.add('active', 'bg-primary', 'text-white', 'shadow-md');
+
+            // Update content visibility
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+                // Nếu là AdminChat (dùng flex), gỡ hidden
+                if(content.id === tabId) {
+                    content.classList.remove('hidden');
+                    if(tabId === 'adminChat') content.classList.add('flex');
+                    if(tabId === 'studentGroups') content.classList.add('flex');
+                } else {
+                    content.classList.remove('flex');
+                }
+            });
+
+            // Reset Sub-views khi chuyển tab
+            if(tabId === 'studentGroups') {
+                document.getElementById('groupListView').classList.remove('hidden');
+                document.getElementById('groupListView').classList.add('flex');
+                document.getElementById('groupChatView').classList.add('hidden');
+                document.getElementById('groupChatView').classList.remove('flex');
+            }
+        }
+
+        // --- Admin Chat Mobile Responsive Logic ---
+        const adminChatList = document.getElementById('adminChatList');
+        const adminChatDetail = document.getElementById('adminChatDetail');
+
+        function openAdminChatDetail(docId) {
+            // Trên mobile, khi bấm item list -> ẩn list, hiện detail
+            if (window.innerWidth < 768) {
+                adminChatList.classList.add('mobile-hidden');
+                adminChatDetail.classList.remove('mobile-hidden');
+                adminChatDetail.classList.add('mobile-show-flex');
+            }
+            // Add visual active state to list item (optional logic)
+        }
+
+        function closeAdminChatDetail() {
+            // Quay lại list trên mobile
+            adminChatList.classList.remove('mobile-hidden');
+            adminChatDetail.classList.add('mobile-hidden');
+            adminChatDetail.classList.remove('mobile-show-flex');
+        }
+
+        // --- Student Group Chat Logic ---
+        function enterRoom(roomName) {
+            document.getElementById('groupListView').classList.add('hidden');
+            document.getElementById('groupListView').classList.remove('flex');
+            
+            const chatView = document.getElementById('groupChatView');
+            chatView.classList.remove('hidden');
+            chatView.classList.add('flex');
+        }
+
+        function exitRoom() {
+            document.getElementById('groupChatView').classList.add('hidden');
+            document.getElementById('groupChatView').classList.remove('flex');
+            
+            document.getElementById('groupListView').classList.remove('hidden');
+            document.getElementById('groupListView').classList.add('flex');
+        }
+
+        // --- Modal Tạo Phòng ---
+        function openCreateRoomModal() {
+            document.getElementById('createRoomModal').classList.add('open');
+        }
+        function closeCreateRoomModal() {
+            document.getElementById('createRoomModal').classList.remove('open');
+        }
+    </script>
+</body>
+</html>
