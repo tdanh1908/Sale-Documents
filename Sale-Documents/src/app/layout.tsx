@@ -7,6 +7,9 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { FloatingContact } from "@/components/layout/FloatingContact";
 
+import { UtmTracker } from "@/components/UtmTracker";
+import { Suspense } from "react";
+
 const nunito = Nunito({
   subsets: ["latin"],
   weight: ["400", "600", "700", "800"],
@@ -29,6 +32,9 @@ export default function RootLayout({
         className={`${nunito.variable} font-sans antialiased min-h-screen flex flex-col overflow-x-hidden`}
       >
         <ThemeProvider>
+          <Suspense fallback={null}>
+            <UtmTracker />
+          </Suspense>
           <Header />
           <main className="flex-1 flex flex-col pb-24">
             {children}
