@@ -54,11 +54,11 @@ export default function DocumentDetailPage() {
         
         {/* Breadcrumb */}
         <nav className="flex text-sm text-slate-500 dark:text-slate-400 mb-6 whitespace-nowrap overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-          <Link href="/" className="hover:text-[#2563EB] transition flex-shrink-0">Trang chủ</Link>
+          <Link href="/" className="cursor-pointer hover:text-[#2563EB] transition flex-shrink-0">Trang chủ</Link>
           <span className="mx-2 flex-shrink-0">/</span>
-          <Link href="/thu-vien" className="hover:text-[#2563EB] transition flex-shrink-0">Toán học</Link>
+          <Link href="/thu-vien" className="cursor-pointer hover:text-[#2563EB] transition flex-shrink-0">Toán học</Link>
           <span className="mx-2 flex-shrink-0">/</span>
-          <Link href="/thu-vien" className="hover:text-[#2563EB] transition flex-shrink-0">Đề thi</Link>
+          <Link href="/thu-vien" className="cursor-pointer hover:text-[#2563EB] transition flex-shrink-0">Đề thi</Link>
           <span className="mx-2 flex-shrink-0">/</span>
           <span className="text-slate-800 dark:text-slate-200 font-bold truncate">Bộ 50 đề thi thử THPT QG Môn Toán 2026</span>
         </nav>
@@ -130,14 +130,14 @@ export default function DocumentDetailPage() {
                 />
                 
                 {/* Nút điều hướng */}
-                <button 
+                <button className="cursor-pointer" 
                   onClick={handlePrevPage}
                   disabled={previewPage === 1}
                   className="absolute left-2 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/80 dark:bg-black/60 shadow text-slate-800 dark:text-white flex items-center justify-center hover:bg-white dark:hover:bg-black transition disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
-                <button 
+                <button className="cursor-pointer" 
                   onClick={handleNextPage}
                   disabled={previewPage === totalPreviewPages}
                   className="absolute right-2 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/80 dark:bg-black/60 shadow text-slate-800 dark:text-white flex items-center justify-center hover:bg-white dark:hover:bg-black transition disabled:opacity-30 disabled:cursor-not-allowed"
@@ -161,7 +161,7 @@ export default function DocumentDetailPage() {
                     </Link>
                   ) : (
                     <div className="flex flex-col items-center">
-                      <button className="h-11 px-6 bg-[#2563EB] text-white font-bold rounded-full hover:bg-blue-700 transition flex items-center gap-2">
+                      <button className="cursor-pointer h-11 px-6 bg-[#2563EB] text-white font-bold rounded-full hover:bg-blue-700 transition flex items-center gap-2">
                         <BookOpen className="w-4 h-4" /> Đọc toàn bộ tài liệu
                       </button>
                     </div>
@@ -175,9 +175,9 @@ export default function DocumentDetailPage() {
             <div className="bg-white dark:bg-[#1E293B] rounded-3xl p-4 sm:p-6 sm:px-8 border border-slate-100 dark:border-slate-800 shadow-sm">
               
               <div className="flex gap-6 border-b border-slate-200 dark:border-slate-700 mb-6 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                <button onClick={() => setActiveTab('desc')} className={`pb-3 font-bold whitespace-nowrap transition border-b-2 ${activeTab === 'desc' ? 'text-[#2563EB] border-[#2563EB]' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 border-transparent'}`}>Mô tả chi tiết</button>
-                <button onClick={() => setActiveTab('review')} className={`pb-3 font-bold whitespace-nowrap transition border-b-2 ${activeTab === 'review' ? 'text-[#2563EB] border-[#2563EB]' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 border-transparent'}`}>Đánh giá (120)</button>
-                <button onClick={() => setActiveTab('comment')} className={`pb-3 font-bold whitespace-nowrap transition border-b-2 ${activeTab === 'comment' ? 'text-[#2563EB] border-[#2563EB]' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 border-transparent'}`}>Bình luận (45)</button>
+                <button onClick={() => setActiveTab('desc')} className={`cursor-pointer pb-3 font-bold whitespace-nowrap transition border-b-2 ${activeTab === 'desc' ? 'text-[#2563EB] border-[#2563EB]' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 border-transparent'}`}>Mô tả chi tiết</button>
+                <button onClick={() => setActiveTab('review')} className={`cursor-pointer pb-3 font-bold whitespace-nowrap transition border-b-2 ${activeTab === 'review' ? 'text-[#2563EB] border-[#2563EB]' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 border-transparent'}`}>Đánh giá (120)</button>
+                <button onClick={() => setActiveTab('comment')} className={`cursor-pointer pb-3 font-bold whitespace-nowrap transition border-b-2 ${activeTab === 'comment' ? 'text-[#2563EB] border-[#2563EB]' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 border-transparent'}`}>Bình luận (45)</button>
               </div>
 
               {/* TAB 1: MÔ TẢ */}
@@ -235,7 +235,7 @@ export default function DocumentDetailPage() {
 
                   {isOwned && (
                     <div className="mb-6">
-                      <button className="h-11 px-6 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-white font-bold rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition w-full sm:w-auto">
+                      <button className="cursor-pointer h-11 px-6 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-white font-bold rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition w-full sm:w-auto">
                         Viết đánh giá của bạn
                       </button>
                     </div>
@@ -283,7 +283,7 @@ export default function DocumentDetailPage() {
                     )}
                     <div className="flex-1 relative">
                       <input type="text" placeholder="Hỏi đáp, thảo luận về tài liệu này..." className="w-full bg-slate-100 dark:bg-slate-800 border-none h-11 rounded-full pl-4 pr-12 text-sm focus:ring-2 focus:ring-[#2563EB] outline-none text-slate-800 dark:text-slate-200" />
-                      <button className="absolute right-1 top-1 bottom-1 w-9 h-9 bg-[#2563EB] text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition disabled:opacity-50">
+                      <button className="cursor-pointer absolute right-1 top-1 bottom-1 w-9 h-9 bg-[#2563EB] text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition disabled:opacity-50">
                         <Send className="w-4 h-4" />
                       </button>
                     </div>
@@ -302,8 +302,8 @@ export default function DocumentDetailPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-4 ml-11 text-xs text-slate-500 font-medium">
-                        <button className="hover:text-[#2563EB] transition">Trả lời</button>
-                        <button className="hover:text-red-500 transition">Báo cáo vi phạm</button>
+                        <button className="cursor-pointer hover:text-[#2563EB] transition">Trả lời</button>
+                        <button className="cursor-pointer hover:text-red-500 transition">Báo cáo vi phạm</button>
                       </div>
                       
                       <div className="flex items-start gap-3 mt-3 ml-11">
@@ -320,7 +320,7 @@ export default function DocumentDetailPage() {
                   </div>
 
                   <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800 flex justify-center">
-                    <button className="h-11 px-6 rounded-full border border-[#2563EB] text-[#2563EB] font-bold hover:bg-blue-50 dark:hover:bg-blue-900/20 transition flex items-center gap-2 text-sm">
+                    <button className="cursor-pointer h-11 px-6 rounded-full border border-[#2563EB] text-[#2563EB] font-bold hover:bg-blue-50 dark:hover:bg-blue-900/20 transition flex items-center gap-2 text-sm">
                       <Headphones className="w-4 h-4" /> Chat riêng với Admin về tài liệu này
                     </button>
                   </div>
@@ -383,14 +383,14 @@ export default function DocumentDetailPage() {
                     <div className="relative">
                       <Target className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                       <input type="text" placeholder="Nhập mã giảm giá..." className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 h-11 rounded-xl pl-9 pr-20 text-sm focus:border-[#2563EB] outline-none text-slate-800 dark:text-slate-200 uppercase" />
-                      <button className="absolute right-1 top-1 bottom-1 px-3 bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-xs rounded-lg hover:bg-slate-300 transition">Áp dụng</button>
+                      <button className="cursor-pointer absolute right-1 top-1 bottom-1 px-3 bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-xs rounded-lg hover:bg-slate-300 transition">Áp dụng</button>
                     </div>
 
                     <div className="flex gap-2">
-                      <button className="w-12 h-12 flex-shrink-0 rounded-2xl bg-orange-100 text-[#F97316] dark:bg-orange-900/40 dark:text-orange-400 flex items-center justify-center hover:bg-[#F97316] hover:text-white transition" title="Thêm vào giỏ">
+                      <button className="cursor-pointer w-12 h-12 flex-shrink-0 rounded-2xl bg-orange-100 text-[#F97316] dark:bg-orange-900/40 dark:text-orange-400 flex items-center justify-center hover:bg-[#F97316] hover:text-white transition" title="Thêm vào giỏ">
                         <ShoppingCart className="w-5 h-5" />
                       </button>
-                      <button className="flex-1 h-12 bg-[#2563EB] text-white font-extrabold text-sm rounded-2xl hover:bg-blue-700 transition flex flex-col items-center justify-center">
+                      <button className="cursor-pointer flex-1 h-12 bg-[#2563EB] text-white font-extrabold text-sm rounded-2xl hover:bg-blue-700 transition flex flex-col items-center justify-center">
                         <span>MUA NGAY</span>
                       </button>
                     </div>
@@ -405,10 +405,10 @@ export default function DocumentDetailPage() {
                       <div className="font-bold text-green-700 dark:text-green-400">Bạn đã sở hữu tài liệu này</div>
                       <div className="text-xs text-green-600/70 dark:text-green-500 mt-1">Phiên bản: Chỉ xem Online</div>
                     </div>
-                    <button className="w-full h-12 bg-[#2563EB] text-white font-extrabold text-sm rounded-2xl hover:bg-blue-700 transition flex items-center justify-center gap-2">
+                    <button className="cursor-pointer w-full h-12 bg-[#2563EB] text-white font-extrabold text-sm rounded-2xl hover:bg-blue-700 transition flex items-center justify-center gap-2">
                       <BookOpen className="w-4 h-4" /> ĐỌC NGAY
                     </button>
-                    <button className="w-full mt-2 h-11 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-sm rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition flex items-center justify-center gap-2">
+                    <button className="cursor-pointer w-full mt-2 h-11 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-sm rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition flex items-center justify-center gap-2">
                       Nâng cấp bản Tải Về (10.000đ)
                     </button>
                   </div>
@@ -425,10 +425,10 @@ export default function DocumentDetailPage() {
                       <div className="text-xs text-green-600/70 dark:text-green-500 mt-1">Phiên bản: Xem Online & Tải PDF</div>
                     </div>
                     <div className="flex gap-2">
-                      <button className="flex-1 h-12 bg-[#2563EB] text-white font-extrabold text-sm rounded-2xl hover:bg-blue-700 transition flex items-center justify-center gap-2">
+                      <button className="cursor-pointer flex-1 h-12 bg-[#2563EB] text-white font-extrabold text-sm rounded-2xl hover:bg-blue-700 transition flex items-center justify-center gap-2">
                         <BookOpen className="w-4 h-4" /> ĐỌC NGAY
                       </button>
-                      <button className="flex-1 h-12 bg-slate-800 dark:bg-slate-700 text-white font-extrabold text-sm rounded-2xl hover:bg-slate-700 dark:hover:bg-slate-600 transition flex items-center justify-center gap-2">
+                      <button className="cursor-pointer flex-1 h-12 bg-slate-800 dark:bg-slate-700 text-white font-extrabold text-sm rounded-2xl hover:bg-slate-700 dark:hover:bg-slate-600 transition flex items-center justify-center gap-2">
                         <DownloadCloud className="w-4 h-4" /> TẢI PDF
                       </button>
                     </div>
@@ -443,12 +443,12 @@ export default function DocumentDetailPage() {
                       <div className="text-sm text-slate-500 font-medium">Tài liệu chia sẻ miễn phí</div>
                     </div>
                     {isAuth ? (
-                      <button className="w-full h-12 bg-[#2563EB] text-white font-extrabold text-sm rounded-2xl hover:bg-blue-700 transition flex items-center justify-center gap-2 shadow-lg shadow-blue-200 dark:shadow-none">
+                      <button className="cursor-pointer w-full h-12 bg-[#2563EB] text-white font-extrabold text-sm rounded-2xl hover:bg-blue-700 transition flex items-center justify-center gap-2 shadow-lg shadow-blue-200 dark:shadow-none">
                         <BookOpen className="w-4 h-4" /> XEM MIỄN PHÍ
                       </button>
                     ) : (
                       <div>
-                        <button className="w-full h-12 border-2 border-[#2563EB] text-[#2563EB] font-extrabold text-sm rounded-2xl hover:bg-[#2563EB] hover:text-white transition flex flex-col items-center justify-center leading-tight py-1">
+                        <button className="cursor-pointer w-full h-12 border-2 border-[#2563EB] text-[#2563EB] font-extrabold text-sm rounded-2xl hover:bg-[#2563EB] hover:text-white transition flex flex-col items-center justify-center leading-tight py-1">
                           <span>Đăng nhập để xem</span>
                         </button>
                         <p className="text-center text-[11px] text-slate-500 mt-2">Vui lòng đăng ký/đăng nhập tài khoản để đọc tài liệu miễn phí này.</p>
@@ -514,7 +514,7 @@ export default function DocumentDetailPage() {
                     <span className="font-black text-[#F97316] text-2xl">129.000đ</span>
                     <span className="text-sm text-slate-400 line-through">177.000đ</span>
                   </div>
-                  <button className="h-11 px-8 bg-[#F97316] text-white font-bold rounded-full hover:bg-orange-600 transition shadow-lg shadow-orange-200 dark:shadow-none w-full md:w-auto">
+                  <button className="cursor-pointer h-11 px-8 bg-[#F97316] text-white font-bold rounded-full hover:bg-orange-600 transition shadow-lg shadow-orange-200 dark:shadow-none w-full md:w-auto">
                     Thêm Combo Vào Giỏ
                   </button>
                 </div>
@@ -559,28 +559,28 @@ export default function DocumentDetailPage() {
         <div className="flex gap-2">
           {isNotOwnedPaid && (
             <>
-              <button className="w-11 h-11 flex-shrink-0 rounded-xl bg-orange-100 text-[#F97316] dark:bg-orange-900/40 dark:text-orange-400 flex items-center justify-center hover:bg-[#F97316] hover:text-white transition">
+              <button className="cursor-pointer w-11 h-11 flex-shrink-0 rounded-xl bg-orange-100 text-[#F97316] dark:bg-orange-900/40 dark:text-orange-400 flex items-center justify-center hover:bg-[#F97316] hover:text-white transition">
                 <ShoppingCart className="w-5 h-5" />
               </button>
-              <button className="h-11 px-6 bg-[#2563EB] text-white font-extrabold text-sm rounded-xl hover:bg-blue-700 transition" onClick={() => window.scrollTo(0, 0)}>
+              <button className="cursor-pointer h-11 px-6 bg-[#2563EB] text-white font-extrabold text-sm rounded-xl hover:bg-blue-700 transition" onClick={() => window.scrollTo(0, 0)}>
                 MUA NGAY
               </button>
             </>
           )}
           
           {isOwned && (
-            <button className="h-11 px-6 bg-[#2563EB] text-white font-extrabold text-sm rounded-xl hover:bg-blue-700 transition flex items-center gap-2">
+            <button className="cursor-pointer h-11 px-6 bg-[#2563EB] text-white font-extrabold text-sm rounded-xl hover:bg-blue-700 transition flex items-center gap-2">
               <BookOpen className="w-4 h-4" /> ĐỌC NGAY
             </button>
           )}
 
           {isFree && (
             isAuth ? (
-              <button className="h-11 px-6 bg-[#2563EB] text-white font-extrabold text-sm rounded-xl hover:bg-blue-700 transition flex items-center gap-2">
+              <button className="cursor-pointer h-11 px-6 bg-[#2563EB] text-white font-extrabold text-sm rounded-xl hover:bg-blue-700 transition flex items-center gap-2">
                 <BookOpen className="w-4 h-4" /> XEM MIỄN PHÍ
               </button>
             ) : (
-              <button className="h-11 px-6 border-2 border-[#2563EB] text-[#2563EB] font-extrabold text-sm rounded-xl">
+              <button className="cursor-pointer h-11 px-6 border-2 border-[#2563EB] text-[#2563EB] font-extrabold text-sm rounded-xl">
                 ĐĂNG NHẬP
               </button>
             )

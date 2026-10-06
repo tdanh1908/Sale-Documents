@@ -55,9 +55,9 @@ export default function Home() {
                 </div>
                 <h2 className="text-2xl md:text-4xl font-extrabold mb-2">{TOP_10_MOCK.title}</h2>
                 <p className="text-blue-100 text-sm md:text-base mb-5">{TOP_10_MOCK.description}</p>
-                <button className="bg-white text-blue-600 font-bold py-2.5 px-6 rounded-full hover:bg-slate-100 transition shadow-lg">
+                <Link href="/bang-xep-hang" className="inline-block bg-white text-blue-600 font-bold py-2.5 px-6 rounded-full hover:bg-slate-100 transition shadow-lg cursor-pointer">
                   Xem Bảng Xếp Hạng
-                </button>
+                </Link>
               </div>
               <div className="w-32 md:w-48 h-32 md:h-48 rounded-full border-4 border-[#FACC15] overflow-hidden shadow-2xl relative">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
