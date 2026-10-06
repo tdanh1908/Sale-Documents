@@ -152,13 +152,13 @@ export default function DocumentDetailPage() {
                 <div className="absolute inset-0 bg-white/60 dark:bg-[#1E293B]/60 backdrop-blur-md flex flex-col items-center justify-center p-4 text-center">
                   
                   {isNotOwnedPaid ? (
-                    <div className="flex flex-col items-center">
-                      <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-500 mb-2">
+                    <Link href="/premium" className="flex flex-col items-center hover:scale-105 transition-transform group cursor-pointer">
+                      <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-500 mb-2 group-hover:text-blue-600 transition-colors">
                         <Lock className="w-5 h-5" />
                       </div>
-                      <div className="font-bold text-slate-800 dark:text-slate-100 mb-1">Đã hết phần xem thử</div>
-                      <div className="text-sm text-slate-600 dark:text-slate-400">Vui lòng mua tài liệu để xem toàn bộ 250 trang.</div>
-                    </div>
+                      <div className="font-bold text-slate-800 dark:text-slate-100 mb-1 group-hover:text-blue-600 transition-colors">Đã hết phần xem thử</div>
+                      <div className="text-sm text-slate-600 dark:text-slate-400">Vui lòng nâng cấp Premium hoặc mua tài liệu.</div>
+                    </Link>
                   ) : (
                     <div className="flex flex-col items-center">
                       <button className="h-11 px-6 bg-[#2563EB] text-white font-bold rounded-full hover:bg-blue-700 transition flex items-center gap-2">
@@ -466,7 +466,7 @@ export default function DocumentDetailPage() {
 
               {/* Upsell Premium Block */}
               {isNotOwnedPaid && (
-                <div className="bg-gradient-to-r from-slate-900 to-slate-800 dark:from-black dark:to-slate-900 p-4 rounded-3xl text-white shadow-lg relative overflow-hidden group cursor-pointer transition hover:scale-[1.02]">
+                <Link href="/premium" className="block bg-gradient-to-r from-slate-900 to-slate-800 dark:from-black dark:to-slate-900 p-4 rounded-3xl text-white shadow-lg relative overflow-hidden group cursor-pointer transition hover:scale-[1.02]">
                   <div className="absolute -right-6 -top-6 w-24 h-24 bg-[#FACC15] opacity-20 rounded-full blur-2xl group-hover:opacity-40 transition"></div>
                   <div className="flex items-start gap-3 relative z-10">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#FACC15] to-[#F97316] flex items-center justify-center text-slate-900 flex-shrink-0 text-xl font-bold shadow-sm">
@@ -478,7 +478,7 @@ export default function DocumentDetailPage() {
                       <div className="mt-2 text-xs font-bold text-[#FACC15] group-hover:underline flex items-center gap-1">Tìm hiểu thêm <ArrowRight className="w-3 h-3" /></div>
                     </div>
                   </div>
-                </div>
+                </Link>
               )}
             </div>
           </div>

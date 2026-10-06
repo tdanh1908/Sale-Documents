@@ -10,7 +10,8 @@ import {
 } from "@/lib/mock-data";
 import { 
   Trophy, Star, Flame, BookOpen, Calculator, Magnet, FlaskConical, Dna, 
-  Feather, Landmark, Globe, Scale, Languages, Monitor, Bolt, Gift, ChartLine 
+  Feather, Landmark, Globe, Scale, Languages, Monitor, Bolt, Gift, ChartLine,
+  Crown, ArrowRight 
 } from "lucide-react";
 
 const iconMap: Record<string, React.ElementType> = {
@@ -106,6 +107,27 @@ export default function Home() {
             );
           })}
         </div>
+      </section>
+
+      {/* Premium CTA Banner */}
+      <section className="max-w-7xl mx-auto px-4 mt-8">
+        <Link href="/premium" className="block w-full rounded-3xl bg-gradient-to-r from-blue-600 to-indigo-600 p-6 md:p-8 text-white shadow-xl relative overflow-hidden group hover:shadow-2xl transition">
+          <div className="absolute right-0 top-0 w-64 h-64 bg-white opacity-10 rounded-full blur-3xl group-hover:opacity-20 transition"></div>
+          <div className="flex flex-col md:flex-row items-center justify-between relative z-10 gap-6">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                <Crown className="w-8 h-8 text-[#FACC15]" />
+              </div>
+              <div>
+                <h3 className="text-xl md:text-2xl font-extrabold mb-1 text-white">Nâng cấp Premium</h3>
+                <p className="text-blue-100 text-sm md:text-base">Mở khóa xem không giới hạn toàn bộ tài liệu & đề thi chất lượng cao.</p>
+              </div>
+            </div>
+            <div className="bg-white text-blue-600 font-bold py-3 px-8 rounded-full shadow-lg group-hover:scale-105 transition flex items-center gap-2 whitespace-nowrap">
+              Tìm hiểu ngay <ArrowRight className="w-4 h-4" />
+            </div>
+          </div>
+        </Link>
       </section>
 
       {/* Flash Sale */}
