@@ -1,26 +1,57 @@
 @import "tailwindcss";
-
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-primary: #2563EB;
+  --color-primary-hover: #1D4ED8;
+  --color-accent: #F97316;
+  --color-highlight: #FACC15;
+  --color-dark-bg: #0F172A;
+  --color-dark-card: #1E293B;
+
+  --color-background: var(--bg-color);
+  --color-foreground: var(--text-color);
+  --color-card: var(--card-bg);
+  --color-border: var(--border-color);
+
+  --font-sans: var(--font-nunito);
 }
 
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --bg-color: #F8FAFC;
+    --text-color: var(--color-slate-800);
+    --card-bg: var(--color-white);
+    --border-color: var(--color-slate-100);
+  }
+  
+  .dark {
+    --bg-color: #0F172A;
+    --text-color: var(--color-slate-100);
+    --card-bg: #1E293B;
+    --border-color: #1E293B;
+  }
+
+  body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    @apply transition-colors duration-300;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Hide scrollbar for carousel */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Smooth snap for carousel */
+.snap-x {
+  scroll-snap-type: x mandatory;
+}
+.snap-center {
+  scroll-snap-align: center;
 }

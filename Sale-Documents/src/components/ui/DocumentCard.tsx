@@ -1,0 +1,200 @@
+import { Star, FileText, ShoppingCart, Heart } from "lucide-react";
+import Link from "next/link";
+
+interface DocumentCardProps {
+  id: string;
+  title: string;
+  subject?: string;
+  subjectColor?: string; // e.g. "blue", "lime"
+  pages?: number;
+  rating?: number;
+  reviews?: number;
+  sales?: string;
+  downloads?: string;
+  priceOnline?: string;
+  priceDownload?: string;
+  originalPrice?: string;
+  discount?: string;
+  badge?: string;
+  badgeColor?: "highlight" | "slate" | string;
+  isFree: boolean;
+  imageColor?: string;
+  variant?: "default" | "horizontal" | "library";
+  isFavorite?: boolean;
+}
+
+export function DocumentCard({
+  id,
+  title,
+  subject,
+  subjectColor = "blue",
+  pages,
+  rating,
+  sales,
+  downloads,
+  priceOnline,
+  priceDownload,
+  originalPrice,
+  discount,
+  badge,
+  badgeColor = "slate",
+  isFree,
+  imageColor = "3B82F6",
+  variant = "default",
+  isFavorite = false,
+}: DocumentCardProps) {
+  // Map standard color names to specific tailwind variants
+  const colorMap: Record<string, string> = {
+    blue: "bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400",
+    purple: "bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400",
+    green: "bg-green-50 text-green-600 dark:bg-green-900/30 dark:text-green-400",
+    lime: "bg-lime-50 text-lime-600 dark:bg-lime-900/30 dark:text-lime-400",
+    pink: "bg-pink-50 text-pink-600 dark:bg-pink-900/30 dark:text-pink-400",
+    orange: "bg-orange-50 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400",
+    teal: "bg-teal-50 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400",
+    indigo: "bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400",
+    red: "bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400",
+    cyan: "bg-cyan-50 text-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-400",
+    slate: "bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300",
+    highlight: "bg-[#FACC15] text-orange-800",
+  };
+
+  const getBadgeClass = (color: string) => colorMap[color] || colorMap["blue"];
+
+  const containerClass = variant === "horizontal"
+    ? "bg-white dark:bg-[#1E293B] rounded-2xl p-3 flex flex-row gap-4 shadow-sm hover:shadow-md border border-slate-100 dark:border-slate-700/60 dark:hover:border-slate-600 transition overflow-hidden group h-full"
+    : variant === "library"
+    ? "bg-white dark:bg-[#1E293B] rounded-2xl flex flex-col shadow-sm hover:shadow-md border border-slate-100 dark:border-slate-700/60 dark:hover:border-slate-600 transition overflow-hidden h-full"
+    : "bg-white dark:bg-[#1E293B] rounded-2xl p-3 flex flex-row md:flex-col gap-4 shadow-sm hover:shadow-md border border-slate-100 dark:border-slate-700/60 dark:hover:border-slate-600 transition relative overflow-hidden group h-full";
+
+  const imageWrapperClass = variant === "horizontal"
+    ? "w-20 h-24 rounded-lg overflow-hidden relative flex-shrink-0 bg-slate-100 dark:bg-slate-800"
+    : variant === "library"
+    ? "relative aspect-[3/4] w-full overflow-hidden flex-shrink-0 bg-slate-100 dark:bg-slate-800"
+    : "w-24 h-32 md:w-full md:h-48 rounded-xl overflow-hidden relative flex-shrink-0 bg-slate-100 dark:bg-slate-800";
+
+  return (
+    <Link href={`/chi-tiet-tai-lieu/${id || "123"}`} className={containerClass + " cursor-pointer block"}>
+      {badge && (
+        <div className={`absolute top-0 right-0 text-xs font-bold px-2 py-1 rounded-bl-lg z-10 ${getBadgeClass(badgeColor)}`}>
+          {badge}
+        </div>
+      )}
+      
+      <div className={imageWrapperClass}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img 
+          src={`https://placehold.co/300x400/${imageColor}/FFF?text=${encodeURIComponent(subject || 'Tài liệu')}`} 
+          alt={title} 
+          className="w-full h-full object-cover transition-transform group-hover:scale-105"
+        />
+        {discount && (
+          <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-lg">
+            {discount}
+          </div>
+        )}
+        {variant === "library" && isFree && !discount && (
+          <div className="absolute top-2 right-2">
+              <span className="bg-green-500 text-white text-[10px] sm:text-xs font-bold px-2 py-1 rounded-lg shadow-sm">Miễn phí</span>
+          </div>
+        )}
+        {variant === "library" && (
+          <button className={`absolute top-2 ${isFree && !discount ? 'left-2' : 'right-2'} w-8 h-8 rounded-full bg-white/80 dark:bg-black/50 flex items-center justify-center hover:bg-white dark:hover:bg-black/70 transition shadow-sm z-10`} aria-label="Thả tim">
+            <Heart className={`w-4 h-4 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-slate-600 dark:text-slate-300'}`} />
+          </button>
+        )}
+      </div>
+
+      <div className={`flex flex-col justify-between flex-1 ${variant === "library" ? "p-3 sm:p-4 bg-white dark:bg-[#1E293B]" : ""}`}>
+        <div>
+          {subject && (
+            <span className={`text-[10px] sm:text-xs font-bold px-2 py-1 rounded-md mb-2 inline-block ${getBadgeClass(subjectColor)}`}>
+              {subject}
+            </span>
+          )}
+          <h4 className="font-bold text-sm md:text-base line-clamp-2 leading-snug text-slate-800 dark:text-slate-100">
+            {title}
+          </h4>
+          
+          <div className="flex items-center flex-wrap text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-2 gap-2 sm:gap-3">
+            {pages && (
+              <span className="flex items-center gap-1">
+                <FileText className="w-3 h-3" /> {pages} trang
+              </span>
+            )}
+            {rating && (
+              <span className="flex items-center gap-1">
+                <Star className="w-3 h-3 fill-[#FACC15] text-[#FACC15]" /> {rating.toFixed(1)}
+              </span>
+            )}
+            {sales && <span>• Đã bán: {sales}</span>}
+            {downloads && <span>• Tải: {downloads}</span>}
+          </div>
+        </div>
+
+        {variant === "library" ? (
+          <div className="mt-auto pt-3 border-t border-slate-100 dark:border-slate-800/50">
+            {isFree ? (
+              <>
+                <div className="mb-3 h-9 sm:h-[42px] flex items-center">
+                  <span className="text-green-600 dark:text-green-400 font-extrabold">0đ</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button className="w-full h-11 bg-slate-100 dark:bg-slate-800 text-[#2563EB] dark:text-blue-400 text-sm font-bold rounded-xl hover:bg-[#2563EB] hover:text-white dark:hover:bg-[#2563EB] dark:hover:text-white transition">
+                    Xem miễn phí
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="mb-3">
+                  <div className="text-[10px] sm:text-xs text-slate-500">Từ</div>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-[#F97316] font-extrabold text-base sm:text-lg">{priceOnline || priceDownload}</span>
+                    {originalPrice && discount && (
+                      <span className="text-xs text-slate-400 line-through">{originalPrice}</span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button className="w-11 h-11 rounded-xl bg-orange-50 text-[#F97316] dark:bg-orange-900/30 dark:text-orange-400 hover:bg-[#F97316] hover:text-white transition flex items-center justify-center flex-shrink-0" title="Thêm vào giỏ">
+                    <ShoppingCart className="w-5 h-5" />
+                  </button>
+                  <button className="flex-1 h-11 bg-[#2563EB] text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition">
+                    Xem trước
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        ) : isFree ? (
+          <div className="mt-3 flex items-center justify-between">
+            <span className="inline-block px-2 py-1 bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400 text-xs font-bold rounded w-max">
+              Miễn Phí
+            </span>
+            <button className="text-[#2563EB] bg-blue-50 dark:bg-blue-900/30 px-3 py-1.5 rounded-full hover:bg-[#2563EB] hover:text-white transition-colors flex items-center gap-1 text-xs font-bold">
+              Xem miễn phí
+            </button>
+          </div>
+        ) : (
+          <div className="mt-3 flex items-center justify-between">
+            <div className="flex flex-col">
+              <div className="text-xs text-slate-600 dark:text-slate-300">
+                Online: <span className="font-bold text-[#F97316]">{priceOnline}</span>
+              </div>
+              <div className="text-xs text-slate-600 dark:text-slate-300">
+                Tải về: <span className="font-bold text-[#F97316]">{priceDownload}</span>
+              </div>
+              {originalPrice && discount && (
+                <div className="text-[10px] text-slate-400 line-through mt-0.5">{originalPrice}</div>
+              )}
+            </div>
+            <button className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-orange-100 text-[#F97316] dark:bg-orange-900/40 dark:text-orange-400 hover:bg-[#F97316] hover:text-white transition flex items-center justify-center flex-shrink-0">
+              <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
+          </div>
+        )}
+      </div>
+    </Link>
+  );
+}

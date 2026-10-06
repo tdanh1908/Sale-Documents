@@ -56,8 +56,7 @@ export async function updateSession(request: NextRequest) {
   const isProtectedRoute =
     pathname.startsWith('/tai-khoan') || // Trang tài khoản
     pathname.startsWith('/doc/') || // Đọc tài liệu
-    pathname.startsWith('/admin') || // Trang admin
-    pathname.startsWith('/gio-hang') // Giỏ hàng & thanh toán
+    pathname.startsWith('/admin') // Trang admin
 
   if (!user && isProtectedRoute) {
     // Chưa đăng nhập → redirect về trang đăng nhập, giữ lại URL để redirect ngược lại sau.
