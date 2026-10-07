@@ -3,16 +3,12 @@ import { Nunito } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { siteConfig } from "@/lib/site-config";
-import { Header } from "@/components/layout/header";
-import { Footer } from "@/components/layout/footer";
-import { FloatingContact } from "@/components/layout/FloatingContact";
-
 import { UtmTracker } from "@/components/UtmTracker";
 import { Suspense } from "react";
 
 const nunito = Nunito({
   subsets: ["latin"],
-  weight: ["400", "600", "700", "800"],
+  weight: ["400", "600", "700", "800", "900"],
   variable: "--font-nunito",
 });
 
@@ -28,6 +24,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="vi" suppressHydrationWarning>
+      <head>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+      </head>
       <body
         className={`${nunito.variable} font-sans antialiased min-h-screen flex flex-col overflow-x-hidden`}
       >
@@ -35,12 +34,7 @@ export default function RootLayout({
           <Suspense fallback={null}>
             <UtmTracker />
           </Suspense>
-          <Header />
-          <main className="flex-1 flex flex-col pb-24">
-            {children}
-          </main>
-          <Footer />
-          <FloatingContact />
+          {children}
         </ThemeProvider>
       </body>
     </html>
