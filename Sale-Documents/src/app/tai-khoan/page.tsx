@@ -1,9 +1,34 @@
 
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { createBrowserClient } from "@/lib/supabase/client";
 
 export default function AccountPage() {
+    const [profile, setProfile] = useState<any>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [supabase] = useState(() => createBrowserClient());
+
+    useEffect(() => {
+        let mounted = true;
+        async function fetchProfile() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user && mounted) {
+                const { data } = await supabase
+                    .from('profiles')
+                    .select('full_name, nickname, school, avatar_url, phone')
+                    .eq('id', session.user.id)
+                    .single();
+                if (data && mounted) {
+                    setProfile(data);
+                }
+            }
+            if (mounted) setIsLoading(false);
+        }
+        fetchProfile();
+        return () => { mounted = false; };
+    }, [supabase]);
+
     return (
         <main  className="max-w-7xl mx-auto px-4 py-6 md:py-8 flex flex-col md:flex-row gap-8 items-start relative min-h-[70vh]">
             
@@ -77,18 +102,18 @@ export default function AccountPage() {
                     <div className="absolute right-0 top-0 w-32 h-32 bg-primary/5 rounded-bl-full pointer-events-none"></div>
                     
                     <div className="relative group cursor-pointer">
-                        <img src="https://placehold.co/150x150/3B82F6/FFF?text=Huy" alt="Avatar" className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-4 border-slate-100 dark:border-slate-800 shadow-md" />
+                        <img src={profile?.avatar_url || "https://placehold.co/150x150/3B82F6/FFF?text=User"} alt="Avatar" className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-4 border-slate-100 dark:border-slate-800 shadow-md" />
                         <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition">
                             <i className="fa-solid fa-camera text-xl"></i>
                         </div>
                     </div>
 
                     <div className="flex-1 text-center sm:text-left">
-                        <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-1">Trần Ngọc Huy</h2>
+                        <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-1">{isLoading ? 'Đang tải...' : profile?.full_name || 'Chưa cập nhật'}</h2>
                         
                         
                         <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-3">
-                            <span className="text-sm font-bold text-slate-500">@Cậu Bé Vàng</span>
+                            <span className="text-sm font-bold text-slate-500">@{profile?.nickname || 'Chưa cập nhật'}</span>
                             
                             <span className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-[10px] font-bold px-2 py-0.5 rounded-md border border-green-200 dark:border-green-800" title="Biệt danh đang hiển thị công khai trên Bảng xếp hạng">Đã duyệt</span>
                             
@@ -98,7 +123,7 @@ export default function AccountPage() {
                         </div>
 
                         <div className="text-sm text-slate-600 dark:text-slate-400 font-medium mb-4 flex items-center justify-center sm:justify-start gap-2">
-                            <i className="fa-solid fa-school text-primary"></i> THPT Chuyên KHTN
+                            <i className="fa-solid fa-school text-primary"></i> {profile?.school || 'Chưa cập nhật'}
                         </div>
 
                         <button className="cursor-pointer h-9 px-4 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-sm font-bold rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition" >
@@ -411,11 +436,11 @@ export default function AccountPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase">Họ và tên</label>
-                                <input type="text" value="Trần Ngọc Huy" className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 h-11 rounded-xl px-4 text-sm focus:border-primary outline-none text-slate-800 dark:text-slate-100 transition" />
+                                <input type="text" defaultValue={profile?.full_name || ""} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 h-11 rounded-xl px-4 text-sm focus:border-primary outline-none text-slate-800 dark:text-slate-100 transition" />
                             </div>
                             <div>
                                 <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase">Số điện thoại</label>
-                                <input type="tel" value="0987654321" className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 h-11 rounded-xl px-4 text-sm focus:border-primary outline-none text-slate-800 dark:text-slate-100 transition" />
+                                <input type="tel" defaultValue={profile?.phone || ""} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 h-11 rounded-xl px-4 text-sm focus:border-primary outline-none text-slate-800 dark:text-slate-100 transition" />
                             </div>
                         </div>
 
@@ -424,13 +449,13 @@ export default function AccountPage() {
                                 <label className="block text-xs font-bold text-slate-500 uppercase">Biệt danh hiển thị</label>
                                 <span className="text-[10px] text-green-500 font-bold"><i className="fa-solid fa-check"></i> Đã duyệt</span>
                             </div>
-                            <input type="text" value="Cậu Bé Vàng" className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 h-11 rounded-xl px-4 text-sm focus:border-primary outline-none text-slate-800 dark:text-slate-100 transition" />
+                            <input type="text" defaultValue={profile?.nickname || ""} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 h-11 rounded-xl px-4 text-sm focus:border-primary outline-none text-slate-800 dark:text-slate-100 transition" />
                             <p className="text-[10px] text-slate-400 mt-1">Lưu ý: Nếu bạn đổi biệt danh, hệ thống sẽ cần Admin duyệt lại trước khi hiển thị công khai.</p>
                         </div>
 
                         <div>
                             <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase">Trường THPT</label>
-                            <input type="text" value="THPT Chuyên KHTN" className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 h-11 rounded-xl px-4 text-sm focus:border-primary outline-none text-slate-800 dark:text-slate-100 transition" />
+                            <input type="text" defaultValue={profile?.school || ""} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 h-11 rounded-xl px-4 text-sm focus:border-primary outline-none text-slate-800 dark:text-slate-100 transition" />
                         </div>
 
                         <div className="pt-2">

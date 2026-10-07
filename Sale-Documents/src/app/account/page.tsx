@@ -1,6 +1,40 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import { createBrowserClient } from '@/lib/supabase/client';
+
 export default function AccountPage() {
+  const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [supabase] = useState(() => createBrowserClient());
+
+  useEffect(() => {
+    let mounted = true;
+    async function fetchProfile() {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) throw error;
+        
+        if (session?.user && mounted) {
+          setUser(session.user);
+          const { data } = await supabase
+            .from('profiles')
+            .select('full_name, nickname, school')
+            .eq('id', session.user.id)
+            .single();
+          if (data && mounted) setProfile(data);
+        }
+      } catch (err) {
+        console.error("Error fetching profile:", err);
+      } finally {
+        if (mounted) setIsLoading(false);
+      }
+    }
+    fetchProfile();
+    return () => { mounted = false; };
+  }, [supabase]);
+
   return (
     <div className="min-h-screen p-4 md:p-8 pt-24 bg-gray-50 dark:bg-gray-900">
       <div className="max-w-4xl mx-auto space-y-6">
@@ -10,25 +44,32 @@ export default function AccountPage() {
           <div className="md:col-span-8 space-y-6">
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
               <h2 className="text-xl font-bold dark:text-gray-100 mb-4 border-b dark:border-gray-700 pb-3">Hồ sơ cá nhân</h2>
-              <form className="space-y-4">
+              {isLoading ? (
+                <div className="animate-pulse space-y-4">
+                  <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
+                  <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
+                </div>
+              ) : (
+                <form className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Họ tên</label>
-                    <input type="text" defaultValue="Người dùng" className="w-full mt-1 p-2.5 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none focus:border-blue-500 transition" />
+                    <input type="text" defaultValue={profile?.full_name || ''} className="w-full mt-1 p-2.5 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none focus:border-blue-500 transition" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Biệt danh</label>
-                    <input type="text" defaultValue="user123" className="w-full mt-1 p-2.5 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none focus:border-blue-500 transition" />
+                    <input type="text" defaultValue={profile?.nickname || ''} className="w-full mt-1 p-2.5 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none focus:border-blue-500 transition" />
                   </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Trường học</label>
-                  <input type="text" defaultValue="THPT Chuyên" className="w-full mt-1 p-2.5 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none focus:border-blue-500 transition" />
+                  <input type="text" defaultValue={profile?.school || ''} className="w-full mt-1 p-2.5 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none focus:border-blue-500 transition" />
                 </div>
                 <div className="pt-2">
                   <button type="button" className="bg-blue-600 text-white font-medium px-6 py-2 rounded-lg hover:bg-blue-700 transition">Lưu thay đổi</button>
                 </div>
               </form>
+              )}
             </div>
 
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">

@@ -66,6 +66,22 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(loginUrl)
   }
 
+  // ── Bảo vệ các route Admin ───────────────────────────────────────────────
+  if (user && pathname.startsWith('/admin')) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (profile?.role !== 'admin') {
+      // Đã đăng nhập nhưng không phải admin → redirect về trang chủ (hoặc trang 403)
+      const homeUrl = request.nextUrl.clone()
+      homeUrl.pathname = '/'
+      return NextResponse.redirect(homeUrl)
+    }
+  }
+
   // QUAN TRỌNG: Luôn trả về supabaseResponse (không trả về NextResponse.next() khác)
   // để cookie được ghi vào response đúng cách.
   return supabaseResponse

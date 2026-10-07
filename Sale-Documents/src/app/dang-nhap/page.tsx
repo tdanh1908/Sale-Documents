@@ -7,6 +7,9 @@ import { z } from 'zod';
 import { Turnstile } from '@marsidev/react-turnstile';
 import Link from 'next/link';
 
+import { createBrowserClient } from '@/lib/supabase/client';
+import { useRouter } from 'next/navigation';
+
 const loginSchema = z.object({
   email: z.string().email("Email không hợp lệ"),
   password: z.string().min(1, "Vui lòng nhập mật khẩu"),
@@ -18,6 +21,9 @@ export default function LoginPage() {
   const [turnstileToken, setTurnstileToken] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  
+  const router = useRouter();
+  const [supabase] = useState(() => createBrowserClient());
 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema)
@@ -31,11 +37,20 @@ export default function LoginPage() {
     setLoading(true);
     setErrorMsg('');
     
-    // Fake API call
-    setTimeout(() => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email: data.email,
+      password: data.password,
+    });
+
+    if (error) {
+      setErrorMsg("Sai email hoặc mật khẩu.");
       setLoading(false);
-      window.location.href = '/account';
-    }, 1500);
+    } else {
+      const params = new URLSearchParams(window.location.search);
+      const nextPath = params.get('redirect') || params.get('next') || '/';
+      router.push(nextPath);
+      router.refresh();
+    }
   };
 
   return (

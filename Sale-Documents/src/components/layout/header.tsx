@@ -1,9 +1,85 @@
+"use client";
+
 import Link from "next/link";
-import { GraduationCap, Search, ShoppingCart, Menu } from "lucide-react";
+import { GraduationCap, Search, ShoppingCart, Menu, User, LogOut, Shield } from "lucide-react";
 import { siteConfig } from "@/lib/site-config";
 import { ThemeToggle } from "./ThemeToggle";
+import { useEffect, useState, useRef } from "react";
+import { createBrowserClient } from "@/lib/supabase/client";
+import { useRouter, usePathname } from "next/navigation";
 
 export function Header() {
+  const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [supabase] = useState(() => createBrowserClient());
+  const router = useRouter();
+  const pathname = usePathname();
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function fetchSession() {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) throw error;
+        
+        if (mounted) {
+          setUser(session?.user ?? null);
+          if (session?.user) {
+            const { data } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+            if (mounted && data) setProfile(data);
+          }
+        }
+      } catch (err) {
+        console.error("Auth session error:", err);
+      } finally {
+        if (mounted) setIsLoading(false);
+      }
+    }
+
+    fetchSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      try {
+        if (mounted) {
+          setUser(session?.user ?? null);
+          if (session?.user) {
+            const { data } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+            if (mounted && data) setProfile(data);
+          } else {
+            if (mounted) setProfile(null);
+          }
+        }
+      } catch (err) {
+        console.error("Auth state change error:", err);
+      } finally {
+        if (mounted) setIsLoading(false);
+      }
+    });
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [supabase]);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setIsDropdownOpen(false);
+    router.refresh();
+  };
+
   return (
     <header className="sticky top-0 z-50 bg-card border-b border-slate-100 dark:border-slate-700/60 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
@@ -52,13 +128,76 @@ export function Header() {
             Thư viện
           </Link>
 
-          {/* Login (Desktop) */}
-          <Link
-            href="/dang-nhap"
-            className="hidden md:block font-bold text-[#2563EB] hover:text-[#1D4ED8] whitespace-nowrap shrink-0"
-          >
-            Đăng nhập
-          </Link>
+          {/* User Menu */}
+          {isLoading ? (
+            <div className="hidden md:block w-20 h-10 bg-slate-100 dark:bg-slate-800 animate-pulse rounded-lg"></div>
+          ) : user ? (
+            <div className="relative hidden md:block" ref={dropdownRef}>
+              <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-300 hover:text-[#2563EB] transition"
+                title={profile?.full_name || user.email?.split('@')[0] || "Người dùng"}
+              >
+                <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center overflow-hidden">
+                  {profile?.avatar_url ? (
+                    <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    <User className="w-5 h-5" />
+                  )}
+                </div>
+              </button>
+              
+              {isDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-100 dark:border-slate-700 py-2 flex flex-col overflow-hidden">
+                  <div className="px-4 py-2 mb-1 border-b border-slate-100 dark:border-slate-700/60">
+                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">
+                      {profile?.full_name || user.email?.split('@')[0] || "Người dùng"}
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                      {user.email}
+                    </p>
+                  </div>
+
+                  <Link
+                    href="/account"
+                    onClick={() => setIsDropdownOpen(false)}
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition"
+                  >
+                    <User className="w-4 h-4" />
+                    Hồ sơ cá nhân
+                  </Link>
+
+                  {profile?.role === 'admin' && (
+                    <Link
+                      href="/admin"
+                      onClick={() => setIsDropdownOpen(false)}
+                      className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition"
+                    >
+                      <Shield className="w-4 h-4" />
+                      Quản lý Admin
+                    </Link>
+                  )}
+                  
+                  <div className="mt-1 pt-1 border-t border-slate-100 dark:border-slate-700/60">
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Đăng xuất
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link
+              href={pathname && pathname !== '/dang-nhap' ? `/dang-nhap?next=${encodeURIComponent(pathname)}` : '/dang-nhap'}
+              className="hidden md:block font-bold text-[#2563EB] hover:text-[#1D4ED8] whitespace-nowrap shrink-0"
+            >
+              Đăng nhập
+            </Link>
+          )}
           
           {/* Hamburger (Mobile) */}
           <button className="md:hidden w-10 h-10 flex items-center justify-center text-slate-600 dark:text-slate-300">
