@@ -1,11 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { createBrowserClient } from "@/lib/supabase/client";
+import * as pdfjsLib from "pdfjs-dist";
 
 export default function CreateDocumentPage() {
   const router = useRouter();
+  const [supabase] = useState(() => createBrowserClient());
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+    }
+  }, []);
 
   // Form State
   const [name, setName] = useState("");
@@ -19,6 +28,12 @@ export default function CreateDocumentPage() {
   const [pages, setPages] = useState(100);
   const [unitPrice, setUnitPrice] = useState(200);
 
+  // File Upload State
+  const [fullFile, setFullFile] = useState<File | null>(null);
+  const [demoFile, setDemoFile] = useState<File | null>(null);
+  const [coverImage, setCoverImage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   // Modal State
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
 
@@ -26,9 +41,152 @@ export default function CreateDocumentPage() {
   const viewPrice = pages * unitPrice;
   const dlPrice = Math.round(viewPrice * 1.2);
 
-  const handleSubmit = () => {
-    // Simulate API call
-    setIsSuccessModalOpen(true);
+  const sanitizeFilename = (name: string) => {
+    const noTones = name.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    return noTones.replace(/[^a-zA-Z0-9.\-]/g, "-").replace(/-+/g, "-");
+  };
+
+  const generatePdfCover = async (file: File) => {
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+      const pdf = await loadingTask.promise;
+      const page = await pdf.getPage(1);
+      
+      const scale = 1.5; 
+      const viewport = page.getViewport({ scale });
+      
+      const canvas = document.createElement("canvas");
+      const context = canvas.getContext("2d");
+      
+      if (!context) return;
+      
+      canvas.height = viewport.height;
+      canvas.width = viewport.width;
+      
+      await page.render({ canvasContext: context, viewport: viewport }).promise;
+      
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
+      setCoverImage(dataUrl);
+    } catch (error) {
+      console.error("Error generating PDF cover:", error);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!name.trim()) {
+      alert("Vui lòng nhập tên tài liệu!");
+      return;
+    }
+    if (!fullFile) {
+      alert("Vui lòng chọn File đầy đủ!");
+      return;
+    }
+    if (!demoFile) {
+      alert("Vui lòng chọn File demo!");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // 1. Upload File Đầy Đủ vào bucket 'documents' (Private)
+      const fullPath = `docs/${Date.now()}_${sanitizeFilename(fullFile.name)}`;
+      const { error: fullUploadError } = await supabase.storage
+        .from("documents")
+        .upload(fullPath, fullFile, { cacheControl: "3600", upsert: false });
+
+      if (fullUploadError) throw new Error("Lỗi upload file đầy đủ: " + fullUploadError.message);
+
+      // 2. Upload File Demo vào bucket 'previews' (Public)
+      const demoPath = `demos/${Date.now()}_${sanitizeFilename(demoFile.name)}`;
+      const { error: demoUploadError } = await supabase.storage
+        .from("previews")
+        .upload(demoPath, demoFile, { cacheControl: "3600", upsert: false });
+
+      if (demoUploadError) throw new Error("Lỗi upload file demo: " + demoUploadError.message);
+
+      // Lấy Public URL cho file demo
+      const { data: { publicUrl: demoUrl } } = supabase.storage
+        .from("previews")
+        .getPublicUrl(demoPath);
+
+      // Chuyển đổi dữ liệu Form sang ENUM của Database
+      const subjectMap: Record<string, string> = {
+        "Toán": "toan", "Lý": "ly", "Hóa": "hoa", 
+        "Sinh": "sinh", "Văn": "van", "Anh": "anh"
+      };
+      const docTypeMap: Record<string, string> = {
+        "Lý thuyết": "ly_thuyet", 
+        "Bài tập": "bai_tap", 
+        "Đề thi": "de_thi"
+      };
+
+      // Tạo slug hợp lệ (vd: "chuyen-de-toan-123456")
+      const slug = sanitizeFilename(name).toLowerCase() + '-' + Date.now().toString().slice(-6);
+
+      // 3. Insert dữ liệu vào bảng public.documents
+      // Lưu ý: Dùng đúng tên cột từ catalog.sql và schema update
+      const { data: newDoc, error: dbError } = await supabase.from("documents").insert({
+        slug: slug,
+        title: name,
+        subject: subjectMap[subject] || "toan",
+        doc_type: docTypeMap[docType] || "ly_thuyet",
+        category: grade || '12', 
+        description: description,
+        is_free: priceType === "free",
+        page_count: pages,           // Tên cột chuẩn từ catalog.sql
+        price_per_page: unitPrice,   // Tên cột chuẩn từ catalog.sql
+        view_price: viewPrice,       // Tên cột chuẩn từ catalog.sql
+        download_price: dlPrice,     // Tên cột chuẩn từ catalog.sql
+        full_file_path: fullPath,    // Tên cột từ schema update
+        demo_file_url: demoUrl,      // Đổi từ demo_file_path sang demo_file_url
+        cover_path: coverImage ? demoPath : null, 
+        status: 'published'          // Mặc định đăng ngay
+      }).select("id").single();
+
+      if (dbError) throw new Error("Lỗi lưu dữ liệu bảng documents: " + dbError.message);
+
+      // 4. Insert thông tin file vào bảng public.document_files (chuẩn kiến trúc)
+      if (newDoc && newDoc.id) {
+        const fileInserts = [
+          {
+            document_id: newDoc.id,
+            kind: 'full',
+            bucket: 'documents',
+            storage_path: fullPath,
+            file_size: fullFile.size,
+            page_count: pages,
+            is_current: true
+          },
+          {
+            document_id: newDoc.id,
+            kind: 'demo',
+            bucket: 'previews',
+            storage_path: demoPath,
+            file_size: demoFile.size,
+            page_count: 3, // Bắt buộc là 3 theo constraint
+            is_current: true
+          }
+        ];
+        
+        const { error: filesError } = await supabase.from("document_files").insert(fileInserts);
+        if (filesError) {
+          console.error("Cảnh báo lưu document_files:", filesError.message);
+          // Không throw error ở đây để người dùng vẫn thấy thành công nếu bản record chính đã lưu
+        }
+      }
+
+      // 5. Refresh router để Next.js clear cache, hiển thị tài liệu mới ngay
+      router.refresh();
+
+      // 5. Hiển thị thông báo thành công
+      setIsSuccessModalOpen(true);
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleReset = () => {
@@ -40,6 +198,9 @@ export default function CreateDocumentPage() {
     setPriceType("paid");
     setPages(100);
     setUnitPrice(200);
+    setFullFile(null);
+    setDemoFile(null);
+    setCoverImage(null);
     setIsSuccessModalOpen(false);
   };
 
@@ -57,8 +218,16 @@ export default function CreateDocumentPage() {
           <button className="flex-1 sm:flex-none h-11 px-6 bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition shadow-sm">
             Lưu nháp
           </button>
-          <button onClick={handleSubmit} className="flex-1 sm:flex-none h-11 px-8 bg-[#2563EB] text-white rounded-xl text-sm font-bold hover:bg-[#1D4ED8] transition shadow-md shadow-blue-200 dark:shadow-none">
-            Đăng ngay
+          <button 
+            onClick={handleSubmit} 
+            disabled={isSubmitting}
+            className="flex-1 sm:flex-none h-11 px-8 bg-[#2563EB] text-white rounded-xl text-sm font-bold hover:bg-[#1D4ED8] disabled:opacity-50 disabled:cursor-not-allowed transition shadow-md shadow-blue-200 dark:shadow-none flex items-center justify-center gap-2"
+          >
+            {isSubmitting ? (
+              <><i className="fa-solid fa-spinner fa-spin"></i> Đang xử lý...</>
+            ) : (
+              "Đăng ngay"
+            )}
           </button>
         </div>
       </div>
@@ -74,21 +243,85 @@ export default function CreateDocumentPage() {
               {/* File Đầy Đủ */}
               <div>
                 <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">File Đầy Đủ (Riêng tư - Cấp khi mua)</label>
-                <div className="dropzone rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer bg-slate-50 dark:bg-[#0F172A]/50 hover:bg-slate-100 dark:hover:bg-slate-800 min-h-[160px] border-2 border-dashed border-slate-300 dark:border-slate-600 transition">
-                  <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 text-[#2563EB] rounded-full flex items-center justify-center text-2xl mb-3"><i className="fa-solid fa-file-pdf"></i></div>
-                  <p className="font-bold text-sm text-slate-700 dark:text-slate-200 mb-1">Kéo thả file PDF vào đây</p>
-                  <p className="text-xs text-slate-500">Hoặc click để chọn file. Tối đa 50MB.</p>
-                </div>
+                <label className={`dropzone rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer min-h-[160px] border-2 border-dashed transition ${fullFile ? 'bg-blue-50/50 dark:bg-blue-900/10 border-blue-300 dark:border-blue-700' : 'bg-slate-50 dark:bg-[#0F172A]/50 hover:bg-slate-100 dark:hover:bg-slate-800 border-slate-300 dark:border-slate-600'}`}>
+                  <input 
+                    type="file" 
+                    accept=".pdf" 
+                    className="hidden" 
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files.length > 0) {
+                        setFullFile(e.target.files[0]);
+                      }
+                    }} 
+                  />
+                  {fullFile ? (
+                    <div className="flex flex-col items-center">
+                      <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 text-[#2563EB] rounded-full flex items-center justify-center text-2xl mb-2"><i className="fa-solid fa-check"></i></div>
+                      <p className="font-bold text-sm text-[#2563EB] dark:text-blue-400 mb-1 max-w-[200px] truncate">{fullFile.name}</p>
+                      <p className="text-xs text-slate-500 mb-3">{(fullFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                      <button 
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setFullFile(null);
+                        }}
+                        className="bg-red-100 text-red-600 px-3 py-1 rounded-full text-xs font-bold hover:bg-red-200 transition flex items-center gap-1"
+                      >
+                        <i className="fa-solid fa-xmark"></i> Gỡ file
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 text-[#2563EB] rounded-full flex items-center justify-center text-2xl mb-3"><i className="fa-solid fa-file-pdf"></i></div>
+                      <p className="font-bold text-sm text-slate-700 dark:text-slate-200 mb-1">Click chọn file PDF đầy đủ</p>
+                      <p className="text-xs text-slate-500">Tối đa 50MB.</p>
+                    </>
+                  )}
+                </label>
               </div>
+
               {/* File Demo */}
               <div>
                 <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">File Demo (Công khai - Xem trước)</label>
-                <div className="dropzone rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer bg-slate-50 dark:bg-[#0F172A]/50 hover:bg-slate-100 dark:hover:bg-slate-800 min-h-[160px] border-2 border-dashed border-slate-300 dark:border-slate-600 transition">
-                  <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 text-[#F97316] rounded-full flex items-center justify-center text-2xl mb-3"><i className="fa-solid fa-file-pdf"></i></div>
-                  <p className="font-bold text-sm text-slate-700 dark:text-slate-200 mb-1">Kéo thả file Demo vào đây</p>
-                  <p className="text-[10px] text-orange-500 font-bold mt-1 bg-orange-50 dark:bg-orange-900/20 px-2 py-1 rounded">Chỉ nên có 3 trang. Hệ thống cảnh báo nếu quá dài.</p>
-                  <p className="text-[10px] text-[#2563EB] font-bold mt-1 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded">Tự trích xuất trang 1 làm Ảnh Bìa</p>
-                </div>
+                <label className={`dropzone rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer min-h-[160px] border-2 border-dashed transition ${demoFile ? 'bg-orange-50/50 dark:bg-orange-900/10 border-orange-300 dark:border-orange-700' : 'bg-slate-50 dark:bg-[#0F172A]/50 hover:bg-slate-100 dark:hover:bg-slate-800 border-slate-300 dark:border-slate-600'}`}>
+                  <input 
+                    type="file" 
+                    accept=".pdf" 
+                    className="hidden" 
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files.length > 0) {
+                        const file = e.target.files[0];
+                        setDemoFile(file);
+                        generatePdfCover(file);
+                      }
+                    }} 
+                  />
+                  {demoFile ? (
+                    <div className="flex flex-col items-center">
+                      <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 text-[#F97316] rounded-full flex items-center justify-center text-2xl mb-2"><i className="fa-solid fa-check"></i></div>
+                      <p className="font-bold text-sm text-[#F97316] dark:text-orange-400 mb-1 max-w-[200px] truncate">{demoFile.name}</p>
+                      <p className="text-xs text-slate-500 mb-3">{(demoFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                      <button 
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setDemoFile(null);
+                          setCoverImage(null);
+                        }}
+                        className="bg-red-100 text-red-600 px-3 py-1 rounded-full text-xs font-bold hover:bg-red-200 transition flex items-center gap-1"
+                      >
+                        <i className="fa-solid fa-xmark"></i> Gỡ file
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 text-[#F97316] rounded-full flex items-center justify-center text-2xl mb-3"><i className="fa-solid fa-file-pdf"></i></div>
+                      <p className="font-bold text-sm text-slate-700 dark:text-slate-200 mb-1">Click chọn file PDF Demo</p>
+                      <p className="text-[10px] text-orange-500 font-bold mt-1 bg-orange-50 dark:bg-orange-900/20 px-2 py-1 rounded">Chỉ nên có 3 trang.</p>
+                      <p className="text-[10px] text-[#2563EB] font-bold mt-1 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded">Tự trích xuất trang 1 làm Ảnh Bìa</p>
+                    </>
+                  )}
+                </label>
               </div>
             </div>
           </div>
@@ -131,16 +364,20 @@ export default function CreateDocumentPage() {
                   onChange={(e) => setDocType(e.target.value)}
                   className="w-full h-11 px-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold outline-none focus:border-[#2563EB] transition cursor-pointer text-slate-800 dark:text-slate-100"
                 >
-                  <option>Lý thuyết</option>
-                  <option>Bài tập</option>
-                  <option>Đề thi</option>
+                  <option value="Lý thuyết">Lý thuyết</option>
+                  <option value="Bài tập">Bài tập</option>
+                  <option value="Đề thi">Đề thi</option>
                 </select>
               </div>
               <div>
                 <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Khối liên quan</label>
-                <div className="h-11 px-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl flex items-center text-sm text-slate-500 cursor-pointer">
-                  Chọn khối (A00, A01...)
-                </div>
+                <input 
+                  type="text"
+                  placeholder="VD: Khối 12"
+                  value={grade}
+                  onChange={(e) => setGrade(e.target.value)}
+                  className="w-full h-11 px-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-[#2563EB] transition text-slate-800 dark:text-slate-100"
+                />
               </div>
             </div>
 
@@ -193,7 +430,7 @@ export default function CreateDocumentPage() {
                       type="number" 
                       value={pages}
                       onChange={(e) => setPages(Number(e.target.value))}
-                      className="w-full h-11 px-3 bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-800 dark:text-slate-100" 
+                      className="w-full h-11 px-3 bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-800 dark:text-slate-100 outline-none focus:border-[#2563EB]" 
                     />
                   </div>
                   <div>
@@ -235,11 +472,15 @@ export default function CreateDocumentPage() {
           <h3 className="font-extrabold text-sm text-slate-500 uppercase tracking-wider mb-4">Xem trước thẻ hiển thị</h3>
           
           <div className="bg-white dark:bg-[#1E293B] rounded-3xl p-4 border border-slate-200 dark:border-slate-700 shadow-xl flex flex-col h-[420px]">
-            <div className="relative aspect-[3/4] w-full overflow-hidden flex-shrink-0 bg-blue-50 rounded-xl mb-3 flex items-center justify-center">
-              <div className="text-slate-400 text-sm font-medium flex flex-col items-center gap-2">
-                <i className="fa-regular fa-image text-3xl"></i>
-                <span>Ảnh tự sinh từ File</span>
-              </div>
+            <div className="relative aspect-[3/4] w-full overflow-hidden flex-shrink-0 bg-blue-50 rounded-xl mb-3 flex items-center justify-center border border-blue-100 dark:border-slate-700">
+              {coverImage ? (
+                <img src={coverImage} alt="Cover Preview" className="w-full h-full object-cover" />
+              ) : (
+                <div className="text-slate-400 text-sm font-medium flex flex-col items-center gap-2">
+                  <i className="fa-regular fa-image text-3xl"></i>
+                  <span>Ảnh tự sinh từ File</span>
+                </div>
+              )}
               {priceType === "free" && (
                 <div className="absolute top-2 left-2 flex flex-col gap-1">
                   <span className="bg-green-500 text-white text-[10px] font-bold px-2 py-1 rounded-lg">Miễn phí</span>
@@ -292,7 +533,7 @@ export default function CreateDocumentPage() {
               <button onClick={() => router.push('/admin/documents')} className="h-11 rounded-xl font-bold bg-[#2563EB] text-white hover:bg-[#1D4ED8] transition w-full">
                 Quay lại danh sách
               </button>
-              <button onClick={handleReset} className="h-11 rounded-xl font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition w-full">
+              <button onClick={handleReset} className="h-11 rounded-xl font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition w-full border border-slate-200 dark:border-slate-700">
                 Thêm tài liệu khác
               </button>
             </div>

@@ -1,12 +1,10 @@
 import Link from "next/link";
 import { DocumentCard } from "@/components/ui/DocumentCard";
 import { Countdown } from "@/components/ui/countdown";
+import { createServerClient } from "@/lib/supabase/server";
 import { 
   TOP_10_MOCK, 
-  SUBJECTS_MOCK, 
-  FLASH_SALE_DOCS, 
-  FREE_DOCS_MOCK, 
-  BEST_SELLING_DOCS 
+  SUBJECTS_MOCK
 } from "@/lib/mock-data";
 import { 
   Trophy, Star, Flame, BookOpen, Calculator, Magnet, FlaskConical, Dna, 
@@ -40,7 +38,49 @@ const subjectColorClasses: Record<string, string> = {
   cyan: "bg-cyan-100 dark:bg-cyan-900/40 text-cyan-600 dark:text-cyan-400",
 };
 
-export default function Home() {
+export default async function Home() {
+  const supabase = await createServerClient();
+
+  // Fetch real documents from Supabase
+  const { data: latestDocs } = await supabase
+    .from('documents')
+    .select('*')
+    .eq('status', 'published')
+    .order('created_at', { ascending: false })
+    .limit(4);
+
+  const { data: freeDocs } = await supabase
+    .from('documents')
+    .select('*')
+    .eq('status', 'published')
+    .eq('is_free', true)
+    .order('created_at', { ascending: false })
+    .limit(3);
+
+  const { data: bestSellingDocs } = await supabase
+    .from('documents')
+    .select('*')
+    .eq('status', 'published')
+    .order('sales_count', { ascending: false })
+    .limit(3);
+
+  // Helper function to format document row to DocumentCard props
+  const mapDocToProps = (doc: any, index: number, isBestSeller: boolean = false) => ({
+    id: doc.id,
+    title: doc.title,
+    subject: doc.subject === 'toan' ? 'Môn Toán' : doc.subject === 'ly' ? 'Vật Lý' : doc.subject === 'hoa' ? 'Hóa Học' : doc.subject === 'van' ? 'Ngữ Văn' : doc.subject === 'anh' ? 'Tiếng Anh' : 'Khác',
+    subjectColor: 'blue',
+    pages: doc.page_count,
+    rating: doc.rating_avg > 0 ? doc.rating_avg : undefined,
+    sales: doc.sales_count > 0 ? `${doc.sales_count}` : undefined,
+    priceOnline: doc.view_price ? `${doc.view_price.toLocaleString('vi-VN')}đ` : "0đ",
+    priceDownload: doc.download_price ? `${doc.download_price.toLocaleString('vi-VN')}đ` : "0đ",
+    isFree: doc.is_free,
+    imageColor: doc.is_free ? "10B981" : "3B82F6",
+    badge: isBestSeller ? `Top ${index + 1}` : undefined,
+    badgeColor: isBestSeller ? (index === 0 ? "highlight" : "slate") : undefined,
+  });
+
   return (
     <div className="pb-12">
       {/* Banner Carousel: Vinh danh Top 10 */}
@@ -67,24 +107,6 @@ export default function Home() {
                 </div>
               </div>
             </div>
-            {/* Slide 2 (Mock) */}
-            <div className="w-full flex-shrink-0 snap-center p-6 md:p-12 flex flex-col md:flex-row items-center gap-6 bg-gradient-to-r from-pink-500 to-rose-500">
-              <div className="flex-1 text-center md:text-left text-white">
-                <div className="inline-flex items-center gap-1 px-3 py-1 bg-white text-rose-600 text-sm font-bold rounded-full mb-3 uppercase tracking-wide">
-                  <Star className="w-4 h-4 fill-current" /> Tài liệu mới
-                </div>
-                <h2 className="text-2xl md:text-4xl font-extrabold mb-2">Bộ Đề Tinh Túy Ngữ Văn 2026</h2>
-                <p className="text-pink-100 text-sm md:text-base mb-5">Đã cập nhật theo cấu trúc đề thi mới nhất của Bộ GD&ĐT.</p>
-                <button className="bg-white text-rose-600 font-bold py-2.5 px-6 rounded-full hover:bg-slate-100 transition shadow-lg">
-                  Tải Ngay
-                </button>
-              </div>
-            </div>
-          </div>
-          {/* Carousel Dots */}
-          <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
-            <button className="w-2.5 h-2.5 rounded-full bg-white"></button>
-            <button className="w-2.5 h-2.5 rounded-full bg-white/50"></button>
           </div>
         </div>
       </section>
@@ -130,26 +152,26 @@ export default function Home() {
         </Link>
       </section>
 
-      {/* Flash Sale */}
+      {/* Tài Liệu Mới Cập Nhật (Thay thế Flash Sale bằng đồ thật) */}
       <section className="max-w-7xl mx-auto px-4 mt-12">
-        <div className="bg-gradient-to-br from-orange-100 to-red-50 dark:from-orange-950/30 dark:to-red-950/20 rounded-3xl p-4 md:p-6 border border-orange-200 dark:border-orange-900/50 relative overflow-hidden">
-          {/* Header Flash Sale */}
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 rounded-3xl p-4 md:p-6 border border-blue-200 dark:border-blue-900/50 relative overflow-hidden">
           <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4 relative z-10">
             <div className="flex items-center gap-3">
-              <Bolt className="w-8 h-8 text-[#F97316] animate-pulse fill-current" />
-              <h2 className="text-2xl font-extrabold text-orange-600 dark:text-orange-500 italic">FLASH SALE</h2>
-              <Countdown />
+              <Star className="w-8 h-8 text-[#2563EB] fill-current" />
+              <h2 className="text-2xl font-extrabold text-blue-700 dark:text-blue-500">MỚI CẬP NHẬT</h2>
             </div>
-            <Link href="/flash-sale" className="text-orange-600 dark:text-orange-500 font-bold hover:underline text-sm md:text-base flex items-center gap-1">
+            <Link href="/thu-vien" className="text-blue-600 dark:text-blue-500 font-bold hover:underline text-sm md:text-base flex items-center gap-1">
               Xem tất cả <span className="text-lg leading-none">&rsaquo;</span>
             </Link>
           </div>
 
-          {/* Products Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 relative z-10">
-            {FLASH_SALE_DOCS.map((doc) => (
-              <DocumentCard key={doc.id} {...doc} />
+            {latestDocs?.map((doc: any, index: number) => (
+              <DocumentCard key={doc.id} {...mapDocToProps(doc, index)} />
             ))}
+            {(!latestDocs || latestDocs.length === 0) && (
+              <div className="col-span-4 text-center py-8 text-slate-500">Chưa có tài liệu nào</div>
+            )}
           </div>
         </div>
       </section>
@@ -174,9 +196,12 @@ export default function Home() {
               </Link>
             </div>
             <div className="flex flex-col gap-4">
-              {FREE_DOCS_MOCK.map((doc) => (
-                <DocumentCard key={doc.id} {...doc} variant="horizontal" />
+              {freeDocs?.map((doc: any, index: number) => (
+                <DocumentCard key={doc.id} {...mapDocToProps(doc, index)} variant="horizontal" />
               ))}
+              {(!freeDocs || freeDocs.length === 0) && (
+                <div className="text-center py-8 text-slate-500 bg-slate-50 dark:bg-slate-900 rounded-xl">Chưa có tài liệu miễn phí</div>
+              )}
             </div>
           </div>
 
@@ -191,9 +216,12 @@ export default function Home() {
               </Link>
             </div>
             <div className="flex flex-col gap-4">
-              {BEST_SELLING_DOCS.map((doc) => (
-                <DocumentCard key={doc.id} {...doc} variant="horizontal" />
+              {bestSellingDocs?.map((doc: any, index: number) => (
+                <DocumentCard key={doc.id} {...mapDocToProps(doc, index, true)} variant="horizontal" />
               ))}
+              {(!bestSellingDocs || bestSellingDocs.length === 0) && (
+                 <div className="text-center py-8 text-slate-500 bg-slate-50 dark:bg-slate-900 rounded-xl">Chưa có dữ liệu bán chạy</div>
+              )}
             </div>
           </div>
         </div>

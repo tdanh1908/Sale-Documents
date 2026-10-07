@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, Sliders, Filter, X, ChevronDown } from "lucide-react";
 import { DocumentCard } from "@/components/ui/DocumentCard";
-import { LIBRARY_DOCS, SUBJECTS_MOCK } from "@/lib/mock-data";
+import { SUBJECTS_MOCK } from "@/lib/mock-data";
+import { createBrowserClient } from "@/lib/supabase/client";
 
 function FilterCheckbox({ label, defaultChecked = false }: { label: string; defaultChecked?: boolean }) {
   return (
@@ -23,6 +24,44 @@ function FilterCheckbox({ label, defaultChecked = false }: { label: string; defa
 
 export default function LibraryPage() {
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+  const [documents, setDocuments] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDocuments = async () => {
+      try {
+        const supabase = createBrowserClient();
+        const { data, error } = await supabase
+          .from('documents')
+          .select('*')
+          .eq('status', 'published')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        setDocuments(data || []);
+      } catch (err) {
+        console.error("Lỗi fetch tài liệu:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchDocuments();
+  }, []);
+
+  const mapDocToProps = (doc: any) => ({
+    id: doc.id,
+    title: doc.title,
+    subject: doc.subject === 'toan' ? 'Môn Toán' : doc.subject === 'ly' ? 'Vật Lý' : doc.subject === 'hoa' ? 'Hóa Học' : doc.subject === 'van' ? 'Ngữ Văn' : doc.subject === 'anh' ? 'Tiếng Anh' : 'Khác',
+    subjectColor: 'blue',
+    pages: doc.page_count,
+    rating: doc.rating_avg > 0 ? doc.rating_avg : undefined,
+    sales: doc.sales_count > 0 ? `${doc.sales_count}` : undefined,
+    priceOnline: doc.view_price ? `${doc.view_price.toLocaleString('vi-VN')}đ` : "0đ",
+    priceDownload: doc.download_price ? `${doc.download_price.toLocaleString('vi-VN')}đ` : "0đ",
+    isFree: doc.is_free,
+    imageColor: doc.is_free ? "10B981" : "3B82F6",
+  });
 
   return (
     <main className="max-w-7xl mx-auto px-4 py-6 md:py-8 min-h-[calc(100vh-64px)]">
@@ -130,7 +169,7 @@ export default function LibraryPage() {
           {/* Kết quả & Sắp xếp */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
             <div className="text-slate-600 dark:text-slate-400 text-sm font-medium">
-              Tìm thấy <span className="text-slate-800 dark:text-white font-extrabold text-base">{LIBRARY_DOCS.length}</span> tài liệu
+              Tìm thấy <span className="text-slate-800 dark:text-white font-extrabold text-base">{documents.length}</span> tài liệu
             </div>
             <div className="flex items-center gap-2">
               <span className="text-sm text-slate-500 hidden sm:inline">Sắp xếp:</span>
@@ -146,18 +185,26 @@ export default function LibraryPage() {
           </div>
 
           {/* Grid Tài liệu */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
-            {LIBRARY_DOCS.map(doc => (
-              <DocumentCard 
-                key={doc.id}
-                {...doc}
-                variant="library"
-                isFavorite={["lib1", "lib4", "lib7"].includes(doc.id)}
-              />
-            ))}
-          </div>
+          {isLoading ? (
+            <div className="py-12 text-center text-slate-500">Đang tải dữ liệu...</div>
+          ) : (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
+              {documents.map(doc => (
+                <DocumentCard 
+                  key={doc.id}
+                  {...mapDocToProps(doc)}
+                  variant="library"
+                  isFavorite={false}
+                />
+              ))}
+              {documents.length === 0 && (
+                <div className="col-span-full py-12 text-center text-slate-500">Không tìm thấy tài liệu nào</div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </main>
   );
 }
+

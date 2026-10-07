@@ -1,14 +1,37 @@
-"use client";
 import Link from "next/link";
+import { createServerClient } from "@/lib/supabase/server";
 
-export default function DocumentsPage() {
+export default async function DocumentsPage() {
+  const supabase = await createServerClient();
+  
+  // Lấy toàn bộ tài liệu từ database, mới nhất lên đầu
+  const { data: documents } = await supabase
+    .from('documents')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  // Helper hiển thị môn học
+  const getSubjectInfo = (subjectCode: string) => {
+    const map: Record<string, { label: string, colorClass: string, bgCode: string }> = {
+      'toan': { label: 'Toán', colorClass: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400', bgCode: '3B82F6' },
+      'ly': { label: 'Lý', colorClass: 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-400', bgCode: '8B5CF6' },
+      'hoa': { label: 'Hóa', colorClass: 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400', bgCode: '10B981' },
+      'sinh': { label: 'Sinh', colorClass: 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400', bgCode: '10B981' },
+      'van': { label: 'Văn', colorClass: 'bg-pink-100 dark:bg-pink-900/40 text-pink-700 dark:text-pink-400', bgCode: 'EC4899' },
+      'anh': { label: 'Anh', colorClass: 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400', bgCode: 'EF4444' }
+    };
+    return map[subjectCode] || { label: 'Khác', colorClass: 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300', bgCode: '94A3B8' };
+  };
+
+  const totalCount = documents?.length || 0;
+
   return (
     <div id="view-list" className="view-section active h-full flex flex-col">
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-extrabold text-slate-800 dark:text-white">Quản lý Tài liệu</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">Tổng số: 2,450 tài liệu trên hệ thống</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">Tổng số: {totalCount.toLocaleString('vi-VN')} tài liệu trên hệ thống</p>
         </div>
         <div className="flex items-center gap-3">
           <button className="h-11 px-4 bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition shadow-sm flex items-center gap-2">
@@ -73,119 +96,100 @@ export default function DocumentsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-sm font-medium">
-              {/* Row 1: Đang bán (Bán chạy) */}
-              <tr className="hover:bg-slate-50 dark:hover:bg-slate-900/30 transition group">
-                <td className="p-4 text-center">
-                  <label className="custom-checkbox flex items-center justify-center cursor-pointer">
-                    <input type="checkbox" className="hidden row-checkbox" value="1" />
-                    <div className="w-5 h-5 rounded border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center bg-white dark:bg-[#1E293B] transition">
-                      <svg className="w-3 h-3 text-white hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"/></svg>
-                    </div>
-                  </label>
-                </td>
-                <td className="p-4">
-                  <div className="w-10 h-14 rounded overflow-hidden bg-blue-50 border border-slate-200 dark:border-slate-700">
-                    <img src="https://placehold.co/100x140/3B82F6/FFF?text=Toán" className="w-full h-full object-cover" alt="Thumb" />
-                  </div>
-                </td>
-                <td className="p-4">
-                  <div className="font-bold text-slate-800 dark:text-slate-100 line-clamp-2">Bộ 50 đề Toán VDC</div>
-                  <div className="text-[10px] text-slate-500 font-mono mt-1">ID: DOC-1001</div>
-                </td>
-                <td className="p-4"><span className="bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 text-xs px-2 py-1 rounded">Toán</span></td>
-                <td className="p-4 text-center">250</td>
-                <td className="p-4 text-right font-bold text-[#2563EB]">49.000đ</td>
-                <td className="p-4 text-right text-slate-500">59.000đ</td>
-                <td className="p-4 text-center">
-                  <span className="inline-block bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-bold px-2 py-1 rounded-full border border-green-200 dark:border-green-800/50">Đang bán</span>
-                </td>
-                <td className="p-4 text-center font-bold">320</td>
-                <td className="p-4 text-right text-xs text-slate-500">Hôm nay<br/>10:45</td>
-                <td className="p-4 text-center">
-                  <div className="flex items-center justify-center gap-1 xl:opacity-0 xl:group-hover:opacity-100 transition-opacity">
-                    <button className="w-8 h-8 rounded-lg text-slate-500 hover:bg-blue-50 hover:text-[#2563EB] transition" title="Sửa thông tin"><i className="fa-solid fa-pen"></i></button>
-                    <button className="w-8 h-8 rounded-lg text-slate-500 hover:bg-orange-50 hover:text-[#F97316] transition" title="Đổi giá"><i className="fa-solid fa-tag"></i></button>
-                    <button className="w-8 h-8 rounded-lg text-slate-500 hover:bg-purple-50 hover:text-purple-600 transition" title="Thay file PDF"><i className="fa-solid fa-file-pdf"></i></button>
-                    <button className="w-8 h-8 rounded-lg text-slate-500 hover:bg-red-50 hover:text-red-500 transition" title="Gỡ khỏi cửa hàng"><i className="fa-solid fa-eye-slash"></i></button>
-                  </div>
-                </td>
-              </tr>
+              {documents?.map((doc: any) => {
+                const subjectInfo = getSubjectInfo(doc.subject);
+                const isHidden = doc.status === 'hidden';
+                const isDraft = doc.status === 'draft';
+                
+                // Trạng thái styles
+                let statusBadge = "";
+                let statusText = "";
+                if (doc.status === 'published') {
+                  statusBadge = "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800/50";
+                  statusText = "Đang bán";
+                } else if (isDraft) {
+                  statusBadge = "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-600/50";
+                  statusText = "Bản nháp";
+                } else {
+                  statusBadge = "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800/50";
+                  statusText = "Đã gỡ";
+                }
 
-              {/* Row 2: Nháp */}
-              <tr className="hover:bg-slate-50 dark:hover:bg-slate-900/30 transition group">
-                <td className="p-4 text-center">
-                  <label className="custom-checkbox flex items-center justify-center cursor-pointer">
-                    <input type="checkbox" className="hidden row-checkbox" value="2" />
-                    <div className="w-5 h-5 rounded border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center bg-white dark:bg-[#1E293B] transition">
-                      <svg className="w-3 h-3 text-white hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"/></svg>
-                    </div>
-                  </label>
-                </td>
-                <td className="p-4">
-                  <div className="w-10 h-14 rounded overflow-hidden bg-green-50 border border-slate-200 dark:border-slate-700 opacity-60 grayscale">
-                    <img src="https://placehold.co/100x140/10B981/FFF?text=Hóa" className="w-full h-full object-cover" alt="Thumb" />
-                  </div>
-                </td>
-                <td className="p-4">
-                  <div className="font-bold text-slate-600 dark:text-slate-400 line-clamp-2">Chuyên đề Hóa vô cơ 12</div>
-                  <div className="text-[10px] text-slate-400 font-mono mt-1">ID: DOC-1002</div>
-                </td>
-                <td className="p-4"><span className="bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 text-xs px-2 py-1 rounded">Hóa</span></td>
-                <td className="p-4 text-center">120</td>
-                <td className="p-4 text-right font-bold text-slate-500">35.000đ</td>
-                <td className="p-4 text-right text-slate-400">42.000đ</td>
-                <td className="p-4 text-center">
-                  <span className="inline-block bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold px-2 py-1 rounded-full border border-slate-300 dark:border-slate-600/50">Bản nháp</span>
-                </td>
-                <td className="p-4 text-center font-bold text-slate-400">0</td>
-                <td className="p-4 text-right text-xs text-slate-500">Hôm qua<br/>15:20</td>
-                <td className="p-4 text-center">
-                  <div className="flex items-center justify-center gap-1 xl:opacity-0 xl:group-hover:opacity-100 transition-opacity">
-                    <button className="w-8 h-8 rounded-lg text-slate-500 hover:bg-blue-50 hover:text-[#2563EB] transition" title="Sửa thông tin"><i className="fa-solid fa-pen"></i></button>
-                    <button className="w-8 h-8 rounded-lg text-slate-500 hover:bg-orange-50 hover:text-[#F97316] transition" title="Đổi giá"><i className="fa-solid fa-tag"></i></button>
-                    <button className="w-8 h-8 rounded-lg text-slate-500 hover:bg-purple-50 hover:text-purple-600 transition" title="Thay file PDF"><i className="fa-solid fa-file-pdf"></i></button>
-                    <button className="w-8 h-8 rounded-lg text-red-400 hover:bg-red-50 hover:text-red-600 transition" title="Xóa vĩnh viễn"><i className="fa-solid fa-trash-can"></i></button>
-                  </div>
-                </td>
-              </tr>
+                // Format ngày
+                const date = new Date(doc.updated_at || doc.created_at);
+                const dateStr = date.toLocaleDateString('vi-VN');
+                const timeStr = date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
 
-              {/* Row 3: Đã gỡ */}
-              <tr className="hover:bg-slate-50 dark:hover:bg-slate-900/30 transition group bg-slate-50/50 dark:bg-slate-900/20">
-                <td className="p-4 text-center">
-                  <label className="custom-checkbox flex items-center justify-center cursor-pointer">
-                    <input type="checkbox" className="hidden row-checkbox" value="3" />
-                    <div className="w-5 h-5 rounded border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center bg-white dark:bg-[#1E293B] transition">
-                      <svg className="w-3 h-3 text-white hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"/></svg>
-                    </div>
-                  </label>
-                </td>
-                <td className="p-4">
-                  <div className="w-10 h-14 rounded overflow-hidden bg-pink-50 border border-slate-200 dark:border-slate-700 opacity-60 grayscale">
-                    <img src="https://placehold.co/100x140/EC4899/FFF?text=Văn" className="w-full h-full object-cover" alt="Thumb" />
-                  </div>
-                </td>
-                <td className="p-4">
-                  <div className="font-bold text-slate-500 dark:text-slate-400 line-clamp-2 line-through decoration-slate-400">Sơ đồ tư duy Văn</div>
-                  <div className="text-[10px] text-slate-400 font-mono mt-1">ID: DOC-0995</div>
-                </td>
-                <td className="p-4"><span className="bg-pink-100 dark:bg-pink-900/40 text-pink-700 dark:text-pink-400 text-xs px-2 py-1 rounded">Văn</span></td>
-                <td className="p-4 text-center text-slate-500">15</td>
-                <td className="p-4 text-right font-bold text-slate-500">9.000đ</td>
-                <td className="p-4 text-right text-slate-400">11.000đ</td>
-                <td className="p-4 text-center">
-                  <span className="inline-block bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-xs font-bold px-2 py-1 rounded-full border border-red-200 dark:border-red-800/50">Đã gỡ</span>
-                </td>
-                <td className="p-4 text-center font-bold text-slate-500">150</td>
-                <td className="p-4 text-right text-xs text-slate-500">15/09/2026</td>
-                <td className="p-4 text-center">
-                  <div className="flex items-center justify-center gap-1 xl:opacity-0 xl:group-hover:opacity-100 transition-opacity">
-                    <button className="w-8 h-8 rounded-lg text-slate-500 hover:bg-blue-50 hover:text-[#2563EB] transition" title="Sửa thông tin"><i className="fa-solid fa-pen"></i></button>
-                    <button className="w-8 h-8 rounded-lg text-slate-500 hover:bg-orange-50 hover:text-[#F97316] transition" title="Đổi giá"><i className="fa-solid fa-tag"></i></button>
-                    <button className="w-8 h-8 rounded-lg text-slate-500 hover:bg-purple-50 hover:text-purple-600 transition" title="Thay file"><i className="fa-solid fa-file-pdf"></i></button>
-                    <button className="w-8 h-8 rounded-lg text-green-500 hover:bg-green-50 hover:text-green-600 transition" title="Khôi phục bán"><i className="fa-solid fa-rotate-left"></i></button>
-                  </div>
-                </td>
-              </tr>
+                return (
+                  <tr key={doc.id} className={`hover:bg-slate-50 dark:hover:bg-slate-900/30 transition group ${isHidden ? 'bg-slate-50/50 dark:bg-slate-900/20' : ''}`}>
+                    <td className="p-4 text-center">
+                      <label className="custom-checkbox flex items-center justify-center cursor-pointer">
+                        <input type="checkbox" className="hidden row-checkbox" value={doc.id} />
+                        <div className="w-5 h-5 rounded border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center bg-white dark:bg-[#1E293B] transition">
+                          <svg className="w-3 h-3 text-white hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"/></svg>
+                        </div>
+                      </label>
+                    </td>
+                    <td className="p-4">
+                      <div className={`w-10 h-14 rounded overflow-hidden bg-slate-50 border border-slate-200 dark:border-slate-700 ${isHidden || isDraft ? 'opacity-60 grayscale' : ''}`}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={`https://placehold.co/100x140/${subjectInfo.bgCode}/FFF?text=${encodeURIComponent(subjectInfo.label)}`} className="w-full h-full object-cover" alt="Thumb" />
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div className={`font-bold line-clamp-2 ${isHidden ? 'text-slate-500 dark:text-slate-400 line-through decoration-slate-400' : isDraft ? 'text-slate-600 dark:text-slate-400' : 'text-slate-800 dark:text-slate-100'}`}>
+                        {doc.title}
+                      </div>
+                      <div className="text-[10px] text-slate-500 font-mono mt-1" title={doc.id}>ID: {doc.id.substring(0, 8)}...</div>
+                    </td>
+                    <td className="p-4">
+                      <span className={`${subjectInfo.colorClass} text-xs px-2 py-1 rounded`}>
+                        {subjectInfo.label}
+                      </span>
+                    </td>
+                    <td className={`p-4 text-center ${isHidden ? 'text-slate-500' : ''}`}>
+                      {doc.page_count}
+                    </td>
+                    <td className={`p-4 text-right font-bold ${isHidden || isDraft ? 'text-slate-500' : 'text-[#2563EB]'}`}>
+                      {doc.view_price ? `${doc.view_price.toLocaleString('vi-VN')}đ` : '0đ'}
+                    </td>
+                    <td className={`p-4 text-right ${isHidden || isDraft ? 'text-slate-400' : 'text-slate-500'}`}>
+                      {doc.download_price ? `${doc.download_price.toLocaleString('vi-VN')}đ` : '0đ'}
+                    </td>
+                    <td className="p-4 text-center">
+                      <span className={`inline-block text-xs font-bold px-2 py-1 rounded-full ${statusBadge}`}>
+                        {statusText}
+                      </span>
+                    </td>
+                    <td className={`p-4 text-center font-bold ${isHidden || isDraft ? 'text-slate-500' : ''}`}>
+                      {doc.sales_count}
+                    </td>
+                    <td className="p-4 text-right text-xs text-slate-500">
+                      {dateStr}<br/>{timeStr}
+                    </td>
+                    <td className="p-4 text-center">
+                      <div className="flex items-center justify-center gap-1 xl:opacity-0 xl:group-hover:opacity-100 transition-opacity">
+                        <button className="w-8 h-8 rounded-lg text-slate-500 hover:bg-blue-50 hover:text-[#2563EB] transition" title="Sửa thông tin"><i className="fa-solid fa-pen"></i></button>
+                        <button className="w-8 h-8 rounded-lg text-slate-500 hover:bg-orange-50 hover:text-[#F97316] transition" title="Đổi giá"><i className="fa-solid fa-tag"></i></button>
+                        <button className="w-8 h-8 rounded-lg text-slate-500 hover:bg-purple-50 hover:text-purple-600 transition" title="Thay file"><i className="fa-solid fa-file-pdf"></i></button>
+                        {doc.status === 'published' ? (
+                          <button className="w-8 h-8 rounded-lg text-slate-500 hover:bg-red-50 hover:text-red-500 transition" title="Gỡ khỏi cửa hàng"><i className="fa-solid fa-eye-slash"></i></button>
+                        ) : (
+                          <button className="w-8 h-8 rounded-lg text-green-500 hover:bg-green-50 hover:text-green-600 transition" title="Khôi phục bán"><i className="fa-solid fa-rotate-left"></i></button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+              
+              {(!documents || documents.length === 0) && (
+                <tr>
+                  <td colSpan={11} className="p-8 text-center text-slate-500">
+                    Chưa có tài liệu nào trên hệ thống.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
