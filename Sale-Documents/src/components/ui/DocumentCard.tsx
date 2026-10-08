@@ -67,6 +67,7 @@ export function DocumentCard({
 
   const handleCartClick = (e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     if (isInCart) {
       removeFromCart(id);
     } else {
@@ -89,7 +90,7 @@ export function DocumentCard({
     : "w-24 h-32 md:w-full md:h-48 rounded-xl overflow-hidden relative flex-shrink-0 bg-slate-100 dark:bg-slate-800";
 
   return (
-    <Link href={`/chi-tiet-tai-lieu/${id || "123"}`} className={containerClass + " cursor-pointer block"}>
+    <Link href={`/doc/${id || "123"}`} className={containerClass + " cursor-pointer block"}>
       {badge && (
         <div className={`absolute top-0 right-0 text-xs font-bold px-2 py-1 rounded-bl-lg z-10 ${getBadgeClass(badgeColor)}`}>
           {badge}
@@ -114,7 +115,9 @@ export function DocumentCard({
           </div>
         )}
         {variant === "library" && (
-          <button className={`absolute top-2 ${isFree && !discount ? 'left-2' : 'right-2'} w-8 h-8 rounded-full bg-white/80 dark:bg-black/50 flex items-center justify-center hover:bg-white dark:hover:bg-black/70 transition shadow-sm z-10`} aria-label="Thả tim">
+          <button 
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+            className={`absolute top-2 ${isFree && !discount ? 'left-2' : 'right-2'} w-8 h-8 rounded-full bg-white/80 dark:bg-black/50 flex items-center justify-center hover:bg-white dark:hover:bg-black/70 transition shadow-sm z-10`} aria-label="Thả tim">
             <Heart className={`w-4 h-4 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-slate-600 dark:text-slate-300'}`} />
           </button>
         )}
