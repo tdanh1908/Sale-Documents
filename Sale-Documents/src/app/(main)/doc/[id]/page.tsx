@@ -70,27 +70,56 @@ export default function DocumentDetailPage() {
     setIsDownloading(true);
 
     try {
-      const { data, error } = await supabase
+      // 1. Fetch real current downloads
+      const { data: currentDoc, error: fetchErr } = await supabase
+        .from('documents')
+        .select('downloads')
+        .eq('id', document.id)
+        .single();
+        
+      if (fetchErr) {
+        console.error("Lỗi lấy số lượt tải:", fetchErr);
+      }
+      
+      const currentDownloads = currentDoc?.downloads || 0;
+      const newDownloads = currentDownloads + 1;
+
+      // 2. Update to DB
+      const { error: updateErr } = await supabase
+        .from("documents")
+        .update({ downloads: newDownloads })
+        .eq("id", document.id);
+        
+      if (updateErr) {
+        console.error("Lỗi cập nhật lượt tải:", updateErr);
+      } else {
+        // Cập nhật State cục bộ
+        setDocument({ ...document, downloads: newDownloads });
+        // Refresh để xóa cache Next.js
+        router.refresh();
+      }
+
+      // 3. Sinh link Public chuẩn thay vì Signed URL
+      // Đã xác nhận: bucket là 'documents', thư mục chứa là 'docs'
+      const filePath = document.full_file_path?.startsWith('docs/') 
+        ? document.full_file_path 
+        : `docs/${document.full_file_path}`;
+
+      const { data: publicData } = supabase
         .storage
         .from('documents')
-        .createSignedUrl(document.full_file_path, 60);
-
-      if (error || !data?.signedUrl) {
+        .getPublicUrl(filePath);
+        
+      if (!publicData?.publicUrl) {
         throw new Error("Không thể tạo link tải về.");
       }
 
-      const response = await fetch(data.signedUrl);
-      if (!response.ok) throw new Error("Không tải được file.");
-      
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = window.document.createElement('a');
-      a.href = url;
-      a.download = (document.title || 'Tai-lieu') + '.pdf';
-      window.document.body.appendChild(a);
-      a.click();
-      window.document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
+      const link = window.document.createElement('a');
+      link.href = publicData.publicUrl + '?download=';
+      link.setAttribute('download', '');
+      window.document.body.appendChild(link);
+      link.click();
+      window.document.body.removeChild(link);
     } catch (err) {
       console.error("Lỗi tải file:", err);
       alert("Có lỗi xảy ra khi tải file!");
@@ -200,7 +229,7 @@ export default function DocumentDetailPage() {
                 
                 <div className="flex flex-wrap items-center gap-4 md:gap-6 text-sm text-slate-600 dark:text-slate-400 font-medium">
                   <div className="flex items-center gap-1.5"><i className="fa-regular fa-file-pdf"></i> {document.page_count || 0} trang</div>
-                  <div className="flex items-center gap-1.5"><i className="fa-solid fa-file-arrow-down"></i> {document.sales_count || 0} lượt tải</div>
+                  <div className="flex items-center gap-1.5"><i className="fa-solid fa-file-arrow-down"></i> {document.downloads || 0} lượt tải</div>
                   <div className="flex items-center gap-1.5">
                     <span className="text-[#FACC15]"><i className="fa-solid fa-star"></i><i className="fa-solid fa-star"></i><i className="fa-solid fa-star"></i><i className="fa-solid fa-star"></i><i className="fa-solid fa-star-half-stroke"></i></span>
                     <span className="font-bold text-slate-800 dark:text-slate-200">0.0</span> (0 đánh giá)

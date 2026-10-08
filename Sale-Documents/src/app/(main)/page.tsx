@@ -61,7 +61,8 @@ export default async function Home() {
     .from('documents')
     .select('*')
     .eq('status', 'published')
-    .order('sales_count', { ascending: false })
+    .order('downloads', { ascending: false, nullsFirst: false })
+    .order('title', { ascending: true })
     .limit(3);
 
   const mapDocToProps = (doc: any, index: number, isBestSeller: boolean = false) => ({
@@ -72,6 +73,7 @@ export default async function Home() {
     pages: doc.page_count,
     rating: doc.rating_avg > 0 ? doc.rating_avg : undefined,
     sales: doc.sales_count > 0 ? `${doc.sales_count}` : undefined,
+    downloads: doc.downloads || 0,
     priceOnline: doc.view_price ? `${doc.view_price.toLocaleString('vi-VN')}đ` : "0đ",
     priceDownload: doc.download_price ? `${doc.download_price.toLocaleString('vi-VN')}đ` : "0đ",
     isFree: doc.is_free,
@@ -196,7 +198,7 @@ export default async function Home() {
               <h4 className="font-bold text-lg text-green-600 flex items-center gap-2">
                 <Gift className="w-5 h-5" /> Miễn Phí Mới Nhất
               </h4>
-              <Link href="/mien-phi" className="text-sm text-blue-600 hover:underline">
+              <Link href="/collection/free" className="text-sm text-blue-600 hover:underline">
                 Xem tất cả
               </Link>
             </div>
@@ -216,7 +218,7 @@ export default async function Home() {
               <h4 className="font-bold text-lg text-blue-600 flex items-center gap-2">
                 <ChartLine className="w-5 h-5" /> Bán Chạy Nhất
               </h4>
-              <Link href="/ban-chay" className="text-sm text-blue-600 hover:underline">
+              <Link href="/collection/best-selling" className="text-sm text-blue-600 hover:underline">
                 Xem tất cả
               </Link>
             </div>

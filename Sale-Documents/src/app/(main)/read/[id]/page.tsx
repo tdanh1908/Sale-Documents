@@ -4,11 +4,16 @@ import { useEffect, useState } from "react";
 import { createBrowserClient } from "@/lib/supabase/client";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Download, Maximize, Minimize, Menu } from "lucide-react";
-import { Document, Page, pdfjs } from 'react-pdf';
+import dynamic from 'next/dynamic';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+const Document = dynamic(() => import('react-pdf').then(mod => {
+  mod.pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${mod.pdfjs.version}/build/pdf.worker.min.mjs`;
+  return mod.Document;
+}), { ssr: false });
+
+const Page = dynamic(() => import('react-pdf').then(mod => mod.Page), { ssr: false });
 
 export default function ReadDocumentPage() {
   const params = useParams();

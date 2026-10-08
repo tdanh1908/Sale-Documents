@@ -194,8 +194,12 @@ export function DocumentCard({
     return <div className={`${containerClass} animate-pulse bg-slate-100 dark:bg-slate-800`} style={{ minHeight: variant === 'horizontal' ? '120px' : '280px' }} />;
   }
 
+  const isValidImage = (url: any) => url && typeof url === 'string' && url !== 'null' && url !== 'undefined' && url.trim() !== '';
+  const validCoverImg = isValidImage(coverImg) ? coverImg : null;
+  const validDemoFile = isValidImage(demo_file_url) ? demo_file_url : null;
+
   return (
-    <Link href={`/doc/${id || "123"}`} className={containerClass + " cursor-pointer block"}>
+    <Link href={id ? `/doc/${id}` : '#'} className={containerClass + " cursor-pointer block"}>
       {badge && (
         <div className={`absolute top-0 right-0 text-xs font-bold px-2 py-1 rounded-bl-lg z-10 ${getBadgeClass(badgeColor)}`}>
           {badge}
@@ -203,15 +207,15 @@ export function DocumentCard({
       )}
       
       <div className={imageWrapperClass}>
-        {coverImg ? (
+        {validCoverImg ? (
           <img 
-            src={coverImg} 
+            src={validCoverImg} 
             alt={title} 
             className="w-full h-full object-cover transition-transform group-hover:scale-105"
           />
-        ) : demo_file_url ? (
+        ) : validDemoFile ? (
           <div className="w-full h-full relative group overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center transition-transform group-hover:scale-105">
-            <iframe src={`${demo_file_url}#toolbar=0&navpanes=0&scrollbar=0`} className="absolute inset-0 w-full h-full object-cover pointer-events-none opacity-50 mix-blend-multiply dark:mix-blend-screen" title="PDF Preview"></iframe>
+            <iframe src={`${validDemoFile}#toolbar=0&navpanes=0&scrollbar=0`} className="absolute inset-0 w-full h-full object-cover pointer-events-none opacity-50 mix-blend-multiply dark:mix-blend-screen" title="PDF Preview"></iframe>
             {variant !== "horizontal" && (
               <div className="relative z-10 flex flex-col items-center bg-white/80 dark:bg-black/60 px-3 py-2 rounded-xl backdrop-blur-sm">
                 <FileText className="w-6 h-6 text-blue-600 dark:text-blue-400 mb-1" />
@@ -220,12 +224,12 @@ export function DocumentCard({
             )}
           </div>
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 flex flex-col items-center justify-center p-3 transition-transform group-hover:scale-105 border border-slate-200 dark:border-slate-700">
-            <div className={`${variant === "horizontal" ? "w-8 h-8 mb-0" : "w-10 h-10 mb-2"} bg-white dark:bg-slate-800 rounded-full flex items-center justify-center shadow-sm`}>
-              <FileText className={`${variant === "horizontal" ? "w-4 h-4" : "w-5 h-5"} text-blue-500`} />
+          <div className="w-full h-full bg-slate-800 flex flex-col items-center justify-center p-3 transition-transform group-hover:scale-105 border border-slate-700">
+            <div className={`${variant === "horizontal" ? "w-8 h-8 mb-0" : "w-10 h-10 mb-2"} bg-slate-700 rounded-full flex items-center justify-center shadow-sm`}>
+              <FileText className={`${variant === "horizontal" ? "w-4 h-4" : "w-5 h-5"} text-slate-300`} />
             </div>
             {variant !== "horizontal" && (
-              <span className="text-slate-600 dark:text-slate-300 font-bold text-center text-xs md:text-sm leading-snug">
+              <span className="text-slate-300 font-bold text-center text-xs md:text-sm leading-snug">
                 Tài liệu
               </span>
             )}
