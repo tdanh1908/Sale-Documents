@@ -125,21 +125,12 @@ export function Header() {
             )}
           </Link>
           
-          {/* Thư viện (Desktop) */}
-          <Link
-            href="/thu-vien"
-            className="hidden md:block font-bold text-slate-700 dark:text-slate-300 hover:text-[#2563EB] dark:hover:text-[#3B82F6] whitespace-nowrap shrink-0"
-          >
-            Thư viện
-          </Link>
-
           {/* User Menu */}
           {isLoading ? (
             <div className="hidden md:block w-20 h-10 bg-slate-100 dark:bg-slate-800 animate-pulse rounded-lg"></div>
           ) : user ? (
-            <div className="relative hidden md:block" ref={dropdownRef}>
+            <div className="relative hidden md:block group pt-2 pb-2">
               <button
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                 className="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-300 hover:text-[#2563EB] transition"
                 title={profile?.full_name || user.email?.split('@')[0] || "Người dùng"}
               >
@@ -152,48 +143,60 @@ export function Header() {
                 </div>
               </button>
               
-              {isDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-100 dark:border-slate-700 py-2 flex flex-col overflow-hidden">
-                  <div className="px-4 py-2 mb-1 border-b border-slate-100 dark:border-slate-700/60">
-                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">
-                      {profile?.full_name || user.email?.split('@')[0] || "Người dùng"}
-                    </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                      {user.email}
-                    </p>
-                  </div>
+              <div className="absolute right-0 top-full hidden group-hover:block w-56 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-100 dark:border-slate-700 py-2 flex flex-col overflow-hidden z-50">
+                <div className="px-4 py-2 mb-1 border-b border-slate-100 dark:border-slate-700/60">
+                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">
+                    {profile?.full_name || user.email?.split('@')[0] || "Người dùng"}
+                  </p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                    {user.email}
+                  </p>
+                </div>
 
+                <Link
+                  href="/thu-vien"
+                  className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition"
+                >
+                  <GraduationCap className="w-4 h-4" />
+                  Thư viện tài liệu
+                </Link>
+
+                <Link
+                  href="/saved"
+                  className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition"
+                >
+                  <ShoppingCart className="w-4 h-4" />
+                  Tài liệu đã lưu
+                </Link>
+
+                <Link
+                  href="/account"
+                  className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition"
+                >
+                  <User className="w-4 h-4" />
+                  Hồ sơ cá nhân
+                </Link>
+
+                {profile?.role === 'admin' && (
                   <Link
-                    href="/account"
-                    onClick={() => setIsDropdownOpen(false)}
+                    href="/admin"
                     className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition"
                   >
-                    <User className="w-4 h-4" />
-                    Hồ sơ cá nhân
+                    <Shield className="w-4 h-4" />
+                    Quản lý Admin
                   </Link>
-
-                  {profile?.role === 'admin' && (
-                    <Link
-                      href="/admin"
-                      onClick={() => setIsDropdownOpen(false)}
-                      className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition"
-                    >
-                      <Shield className="w-4 h-4" />
-                      Quản lý Admin
-                    </Link>
-                  )}
-                  
-                  <div className="mt-1 pt-1 border-t border-slate-100 dark:border-slate-700/60">
-                    <button
-                      onClick={handleLogout}
-                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      Đăng xuất
-                    </button>
-                  </div>
+                )}
+                
+                <div className="mt-1 pt-1 border-t border-slate-100 dark:border-slate-700/60">
+                  <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Đăng xuất
+                  </button>
                 </div>
-              )}
+              </div>
             </div>
           ) : (
             <Link

@@ -3,6 +3,8 @@
 import { Star, FileText, ShoppingCart, Heart } from "lucide-react";
 import Link from "next/link";
 import { useCart } from "@/contexts/CartContext";
+import { useState, useEffect } from "react";
+import { createBrowserClient } from "@/lib/supabase/client";
 
 interface DocumentCardProps {
   id: string;
@@ -24,6 +26,7 @@ interface DocumentCardProps {
   imageColor?: string;
   variant?: "default" | "horizontal" | "library";
   isFavorite?: boolean;
+  onRemoveFromSaved?: (id: string) => void;
 }
 
 export function DocumentCard({
@@ -45,6 +48,7 @@ export function DocumentCard({
   imageColor = "3B82F6",
   variant = "default",
   isFavorite = false,
+  onRemoveFromSaved,
 }: DocumentCardProps) {
   // Map standard color names to specific tailwind variants
   const colorMap: Record<string, string> = {
@@ -62,6 +66,76 @@ export function DocumentCard({
     highlight: "bg-[#FACC15] text-orange-800",
   };
 
+  const [favorited, setFavorited] = useState(isFavorite);
+  const [user, setUser] = useState<any>(null);
+  const supabase = createBrowserClient();
+
+  useEffect(() => {
+    const checkFavoriteStatus = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+      if (user && !isFavorite) {
+        const { data } = await supabase
+          .from("saved_documents")
+          .select("id")
+          .eq("document_id", id)
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (data) {
+          setFavorited(true);
+        }
+      }
+    };
+    checkFavoriteStatus();
+  }, [id, supabase, isFavorite]);
+
+  const handleToggleSave = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!user) {
+      alert("Vui lòng đăng nhập để lưu tài liệu!");
+      return;
+    }
+
+    const previousState = favorited;
+    setFavorited(!previousState);
+
+    if (!previousState) {
+      const { error } = await supabase
+        .from("saved_documents")
+        .insert({ document_id: id, user_id: user.id });
+      
+      if (error) {
+        console.error("Error saving document:", error);
+        setFavorited(previousState);
+      }
+    } else {
+      const { error } = await supabase
+        .from("saved_documents")
+        .delete()
+        .eq("document_id", id)
+        .eq("user_id", user.id);
+        
+      if (error) {
+        console.error("Error removing document:", error);
+        setFavorited(previousState);
+      } else if (onRemoveFromSaved) {
+        onRemoveFromSaved(id);
+      }
+    }
+  };
+
+  const parsePrice = (priceStr?: string) => {
+    if (!priceStr) return 0;
+    return parseInt(priceStr.replace(/\D/g, '')) || 0;
+  };
+  const formatPrice = (price: number) => price.toLocaleString('vi-VN') + 'đ';
+
+  const currentPriceNum = parsePrice(priceOnline || priceDownload);
+  const fakeOriginalPriceNum = currentPriceNum * 1.5;
+  const fakeOriginalPrice = formatPrice(fakeOriginalPriceNum);
+
   const { cartItems, addToCart, removeFromCart } = useCart();
   const isInCart = cartItems.some(item => item.document_id === id);
 
@@ -78,9 +152,9 @@ export function DocumentCard({
   const getBadgeClass = (color: string) => colorMap[color] || colorMap["blue"];
 
   const containerClass = variant === "horizontal"
-    ? "bg-white dark:bg-[#1E293B] rounded-2xl p-3 flex flex-row gap-4 shadow-sm hover:shadow-md border border-slate-100 dark:border-slate-700/60 dark:hover:border-slate-600 transition overflow-hidden group h-full"
+    ? "bg-white dark:bg-[#1E293B] rounded-2xl p-3 flex flex-row gap-4 shadow-sm hover:shadow-md border border-slate-100 dark:border-slate-700/60 dark:hover:border-slate-600 transition relative overflow-hidden group h-full"
     : variant === "library"
-    ? "bg-white dark:bg-[#1E293B] rounded-2xl flex flex-col shadow-sm hover:shadow-md border border-slate-100 dark:border-slate-700/60 dark:hover:border-slate-600 transition overflow-hidden h-full"
+    ? "bg-white dark:bg-[#1E293B] rounded-2xl flex flex-col shadow-sm hover:shadow-md border border-slate-100 dark:border-slate-700/60 dark:hover:border-slate-600 transition relative overflow-hidden h-full"
     : "bg-white dark:bg-[#1E293B] rounded-2xl p-3 flex flex-row md:flex-col gap-4 shadow-sm hover:shadow-md border border-slate-100 dark:border-slate-700/60 dark:hover:border-slate-600 transition relative overflow-hidden group h-full";
 
   const imageWrapperClass = variant === "horizontal"
@@ -109,19 +183,13 @@ export function DocumentCard({
             {discount}
           </div>
         )}
-        {variant === "library" && isFree && !discount && (
-          <div className="absolute top-2 right-2">
-              <span className="bg-green-500 text-white text-[10px] sm:text-xs font-bold px-2 py-1 rounded-lg shadow-sm">Miễn phí</span>
-          </div>
-        )}
-        {variant === "library" && (
-          <button 
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-            className={`absolute top-2 ${isFree && !discount ? 'left-2' : 'right-2'} w-8 h-8 rounded-full bg-white/80 dark:bg-black/50 flex items-center justify-center hover:bg-white dark:hover:bg-black/70 transition shadow-sm z-10`} aria-label="Thả tim">
-            <Heart className={`w-4 h-4 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-slate-600 dark:text-slate-300'}`} />
-          </button>
-        )}
       </div>
+
+      <button 
+        onClick={handleToggleSave}
+        className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/80 dark:bg-black/50 flex items-center justify-center hover:bg-white dark:hover:bg-black/70 transition shadow-sm z-20" aria-label="Thả tim">
+        <Heart className={`w-4 h-4 ${favorited ? 'fill-red-500 text-red-500' : 'text-slate-600 dark:text-slate-300'}`} />
+      </button>
 
       <div className={`flex flex-col justify-between flex-1 ${variant === "library" ? "p-3 sm:p-4 bg-white dark:bg-[#1E293B]" : ""}`}>
         <div>
@@ -155,7 +223,7 @@ export function DocumentCard({
             {isFree ? (
               <>
                 <div className="mb-3 h-9 sm:h-[42px] flex items-center">
-                  <span className="text-green-600 dark:text-green-400 font-extrabold">0đ</span>
+                  <span className="bg-green-100 text-green-600 dark:bg-green-900/40 dark:text-green-400 px-2 py-1 rounded text-xs font-bold">Miễn phí</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <button className="w-full h-11 bg-slate-100 dark:bg-slate-800 text-[#2563EB] dark:text-blue-400 text-sm font-bold rounded-xl hover:bg-[#2563EB] hover:text-white dark:hover:bg-[#2563EB] dark:hover:text-white transition">
@@ -166,12 +234,12 @@ export function DocumentCard({
             ) : (
               <>
                 <div className="mb-3">
-                  <div className="text-[10px] sm:text-xs text-slate-500">Từ</div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-xs text-gray-400 line-through">{fakeOriginalPrice}</span>
+                    <span className="bg-red-100 text-red-600 px-1 rounded text-[10px] font-bold">-33%</span>
+                  </div>
                   <div className="flex items-baseline gap-2">
                     <span className="text-[#F97316] font-extrabold text-base sm:text-lg">{priceOnline || priceDownload}</span>
-                    {originalPrice && discount && (
-                      <span className="text-xs text-slate-400 line-through">{originalPrice}</span>
-                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -205,15 +273,13 @@ export function DocumentCard({
         ) : (
           <div className="mt-3 flex items-center justify-between">
             <div className="flex flex-col">
-              <div className="text-xs text-slate-600 dark:text-slate-300">
-                Online: <span className="font-bold text-[#F97316]">{priceOnline}</span>
+              <div className="flex items-center gap-2 mb-0.5">
+                <span className="text-xs text-gray-400 line-through">{fakeOriginalPrice}</span>
+                <span className="bg-red-100 text-red-600 px-1 rounded text-[10px] font-bold">-33%</span>
               </div>
-              <div className="text-xs text-slate-600 dark:text-slate-300">
-                Tải về: <span className="font-bold text-[#F97316]">{priceDownload}</span>
+              <div className="text-[#F97316] font-bold text-lg leading-none">
+                {priceOnline || priceDownload}
               </div>
-              {originalPrice && discount && (
-                <div className="text-[10px] text-slate-400 line-through mt-0.5">{originalPrice}</div>
-              )}
             </div>
             <button 
               onClick={handleCartClick}
