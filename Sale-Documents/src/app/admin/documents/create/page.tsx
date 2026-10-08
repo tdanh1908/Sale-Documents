@@ -126,8 +126,39 @@ export default function CreateDocumentPage() {
         "Đề thi": "de_thi"
       };
 
-      // Tạo slug hợp lệ (vd: "chuyen-de-toan-123456")
-      const slug = sanitizeFilename(name).toLowerCase() + '-' + Date.now().toString().slice(-6);
+      // Bulletproof slug generation
+      const generateValidSlug = (title: string) => {
+        if (!title) return `doc-${Date.now()}`;
+        let baseSlug = title.toString().toLowerCase()
+          .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+          .replace(/[đĐ]/g, 'd')
+          .replace(/[^a-z0-9-]/g, '-')
+          .replace(/-+/g, '-')
+          .replace(/^-+|-+$/g, '');
+        return baseSlug ? `${baseSlug}-${Date.now().toString().slice(-6)}` : `doc-${Date.now()}`;
+      };
+      const slug = generateValidSlug(name);
+
+      // 2.5 Upload Cover Image (Nếu có)
+      let coverUrl = null;
+      if (coverImage) {
+        try {
+          const res = await fetch(coverImage);
+          const blob = await res.blob();
+          const coverFileName = `covers/${Date.now()}_cover.jpg`;
+          
+          const { error: coverUploadError } = await supabase.storage
+            .from("previews")
+            .upload(coverFileName, blob, { contentType: "image/jpeg", cacheControl: "3600" });
+            
+          if (!coverUploadError) {
+            const { data: { publicUrl } } = supabase.storage.from("previews").getPublicUrl(coverFileName);
+            coverUrl = publicUrl;
+          }
+        } catch (e) {
+          console.error("Lỗi upload ảnh bìa:", e);
+        }
+      }
 
       // 3. Chuẩn hóa dữ liệu đầu vào (Sanitize Payload)
       const isFree = priceType === "free";
@@ -153,7 +184,7 @@ export default function CreateDocumentPage() {
         download_price: sanitizedDlPrice,     
         full_file_path: fullPath,    
         demo_file_url: demoUrl,      
-        cover_path: coverImage ? demoPath : null, 
+        cover_url: coverUrl, // Sửa thành cover_url cho đúng DB Schema
         status: 'published'          
       };
 

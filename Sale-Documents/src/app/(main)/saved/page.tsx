@@ -66,6 +66,12 @@ export default function SavedDocumentsPage() {
     priceDownload: doc?.download_price ? `${doc?.download_price.toLocaleString('vi-VN')}đ` : undefined,
     isFree: doc?.is_free,
     imageColor: doc?.is_free ? "10B981" : "3B82F6",
+    coverUrl: doc?.cover_url,
+    cover_image_url: doc?.cover_image_url,
+    thumbnail_url: doc?.thumbnail_url,
+    image_url: doc?.image_url,
+    avatar_url: doc?.avatar_url,
+    demo_file_url: doc?.demo_file_url,
   });
 
   const filteredDocs = selectedTag === "Tất cả" 

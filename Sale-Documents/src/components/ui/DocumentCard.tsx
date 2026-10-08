@@ -25,6 +25,12 @@ interface DocumentCardProps {
   badgeColor?: "highlight" | "slate" | string;
   isFree: boolean;
   imageColor?: string;
+  coverUrl?: string;
+  cover_image_url?: string;
+  thumbnail_url?: string;
+  image_url?: string;
+  avatar_url?: string;
+  demo_file_url?: string;
   variant?: "default" | "horizontal" | "library";
   isFavorite?: boolean;
   onRemoveFromSaved?: (id: string) => void;
@@ -49,10 +55,19 @@ export function DocumentCard({
   badgeColor = "slate",
   isFree,
   imageColor = "3B82F6",
+  coverUrl,
+  cover_image_url,
+  thumbnail_url,
+  image_url,
+  avatar_url,
+  demo_file_url,
   variant = "default",
   isFavorite = false,
   onRemoveFromSaved,
 }: DocumentCardProps) {
+  // Lấy ảnh bìa theo thứ tự ưu tiên
+  const coverImg = coverUrl || cover_image_url || thumbnail_url || image_url || avatar_url;
+
   // Map standard color names to specific tailwind variants
   const colorMap: Record<string, string> = {
     blue: "bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400",
@@ -170,6 +185,15 @@ export function DocumentCard({
     ? "relative aspect-[3/4] w-full overflow-hidden flex-shrink-0 bg-slate-100 dark:bg-slate-800"
     : "w-24 h-32 md:w-full md:h-48 rounded-xl overflow-hidden relative flex-shrink-0 bg-slate-100 dark:bg-slate-800";
 
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return <div className={`${containerClass} animate-pulse bg-slate-100 dark:bg-slate-800`} style={{ minHeight: variant === 'horizontal' ? '120px' : '280px' }} />;
+  }
+
   return (
     <Link href={`/doc/${id || "123"}`} className={containerClass + " cursor-pointer block"}>
       {badge && (
@@ -179,12 +203,34 @@ export function DocumentCard({
       )}
       
       <div className={imageWrapperClass}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img 
-          src={`https://placehold.co/300x400/${imageColor}/FFF?text=${encodeURIComponent(subject || 'Tài liệu')}`} 
-          alt={title} 
-          className="w-full h-full object-cover transition-transform group-hover:scale-105"
-        />
+        {coverImg ? (
+          <img 
+            src={coverImg} 
+            alt={title} 
+            className="w-full h-full object-cover transition-transform group-hover:scale-105"
+          />
+        ) : demo_file_url ? (
+          <div className="w-full h-full relative group overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center transition-transform group-hover:scale-105">
+            <iframe src={`${demo_file_url}#toolbar=0&navpanes=0&scrollbar=0`} className="absolute inset-0 w-full h-full object-cover pointer-events-none opacity-50 mix-blend-multiply dark:mix-blend-screen" title="PDF Preview"></iframe>
+            {variant !== "horizontal" && (
+              <div className="relative z-10 flex flex-col items-center bg-white/80 dark:bg-black/60 px-3 py-2 rounded-xl backdrop-blur-sm">
+                <FileText className="w-6 h-6 text-blue-600 dark:text-blue-400 mb-1" />
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Xem trước</span>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 flex flex-col items-center justify-center p-3 transition-transform group-hover:scale-105 border border-slate-200 dark:border-slate-700">
+            <div className={`${variant === "horizontal" ? "w-8 h-8 mb-0" : "w-10 h-10 mb-2"} bg-white dark:bg-slate-800 rounded-full flex items-center justify-center shadow-sm`}>
+              <FileText className={`${variant === "horizontal" ? "w-4 h-4" : "w-5 h-5"} text-blue-500`} />
+            </div>
+            {variant !== "horizontal" && (
+              <span className="text-slate-600 dark:text-slate-300 font-bold text-center text-xs md:text-sm leading-snug">
+                Tài liệu
+              </span>
+            )}
+          </div>
+        )}
         {discount && (
           <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-lg">
             {discount}
@@ -192,20 +238,21 @@ export function DocumentCard({
         )}
       </div>
 
-      <button 
+      <div 
+        role="button"
         onClick={handleToggleSave}
         className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/80 dark:bg-black/50 flex items-center justify-center hover:bg-white dark:hover:bg-black/70 transition shadow-sm z-20" aria-label="Thả tim">
         <Heart className={`w-4 h-4 ${favorited ? 'fill-red-500 text-red-500' : 'text-slate-600 dark:text-slate-300'}`} />
-      </button>
+      </div>
 
-      <div className={`flex flex-col justify-between flex-1 ${variant === "library" ? "p-3 sm:p-4 bg-white dark:bg-[#1E293B]" : ""}`}>
-        <div>
+      <div className={`flex flex-col justify-between flex-1 min-w-0 ${variant === "library" ? "p-3 sm:p-4 bg-white dark:bg-[#1E293B]" : ""}`}>
+        <div className="min-w-0">
           {subject && (
             <span className={`text-[10px] sm:text-xs font-bold px-2 py-1 rounded-md mb-2 inline-block ${getBadgeClass(subjectColor)}`}>
               {subject}
             </span>
           )}
-          <h4 className="font-bold text-sm md:text-base line-clamp-2 leading-snug text-slate-800 dark:text-slate-100">
+          <h4 className={`font-bold text-sm md:text-base line-clamp-2 overflow-hidden text-ellipsis w-full break-all leading-snug text-slate-800 dark:text-slate-100 ${variant === "horizontal" ? "pr-8 md:pr-12" : ""}`}>
             {title}
           </h4>
           
@@ -236,9 +283,9 @@ export function DocumentCard({
                   <span className="bg-green-100 text-green-600 dark:bg-green-900/40 dark:text-green-400 px-2 py-1 rounded text-xs font-bold">Miễn phí</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button className="w-full h-11 bg-slate-100 dark:bg-slate-800 text-[#2563EB] dark:text-blue-400 text-sm font-bold rounded-xl hover:bg-[#2563EB] hover:text-white dark:hover:bg-[#2563EB] dark:hover:text-white transition">
+                  <div role="button" className="w-full h-11 bg-slate-100 dark:bg-slate-800 text-[#2563EB] dark:text-blue-400 text-sm font-bold rounded-xl hover:bg-[#2563EB] hover:text-white dark:hover:bg-[#2563EB] dark:hover:text-white transition flex items-center justify-center">
                     Xem miễn phí
-                  </button>
+                  </div>
                 </div>
               </>
             ) : (
@@ -253,7 +300,8 @@ export function DocumentCard({
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button 
+                  <div 
+                    role="button"
                     onClick={handleCartClick}
                     className={`w-11 h-11 rounded-xl transition flex items-center justify-center flex-shrink-0 ${
                       isInCart 
@@ -263,10 +311,10 @@ export function DocumentCard({
                     title={isInCart ? "Xóa khỏi giỏ" : "Thêm vào giỏ"}
                   >
                     <ShoppingCart className="w-5 h-5" />
-                  </button>
-                  <button className="flex-1 h-11 bg-[#2563EB] text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition">
+                  </div>
+                  <div role="button" className="flex-1 h-11 bg-[#2563EB] text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition flex items-center justify-center">
                     Xem trước
-                  </button>
+                  </div>
                 </div>
               </>
             )}
@@ -276,9 +324,9 @@ export function DocumentCard({
             <span className="inline-block px-2 py-1 bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400 text-xs font-bold rounded w-max">
               Miễn Phí
             </span>
-            <button className="text-[#2563EB] bg-blue-50 dark:bg-blue-900/30 px-3 py-1.5 rounded-full hover:bg-[#2563EB] hover:text-white transition-colors flex items-center gap-1 text-xs font-bold">
+            <div role="button" className="text-[#2563EB] bg-blue-50 dark:bg-blue-900/30 px-3 py-1.5 rounded-full hover:bg-[#2563EB] hover:text-white transition-colors flex items-center gap-1 text-xs font-bold">
               Xem miễn phí
-            </button>
+            </div>
           </div>
         ) : (
           <div className="mt-3 flex items-center justify-between">
@@ -291,7 +339,8 @@ export function DocumentCard({
                 {priceOnline || priceDownload}
               </div>
             </div>
-            <button 
+            <div 
+              role="button"
               onClick={handleCartClick}
               className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full transition flex items-center justify-center flex-shrink-0 ${
                 isInCart 
@@ -301,7 +350,7 @@ export function DocumentCard({
               title={isInCart ? "Xóa khỏi giỏ" : "Thêm vào giỏ"}
             >
               <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
+            </div>
           </div>
         )}
       </div>

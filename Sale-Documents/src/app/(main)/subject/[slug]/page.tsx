@@ -23,7 +23,6 @@ export default async function SubjectPage({ params }: PageProps) {
     .eq('subject', slug)
     .order('created_at', { ascending: false });
 
-  // Helper function to format document row to DocumentCard props
   const mapDocToProps = (doc: any) => ({
     id: doc.id,
     title: doc.title,
@@ -36,6 +35,12 @@ export default async function SubjectPage({ params }: PageProps) {
     priceDownload: doc.download_price ? `${doc.download_price.toLocaleString('vi-VN')}đ` : "0đ",
     isFree: doc.is_free,
     imageColor: doc.is_free ? "10B981" : "3B82F6",
+    coverUrl: doc.cover_url,
+    cover_image_url: doc.cover_image_url,
+    thumbnail_url: doc.thumbnail_url,
+    image_url: doc.image_url,
+    avatar_url: doc.avatar_url,
+    demo_file_url: doc.demo_file_url,
   });
 
   return (

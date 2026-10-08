@@ -149,18 +149,36 @@ export default function DocumentDetailPage() {
             <div className="flex flex-col sm:flex-row gap-6 mb-8">
               {/* Ảnh bìa */}
               <div className="w-full sm:w-48 lg:w-56 flex-shrink-0">
-                <div className="aspect-[3/4] rounded-2xl overflow-hidden shadow-md relative border border-slate-100 dark:border-slate-800 bg-blue-50">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img 
-                    src={document.cover_url || `https://placehold.co/400x533/3B82F6/FFF?text=${encodeURIComponent(document.subject || 'TL')}`} 
-                    alt="Bìa sách" 
-                    className="w-full h-full object-cover" 
-                  />
+                <div className="aspect-[3/4] rounded-2xl overflow-hidden shadow-md relative border border-slate-100 dark:border-slate-800 bg-slate-100 dark:bg-slate-800">
+                  {(document.cover_url || document.cover_image_url || document.thumbnail_url || document.image_url || document.avatar_url) ? (
+                    <img 
+                      src={document.cover_url || document.cover_image_url || document.thumbnail_url || document.image_url || document.avatar_url} 
+                      alt="Bìa sách" 
+                      className="w-full h-full object-cover" 
+                    />
+                  ) : document.demo_file_url ? (
+                    <div className="w-full h-full relative group flex flex-col items-center justify-center">
+                      <iframe src={`${document.demo_file_url}#toolbar=0&navpanes=0&scrollbar=0`} className="absolute inset-0 w-full h-full object-cover pointer-events-none opacity-40 mix-blend-multiply dark:mix-blend-screen" title="PDF Preview"></iframe>
+                      <div className="relative z-10 flex flex-col items-center bg-white/80 dark:bg-black/60 px-4 py-2 rounded-xl backdrop-blur-sm shadow-sm">
+                        <i className="fa-regular fa-file-pdf text-blue-500 mb-1 text-2xl"></i>
+                        <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Xem trước</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 border border-slate-200 dark:border-slate-700 p-4">
+                      <div className="w-12 h-12 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center shadow-sm mb-3">
+                        <i className="fa-solid fa-file-lines text-blue-500 text-xl"></i>
+                      </div>
+                      <span className="font-bold text-slate-600 dark:text-slate-300 text-lg md:text-xl text-center leading-snug drop-shadow-sm">
+                        {subjectName || 'Tài liệu'}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
               
               {/* Thông tin */}
-              <div className="flex flex-col flex-1 justify-center">
+              <div className="flex flex-col flex-1 min-w-0 justify-center">
                 <div className="flex flex-wrap gap-2 mb-3">
                   <span className="bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 text-xs font-bold px-2.5 py-1 rounded-lg border border-blue-200 dark:border-blue-800">
                     Môn {subjectName}
@@ -176,7 +194,7 @@ export default function DocumentDetailPage() {
                   )}
                 </div>
                 
-                <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white leading-tight mb-4">
+                <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white leading-tight mb-4 w-full min-w-0 break-all overflow-hidden text-ellipsis line-clamp-2">
                   {document.title}
                 </h1>
                 

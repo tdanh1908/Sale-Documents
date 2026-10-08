@@ -161,8 +161,18 @@ export default function EditDocumentPage() {
         "Đề thi": "de_thi"
       };
 
-      // Tạo slug hợp lệ
-      const slug = sanitizeFilename(name).toLowerCase() + '-' + Date.now().toString().slice(-6);
+      // Bulletproof slug generation
+      const generateValidSlug = (title: string) => {
+        if (!title) return `doc-${Date.now()}`;
+        let baseSlug = title.toString().toLowerCase()
+          .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+          .replace(/[đĐ]/g, 'd')
+          .replace(/[^a-z0-9-]/g, '-')
+          .replace(/-+/g, '-')
+          .replace(/^-+|-+$/g, '');
+        return baseSlug ? `${baseSlug}-${Date.now().toString().slice(-6)}` : `doc-${Date.now()}`;
+      };
+      const slug = generateValidSlug(name);
 
       // 3. Chuẩn hóa dữ liệu đầu vào (Sanitize Payload)
       const isFree = priceType === "free";

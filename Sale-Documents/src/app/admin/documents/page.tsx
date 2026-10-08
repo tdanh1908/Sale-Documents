@@ -185,9 +185,22 @@ export default function DocumentsPage() {
                       </label>
                     </td>
                     <td className="p-4">
-                      <div className="w-10 h-14 rounded overflow-hidden bg-slate-50 border border-slate-200 dark:border-slate-700">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={`https://placehold.co/100x140//FFF?text=${doc.title ? doc.title.substring(0, 2) : 'TL'}`} className="w-full h-full object-cover" alt="Thumb" />
+                      <div className="w-12 h-16 rounded overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center">
+                        {(() => {
+                          const cover = doc.cover_image_url || doc.thumbnail_url || doc.image_url || doc.file_url || doc.cover_url;
+                          if (cover && typeof cover === 'string' && cover.trim() !== '') {
+                            /* eslint-disable-next-line @next/next/no-img-element */
+                            return <img src={cover} className="w-full h-full object-cover" alt={doc.title} />;
+                          }
+                          return (
+                            <div className="flex flex-col items-center justify-center w-full h-full bg-slate-100 dark:bg-slate-800 p-1">
+                              <i className="fa-solid fa-file-pdf text-slate-300 dark:text-slate-600 text-xl mb-1"></i>
+                              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider text-center line-clamp-1">
+                                {doc.title ? doc.title.substring(0, 2) : 'TL'}
+                              </span>
+                            </div>
+                          );
+                        })()}
                       </div>
                     </td>
                     <td className="p-4">
