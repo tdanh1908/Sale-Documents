@@ -2,18 +2,31 @@
 
 import { useEffect, useState } from "react";
 import { createBrowserClient } from "@/lib/supabase/client";
-import { useParams, notFound } from "next/navigation";
+import { useParams, notFound, useRouter } from "next/navigation";
 import Link from "next/link";
+import { useCart } from "@/contexts/CartContext";
 
 export default function DocumentDetailPage() {
   const params = useParams();
   const id = params?.id as string;
+  const router = useRouter();
   const [supabase] = useState(() => createBrowserClient());
   const [document, setDocument] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [selectedOption, setSelectedOption] = useState("view_only");
   const [activeTab, setActiveTab] = useState("desc");
+  const { addToCart, cartItems } = useCart();
+
+  const isInCart = cartItems.includes(id);
+
+  const handleAddToCart = () => {
+    if (isInCart) {
+      router.push('/cart');
+    } else {
+      addToCart(id, selectedOption);
+    }
+  };
 
   useEffect(() => {
     const fetchDocument = async () => {
@@ -288,11 +301,11 @@ export default function DocumentDetailPage() {
 
                     {/* Nút Hành động chính */}
                     <div className="flex gap-2">
-                      <button className="w-12 h-12 flex-shrink-0 rounded-2xl bg-orange-100 text-orange-600 dark:bg-orange-900/40 dark:text-orange-400 flex items-center justify-center text-lg hover:bg-[#F97316] hover:text-white transition" title="Thêm vào giỏ">
+                      <button onClick={handleAddToCart} className="cursor-pointer w-12 h-12 flex-shrink-0 rounded-2xl bg-orange-100 text-orange-600 dark:bg-orange-900/40 dark:text-orange-400 flex items-center justify-center text-lg hover:bg-[#F97316] hover:text-white transition" title="Thêm vào giỏ">
                         <i className="fa-solid fa-cart-plus"></i>
                       </button>
-                      <button className="flex-1 h-12 bg-[#2563EB] text-white font-extrabold text-sm rounded-2xl hover:bg-[#1D4ED8] transition flex flex-col items-center justify-center shadow-lg shadow-blue-200 dark:shadow-none">
-                        <span>MUA NGAY</span>
+                      <button onClick={handleAddToCart} className="cursor-pointer flex-1 h-12 bg-[#2563EB] text-white font-extrabold text-sm rounded-2xl hover:bg-[#1D4ED8] transition flex flex-col items-center justify-center shadow-lg shadow-blue-200 dark:shadow-none">
+                        <span>{isInCart ? "Đi đến Giỏ hàng" : "MUA NGAY"}</span>
                       </button>
                     </div>
                   </div>

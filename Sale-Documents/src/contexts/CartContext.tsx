@@ -1,11 +1,11 @@
-﻿"use client";
+"use client";
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { createBrowserClient } from '@/lib/supabase/client';
 
 type CartContextType = {
   cartItems: string[];
-  addToCart: (documentId: string) => Promise<void>;
+  addToCart: (documentId: string, option?: string) => Promise<void>;
   removeFromCart: (documentId: string) => Promise<void>;
   isLoading: boolean;
 };
@@ -61,7 +61,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     };
   }, [supabase]);
 
-  const addToCart = async (documentId: string) => {
+  const addToCart = async (documentId: string, option?: string) => {
     if (!user) {
       alert("Vui lòng đăng nhập để thêm vào giỏ hàng");
       return;
@@ -74,7 +74,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     
     const { error } = await supabase
       .from('cart_items')
-      .insert({ user_id: user.id, document_id: documentId });
+      .insert({ user_id: user.id, document_id: documentId, option: option || 'view_only' });
 
     if (error) {
       console.error("Error adding to cart:", error);

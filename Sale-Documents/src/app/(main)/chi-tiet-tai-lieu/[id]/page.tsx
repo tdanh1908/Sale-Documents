@@ -11,10 +11,28 @@ import { LIBRARY_DOCS } from "@/lib/mock-data";
 import Link from "next/link";
 import Image from "next/image";
 
+import { useCart } from "@/contexts/CartContext";
+import { useRouter } from "next/navigation";
+
 export default function DocumentDetailPage() {
   const [activeTab, setActiveTab] = useState("desc");
   const [previewPage, setPreviewPage] = useState(1);
   const [buyType, setBuyType] = useState("online");
+  const { addToCart, cartItems } = useCart();
+  const router = useRouter();
+
+  // Mock document ID
+  const mockId = "demo-doc-1";
+  const isInCart = cartItems.includes(mockId);
+
+  const handleAddToCart = () => {
+    if (isInCart) {
+      router.push('/cart');
+    } else {
+      // Map buyType to option
+      addToCart(mockId, buyType === 'online' ? 'view_only' : 'download');
+    }
+  };
 
   // --- DEMO STATE CONTROLLER ---
   const [isAuth, setIsAuth] = useState(false);
@@ -387,11 +405,11 @@ export default function DocumentDetailPage() {
                     </div>
 
                     <div className="flex gap-2">
-                      <button className="cursor-pointer w-12 h-12 flex-shrink-0 rounded-2xl bg-orange-100 text-[#F97316] dark:bg-orange-900/40 dark:text-orange-400 flex items-center justify-center hover:bg-[#F97316] hover:text-white transition" title="Thêm vào giỏ">
+                      <button onClick={handleAddToCart} className="cursor-pointer w-12 h-12 flex-shrink-0 rounded-2xl bg-orange-100 text-[#F97316] dark:bg-orange-900/40 dark:text-orange-400 flex items-center justify-center hover:bg-[#F97316] hover:text-white transition" title="Thêm vào giỏ">
                         <ShoppingCart className="w-5 h-5" />
                       </button>
-                      <button className="cursor-pointer flex-1 h-12 bg-[#2563EB] text-white font-extrabold text-sm rounded-2xl hover:bg-blue-700 transition flex flex-col items-center justify-center">
-                        <span>MUA NGAY</span>
+                      <button onClick={handleAddToCart} className="cursor-pointer flex-1 h-12 bg-[#2563EB] text-white font-extrabold text-sm rounded-2xl hover:bg-blue-700 transition flex flex-col items-center justify-center">
+                        <span>{isInCart ? "Đi đến Giỏ hàng" : "MUA NGAY"}</span>
                       </button>
                     </div>
                   </div>
@@ -559,11 +577,11 @@ export default function DocumentDetailPage() {
         <div className="flex gap-2">
           {isNotOwnedPaid && (
             <>
-              <button className="cursor-pointer w-11 h-11 flex-shrink-0 rounded-xl bg-orange-100 text-[#F97316] dark:bg-orange-900/40 dark:text-orange-400 flex items-center justify-center hover:bg-[#F97316] hover:text-white transition">
+              <button onClick={handleAddToCart} className="cursor-pointer w-11 h-11 flex-shrink-0 rounded-xl bg-orange-100 text-[#F97316] dark:bg-orange-900/40 dark:text-orange-400 flex items-center justify-center hover:bg-[#F97316] hover:text-white transition">
                 <ShoppingCart className="w-5 h-5" />
               </button>
-              <button className="cursor-pointer h-11 px-6 bg-[#2563EB] text-white font-extrabold text-sm rounded-xl hover:bg-blue-700 transition" onClick={() => window.scrollTo(0, 0)}>
-                MUA NGAY
+              <button onClick={handleAddToCart} className="cursor-pointer h-11 px-6 bg-[#2563EB] text-white font-extrabold text-sm rounded-xl hover:bg-blue-700 transition">
+                {isInCart ? "Giỏ hàng" : "MUA NGAY"}
               </button>
             </>
           )}

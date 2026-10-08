@@ -223,7 +223,7 @@ export default function DocumentsPage() {
                     </td>
                     <td className="p-4 text-center">
                       <div className="flex items-center justify-center gap-1 xl:opacity-0 xl:group-hover:opacity-100 transition-opacity">
-                        <button className="w-8 h-8 rounded-lg text-slate-500 hover:bg-blue-50 hover:text-[#2563EB] transition" title="Sửa thông tin"><i className="fa-solid fa-pen"></i></button>
+                        <Link href={`/admin/documents/edit/${doc.id}`} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:bg-blue-50 hover:text-[#2563EB] transition" title="Sửa thông tin"><i className="fa-solid fa-pen"></i></Link>
                         <button className="w-8 h-8 rounded-lg text-slate-500 hover:bg-orange-50 hover:text-[#F97316] transition" title="Đổi giá"><i className="fa-solid fa-tag"></i></button>
                         <button className="w-8 h-8 rounded-lg text-slate-500 hover:bg-purple-50 hover:text-purple-600 transition" title="Thay file"><i className="fa-solid fa-file-pdf"></i></button>
                         {doc.status === 'published' || isDraft ? (
