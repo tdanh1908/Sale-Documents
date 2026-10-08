@@ -63,7 +63,7 @@ export function DocumentCard({
   };
 
   const { cartItems, addToCart, removeFromCart } = useCart();
-  const isInCart = cartItems.includes(id);
+  const isInCart = cartItems.some(item => item.document_id === id);
 
   const handleCartClick = (e: React.MouseEvent) => {
     e.preventDefault();

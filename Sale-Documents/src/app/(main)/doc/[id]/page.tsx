@@ -17,15 +17,21 @@ export default function DocumentDetailPage() {
   const [selectedOption, setSelectedOption] = useState("view_only");
   const [activeTab, setActiveTab] = useState("desc");
   const { addToCart, cartItems } = useCart();
+  const isAdded = cartItems.some(item => item.document_id === id && item.option === selectedOption);
 
-  const isInCart = cartItems.includes(id);
-
-  const handleAddToCart = () => {
-    if (isInCart) {
-      router.push('/cart');
+  const handleAddToCartOnly = async () => {
+    if (isAdded) {
+      router.push('/gio-hang');
     } else {
-      addToCart(id, selectedOption);
+      await addToCart(id, selectedOption);
     }
+  };
+
+  const handleBuyNow = async () => {
+    if (!isAdded) {
+      await addToCart(id, selectedOption);
+    }
+    router.push(`/gio-hang?direct_buy=true&doc_id=${id}&option=${selectedOption}`);
   };
 
   useEffect(() => {
@@ -159,7 +165,7 @@ export default function DocumentDetailPage() {
               </div>
 
               {/* Container hiển thị ảnh/iframe */}
-              <div className="relative w-full bg-slate-100 dark:bg-slate-900 rounded-xl overflow-hidden aspect-[1/1.4] sm:aspect-[16/10] flex items-center justify-center border border-slate-200 dark:border-slate-700">
+              <div className="relative w-full bg-slate-100 dark:bg-slate-900 rounded-lg overflow-hidden h-[70vh] md:h-[80vh] flex items-center justify-center border border-slate-200 dark:border-slate-700">
                 {document.demo_file_url ? (
                   <iframe 
                     src={`${document.demo_file_url}#toolbar=0`} 
@@ -301,11 +307,11 @@ export default function DocumentDetailPage() {
 
                     {/* Nút Hành động chính */}
                     <div className="flex gap-2">
-                      <button onClick={handleAddToCart} className="cursor-pointer w-12 h-12 flex-shrink-0 rounded-2xl bg-orange-100 text-orange-600 dark:bg-orange-900/40 dark:text-orange-400 flex items-center justify-center text-lg hover:bg-[#F97316] hover:text-white transition" title="Thêm vào giỏ">
-                        <i className="fa-solid fa-cart-plus"></i>
+                      <button onClick={handleAddToCartOnly} className={`cursor-pointer w-12 h-12 flex-shrink-0 rounded-2xl flex items-center justify-center text-lg transition ${isAdded ? 'bg-green-500 text-white hover:bg-green-600 shadow-md shadow-green-200 dark:shadow-none' : 'bg-orange-100 text-orange-600 dark:bg-orange-900/40 dark:text-orange-400 hover:bg-[#F97316] hover:text-white'}`} title={isAdded ? "Đi đến giỏ hàng" : "Thêm vào giỏ"}>
+                        <i className={`fa-solid ${isAdded ? 'fa-check' : 'fa-cart-plus'}`}></i>
                       </button>
-                      <button onClick={handleAddToCart} className="cursor-pointer flex-1 h-12 bg-[#2563EB] text-white font-extrabold text-sm rounded-2xl hover:bg-[#1D4ED8] transition flex flex-col items-center justify-center shadow-lg shadow-blue-200 dark:shadow-none">
-                        <span>{isInCart ? "Đi đến Giỏ hàng" : "MUA NGAY"}</span>
+                      <button onClick={handleBuyNow} className="cursor-pointer flex-1 h-12 bg-[#2563EB] text-white font-extrabold text-sm rounded-2xl hover:bg-[#1D4ED8] transition flex flex-col items-center justify-center shadow-lg shadow-blue-200 dark:shadow-none">
+                        <span>MUA NGAY</span>
                       </button>
                     </div>
                   </div>

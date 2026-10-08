@@ -23,7 +23,7 @@ export default function DocumentDetailPage() {
 
   // Mock document ID
   const mockId = "demo-doc-1";
-  const isInCart = cartItems.includes(mockId);
+  const isInCart = cartItems.some(item => item.document_id === mockId);
 
   const handleAddToCart = () => {
     if (isInCart) {
