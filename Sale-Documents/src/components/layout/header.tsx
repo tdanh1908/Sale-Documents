@@ -70,10 +70,16 @@ export function Header() {
     };
     document.addEventListener("mousedown", handleClickOutside);
 
+    const handleAvatarUpdated = () => {
+      fetchSession();
+    };
+    window.addEventListener('avatarUpdated', handleAvatarUpdated);
+
     return () => {
       mounted = false;
       subscription.unsubscribe();
       document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener('avatarUpdated', handleAvatarUpdated);
     };
   }, [supabase]);
 

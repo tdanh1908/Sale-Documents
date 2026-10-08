@@ -2,12 +2,26 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { createBrowserClient } from "@/lib/supabase/client";
 
 export default function AccountPage() {
     const [profile, setProfile] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [supabase] = useState(() => createBrowserClient());
+    const router = useRouter();
+
+    // Profile state
+    const [fullName, setFullName] = useState("");
+    const [phone, setPhone] = useState("");
+    const [nickname, setNickname] = useState("");
+    const [school, setSchool] = useState("");
+    const [isUpdating, setIsUpdating] = useState(false);
+
+    // Delete state
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [deletePassword, setDeletePassword] = useState("");
+    const [isDeleting, setIsDeleting] = useState(false);
 
     useEffect(() => {
         let mounted = true;
@@ -16,11 +30,15 @@ export default function AccountPage() {
             if (session?.user && mounted) {
                 const { data } = await supabase
                     .from('profiles')
-                    .select('full_name, nickname, school, avatar_url, phone')
+                    .select('full_name, nickname, school, avatar_url, phone, is_premium')
                     .eq('id', session.user.id)
                     .single();
                 if (data && mounted) {
                     setProfile(data);
+                    setFullName(data.full_name || "");
+                    setPhone(data.phone || "");
+                    setNickname(data.nickname || "");
+                    setSchool(data.school || "");
                 }
             }
             if (mounted) setIsLoading(false);
@@ -28,6 +46,67 @@ export default function AccountPage() {
         fetchProfile();
         return () => { mounted = false; };
     }, [supabase]);
+
+    const handleUpdateProfile = async () => {
+        setIsUpdating(true);
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+            const { error } = await supabase
+                .from('profiles')
+                .update({ full_name: fullName, phone: phone, nickname: nickname, school: school })
+                .eq('id', session.user.id);
+            if (!error) {
+                alert("Cập nhật hồ sơ thành công!");
+                setProfile((prev: any) => ({ ...prev, full_name: fullName, phone: phone, nickname: nickname, school: school }));
+            } else {
+                alert("Có lỗi xảy ra: " + error.message);
+            }
+        }
+        setIsUpdating(false);
+    };
+
+    const handleDeleteAccount = async () => {
+        if (!deletePassword) {
+            alert("Vui lòng nhập mật khẩu.");
+            return;
+        }
+        setIsDeleting(true);
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.user?.email) throw new Error("Không lấy được email");
+            
+            const { error: signInError } = await supabase.auth.signInWithPassword({
+                email: session.user.email,
+                password: deletePassword
+            });
+
+            if (signInError) {
+                alert("Mật khẩu không chính xác!");
+                setIsDeleting(false);
+                return;
+            }
+
+            const response = await fetch('/api/auth/delete-account', { 
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ userId: session.user.id })
+            });
+            const result = await response.json();
+            
+            if (!response.ok || result.error) {
+                throw new Error(result.error || "Lỗi xóa tài khoản từ server");
+            }
+
+            await supabase.auth.signOut();
+            alert("Đã xóa vĩnh viễn");
+            router.push('/dang-nhap');
+        } catch (err: any) {
+            alert("Lỗi: " + err.message);
+            setIsDeleting(false);
+        }
+    };
 
     return (
         <main  className="max-w-7xl mx-auto px-4 py-6 md:py-8 flex flex-col md:flex-row gap-8 items-start relative min-h-[70vh]">
@@ -134,40 +213,58 @@ export default function AccountPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     
-                    <div className="bg-gradient-to-br from-slate-900 to-slate-800 dark:from-black dark:to-slate-900 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden group">
-                        <div className="absolute -right-10 -top-10 w-32 h-32 bg-highlight opacity-20 rounded-full blur-2xl group-hover:opacity-40 transition"></div>
-                        
-                        <div className="flex items-center gap-3 mb-4 relative z-10">
-                            <div className="w-12 h-12 bg-white/10 backdrop-blur rounded-full flex items-center justify-center text-highlight text-xl shadow-inner border border-white/10"><i className="fa-solid fa-crown"></i></div>
-                            <div>
-                                <h3 className="font-extrabold text-lg text-white">Gói Premium</h3>
-                                <div className="text-xs text-blue-200 font-medium">Đang hoạt động</div>
-                            </div>
-                        </div>
-
-                        <div className="space-y-4 relative z-10">
-                            <div>
-                                <div className="flex justify-between text-sm mb-1 font-bold">
-                                    <span>Thời gian còn lại</span>
-                                    <span className="text-highlight">23 ngày</span>
-                                </div>
-                                <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
-                                    <div className="bg-highlight h-full" ></div>
-                                </div>
-                            </div>
+                    {profile?.is_premium ? (
+                        <div className="bg-gradient-to-br from-slate-900 to-slate-800 dark:from-black dark:to-slate-900 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden group">
+                            <div className="absolute -right-10 -top-10 w-32 h-32 bg-highlight opacity-20 rounded-full blur-2xl group-hover:opacity-40 transition"></div>
                             
-                            <div>
-                                <div className="flex justify-between text-sm mb-1 font-bold">
-                                    <span>Suất tải tài liệu</span>
-                                    <span className="text-green-400">2 / 5</span>
-                                </div>
-                                <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
-                                    <div className="bg-green-500 h-full" ></div>
+                            <div className="flex items-center gap-3 mb-4 relative z-10">
+                                <div className="w-12 h-12 bg-white/10 backdrop-blur rounded-full flex items-center justify-center text-highlight text-xl shadow-inner border border-white/10"><i className="fa-solid fa-crown"></i></div>
+                                <div>
+                                    <h3 className="font-extrabold text-lg text-white">Thành viên Premium</h3>
+                                    <div className="text-xs text-blue-200 font-medium">Đang hoạt động</div>
                                 </div>
                             </div>
+
+                            <div className="space-y-4 relative z-10">
+                                <div>
+                                    <div className="flex justify-between text-sm mb-1 font-bold">
+                                        <span>Thời gian còn lại</span>
+                                        <span className="text-highlight">23 ngày</span>
+                                    </div>
+                                    <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
+                                        <div className="bg-highlight h-full" style={{ width: '70%' }}></div>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <div className="flex justify-between text-sm mb-1 font-bold">
+                                        <span>Suất tải tài liệu</span>
+                                        <span className="text-green-400">2 / 5</span>
+                                    </div>
+                                    <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
+                                        <div className="bg-green-500 h-full" style={{ width: '40%' }}></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button className="cursor-pointer w-full mt-5 h-11 bg-white/10 hover:bg-white/20 border border-white/20 backdrop-blur rounded-xl text-sm font-bold transition flex items-center justify-center gap-2">Gia hạn ngay</button>
                         </div>
-                        <button className="cursor-pointer w-full mt-5 h-11 bg-white/10 hover:bg-white/20 border border-white/20 backdrop-blur rounded-xl text-sm font-bold transition flex items-center justify-center gap-2">Gia hạn ngay</button>
-                    </div>
+                    ) : (
+                        <div className="bg-gradient-to-br from-slate-900 to-slate-800 dark:from-black dark:to-slate-900 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden group flex flex-col justify-center">
+                            <div className="absolute -right-10 -top-10 w-32 h-32 bg-slate-500 opacity-20 rounded-full blur-2xl group-hover:opacity-40 transition"></div>
+                            
+                            <div className="flex items-center gap-3 mb-4 relative z-10">
+                                <div className="w-12 h-12 bg-white/10 backdrop-blur rounded-full flex items-center justify-center text-slate-300 text-xl shadow-inner border border-white/10"><i className="fa-solid fa-crown"></i></div>
+                                <div>
+                                    <h3 className="font-extrabold text-lg text-white">Chưa đăng ký Premium</h3>
+                                </div>
+                            </div>
+
+                            <div className="relative z-10 mb-5">
+                                <p className="text-sm text-slate-300 font-medium">Mở khóa tải tài liệu không giới hạn chỉ với 59K/tháng</p>
+                            </div>
+                            <Link href="/premium" className="cursor-pointer w-full mt-auto h-11 bg-yellow-400 hover:bg-yellow-500 rounded-xl text-sm font-bold transition flex items-center justify-center gap-2 text-slate-900 shadow-lg">Đăng ký Premium ngay</Link>
+                        </div>
+                    )}
 
                     
                     <div className="grid grid-cols-2 gap-4">
@@ -432,15 +529,15 @@ export default function AccountPage() {
                 
                 <div className="bg-white dark:bg-darkCard rounded-3xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
                     <h3 className="font-bold text-lg mb-4 border-b border-slate-100 dark:border-slate-800 pb-2">Thông tin cá nhân</h3>
-                    <form className="space-y-4">
+                    <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); handleUpdateProfile(); }}>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase">Họ và tên</label>
-                                <input type="text" defaultValue={profile?.full_name || ""} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 h-11 rounded-xl px-4 text-sm focus:border-primary outline-none text-slate-800 dark:text-slate-100 transition" />
+                                <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 h-11 rounded-xl px-4 text-sm focus:border-primary outline-none text-slate-800 dark:text-slate-100 transition" />
                             </div>
                             <div>
                                 <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase">Số điện thoại</label>
-                                <input type="tel" defaultValue={profile?.phone || ""} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 h-11 rounded-xl px-4 text-sm focus:border-primary outline-none text-slate-800 dark:text-slate-100 transition" />
+                                <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 h-11 rounded-xl px-4 text-sm focus:border-primary outline-none text-slate-800 dark:text-slate-100 transition" />
                             </div>
                         </div>
 
@@ -449,17 +546,19 @@ export default function AccountPage() {
                                 <label className="block text-xs font-bold text-slate-500 uppercase">Biệt danh hiển thị</label>
                                 <span className="text-[10px] text-green-500 font-bold"><i className="fa-solid fa-check"></i> Đã duyệt</span>
                             </div>
-                            <input type="text" defaultValue={profile?.nickname || ""} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 h-11 rounded-xl px-4 text-sm focus:border-primary outline-none text-slate-800 dark:text-slate-100 transition" />
+                            <input type="text" value={nickname} onChange={(e) => setNickname(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 h-11 rounded-xl px-4 text-sm focus:border-primary outline-none text-slate-800 dark:text-slate-100 transition" />
                             <p className="text-[10px] text-slate-400 mt-1">Lưu ý: Nếu bạn đổi biệt danh, hệ thống sẽ cần Admin duyệt lại trước khi hiển thị công khai.</p>
                         </div>
 
                         <div>
                             <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase">Trường THPT</label>
-                            <input type="text" defaultValue={profile?.school || ""} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 h-11 rounded-xl px-4 text-sm focus:border-primary outline-none text-slate-800 dark:text-slate-100 transition" />
+                            <input type="text" value={school} onChange={(e) => setSchool(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 h-11 rounded-xl px-4 text-sm focus:border-primary outline-none text-slate-800 dark:text-slate-100 transition" />
                         </div>
 
                         <div className="pt-2">
-                            <button type="button" className="cursor-pointer h-11 px-6 bg-primary text-white font-bold rounded-xl hover:bg-primaryHover transition shadow-sm">Lưu thay đổi</button>
+                            <button type="submit" disabled={isUpdating} className={`cursor-pointer h-11 px-6 bg-primary text-white font-bold rounded-xl hover:bg-primaryHover transition shadow-sm ${isUpdating ? 'opacity-70' : ''}`}>
+                                {isUpdating ? 'Đang lưu...' : 'Lưu thay đổi'}
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -486,13 +585,35 @@ export default function AccountPage() {
                 <div className="bg-red-50 dark:bg-red-900/10 rounded-3xl p-6 border border-red-200 dark:border-red-900/30">
                     <h3 className="font-bold text-lg text-red-600 dark:text-red-500 mb-2">Vùng nguy hiểm</h3>
                     <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">Khi bạn xóa tài khoản, toàn bộ dữ liệu lịch sử thi, tài liệu đã mua và gói Premium sẽ bị xóa vĩnh viễn và không thể khôi phục.</p>
-                    <button className="cursor-pointer h-11 px-6 bg-white dark:bg-darkCard text-red-500 border border-red-200 dark:border-red-800 font-bold rounded-xl hover:bg-red-50 dark:hover:bg-red-900/30 transition">Xóa tài khoản và dữ liệu của tôi</button>
+                    <button type="button" onClick={() => setIsDeleteModalOpen(true)} className="cursor-pointer h-11 px-6 bg-white dark:bg-darkCard text-red-500 border border-red-200 dark:border-red-800 font-bold rounded-xl hover:bg-red-50 dark:hover:bg-red-900/30 transition">Xóa tài khoản và dữ liệu của tôi</button>
                 </div>
 
             </div>
 
         </div>
     
+        {isDeleteModalOpen && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4">
+                <div className="bg-white dark:bg-darkCard rounded-3xl p-6 max-w-md w-full shadow-2xl animate-in fade-in zoom-in duration-200">
+                    <h3 className="font-bold text-xl text-red-600 mb-2">Xóa tài khoản vĩnh viễn?</h3>
+                    <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">Hành động này không thể hoàn tác. Vui lòng nhập mật khẩu của bạn để xác nhận xóa.</p>
+                    <input 
+                        type="password" 
+                        placeholder="Nhập mật khẩu hiện tại" 
+                        value={deletePassword}
+                        onChange={(e) => setDeletePassword(e.target.value)}
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 h-11 rounded-xl px-4 text-sm focus:border-red-500 outline-none text-slate-800 dark:text-slate-100 mb-4"
+                    />
+                    <div className="flex gap-3">
+                        <button onClick={() => setIsDeleteModalOpen(false)} disabled={isDeleting} className="flex-1 h-11 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition">Hủy</button>
+                        <button onClick={handleDeleteAccount} disabled={isDeleting} className={`flex-1 h-11 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition flex items-center justify-center gap-2 ${isDeleting ? 'opacity-70 cursor-wait' : ''}`}>
+                            {isDeleting ? 'Đang xóa...' : 'Xóa vĩnh viễn'}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
+
         </main>
     );
 }

@@ -1,11 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Turnstile } from '@marsidev/react-turnstile';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { createBrowserClient } from '@/lib/supabase/client';
 
 const registerSchema = z.object({
   email: z.string().email("Email không hợp lệ"),
@@ -25,6 +27,19 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+
+  const router = useRouter();
+  const [supabase] = useState(() => createBrowserClient());
+
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        router.replace('/');
+      }
+    };
+    checkSession();
+  }, [supabase, router]);
 
   const { register, handleSubmit, formState: { errors } } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),

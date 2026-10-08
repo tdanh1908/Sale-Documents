@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -24,6 +24,16 @@ export default function LoginPage() {
   
   const router = useRouter();
   const [supabase] = useState(() => createBrowserClient());
+
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        router.replace('/');
+      }
+    };
+    checkSession();
+  }, [supabase, router]);
 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema)
@@ -49,9 +59,13 @@ export default function LoginPage() {
       setErrorMsg("Sai email hoặc mật khẩu.");
       setLoading(false);
     } else {
+      alert("Đăng nhập thành công!");
       const params = new URLSearchParams(window.location.search);
-      const nextPath = params.get('redirect') || params.get('next') || '/';
-      router.push(nextPath);
+      let nextPath = params.get('redirect') || params.get('next') || '/';
+      if (nextPath.includes('dang-ky') || nextPath.includes('dang-nhap') || nextPath.includes('register') || nextPath.includes('login')) {
+        nextPath = '/';
+      }
+      router.replace(nextPath);
       router.refresh();
     }
   };
