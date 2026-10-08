@@ -120,7 +120,7 @@ export default async function Home() {
           {SUBJECTS_MOCK.map((subject) => {
             const Icon = iconMap[subject.icon] || BookOpen;
             return (
-              <Link key={subject.id} href={`/mon/${subject.id}`} className="flex items-center p-3 rounded-2xl bg-card shadow-sm hover:shadow-md border border-slate-100 dark:border-slate-700/60 dark:hover:border-slate-600 transition group">
+              <Link key={subject.id} href={`/subject/${subject.id}`} className="flex items-center p-3 rounded-2xl bg-card shadow-sm hover:shadow-md border border-slate-100 dark:border-slate-700/60 dark:hover:border-slate-600 transition group">
                 <div className={`w-12 h-12 rounded-xl flex items-center justify-center group-hover:scale-110 transition ${subjectColorClasses[subject.color] || subjectColorClasses.blue}`}>
                   <Icon className="w-6 h-6" />
                 </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { Star, FileText, ShoppingCart, Heart } from "lucide-react";
+import { Star, FileText, ShoppingCart, Heart, Download } from "lucide-react";
 import Link from "next/link";
 import { useCart } from "@/contexts/CartContext";
 import { useState, useEffect } from "react";
@@ -14,8 +14,9 @@ interface DocumentCardProps {
   pages?: number;
   rating?: number;
   reviews?: number;
+  reviewCount?: number;
   sales?: string;
-  downloads?: string;
+  downloads?: number;
   priceOnline?: string;
   priceDownload?: string;
   originalPrice?: string;
@@ -36,6 +37,8 @@ export function DocumentCard({
   subjectColor = "blue",
   pages,
   rating,
+  reviews,
+  reviewCount,
   sales,
   downloads,
   priceOnline,
@@ -139,6 +142,10 @@ export function DocumentCard({
   const { cartItems, addToCart, removeFromCart } = useCart();
   const isInCart = cartItems.some(item => item.document_id === id);
 
+  const dl = downloads || 0;
+  const rate = rating || 0.0;
+  const rev = reviewCount || reviews || 0;
+
   const handleCartClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -202,19 +209,22 @@ export function DocumentCard({
             {title}
           </h4>
           
-          <div className="flex items-center flex-wrap text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-2 gap-2 sm:gap-3">
-            {pages && (
-              <span className="flex items-center gap-1">
-                <FileText className="w-3 h-3" /> {pages} trang
-              </span>
-            )}
-            {rating && (
-              <span className="flex items-center gap-1">
-                <Star className="w-3 h-3 fill-[#FACC15] text-[#FACC15]" /> {rating.toFixed(1)}
-              </span>
-            )}
-            {sales && <span>• Đã bán: {sales}</span>}
-            {downloads && <span>• Tải: {downloads}</span>}
+          <div className="flex flex-wrap items-center gap-4 text-xs text-slate-400 mt-2">
+            <div className="flex items-center gap-1">
+              <FileText className="w-4 h-4" /> <span>{pages || 0} trang</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Download className="w-4 h-4" /> <span>{dl} lượt tải</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="flex text-yellow-400">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-4 h-4" fill="currentColor" />
+                ))}
+              </div>
+              <span className="font-bold text-slate-200">{rate.toFixed(1)}</span>
+              <span>({rev} đánh giá)</span>
+            </div>
           </div>
         </div>
 
