@@ -175,7 +175,7 @@ export default function DocumentsPage() {
                 const timeStr = date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
 
                 return (
-                  <tr key={doc.id} className={hover:bg-slate-50 dark:hover:bg-slate-900/30 transition group }>
+                  <tr key={doc.id} className="hover:bg-slate-50 dark:hover:bg-slate-900/30 transition group">
                     <td className="p-4 text-center">
                       <label className="custom-checkbox flex items-center justify-center cursor-pointer">
                         <input type="checkbox" className="hidden row-checkbox" value={doc.id} />
@@ -185,37 +185,37 @@ export default function DocumentsPage() {
                       </label>
                     </td>
                     <td className="p-4">
-                      <div className={w-10 h-14 rounded overflow-hidden bg-slate-50 border border-slate-200 dark:border-slate-700 }>
+                      <div className="w-10 h-14 rounded overflow-hidden bg-slate-50 border border-slate-200 dark:border-slate-700">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={https://placehold.co/100x140//FFF?text=} className="w-full h-full object-cover" alt="Thumb" />
+                        <img src={`https://placehold.co/100x140//FFF?text=${doc.title ? doc.title.substring(0, 2) : 'TL'}`} className="w-full h-full object-cover" alt="Thumb" />
                       </div>
                     </td>
                     <td className="p-4">
-                      <div className={ont-bold line-clamp-2 }>
+                      <div className="font-bold line-clamp-2">
                         {doc.title}
                       </div>
                       <div className="text-[10px] text-slate-500 font-mono mt-1" title={doc.id}>ID: {doc.id.substring(0, 8)}...</div>
                     </td>
                     <td className="p-4">
-                      <span className={${subjectInfo.colorClass} text-xs px-2 py-1 rounded}>
+                      <span className={`${subjectInfo.colorClass} text-xs px-2 py-1 rounded`}>
                         {subjectInfo.label}
                       </span>
                     </td>
-                    <td className={p-4 text-center }>
+                    <td className="p-4 text-center">
                       {doc.page_count}
                     </td>
-                    <td className={p-4 text-right font-bold }>
-                      {doc.view_price ? ${doc.view_price.toLocaleString('vi-VN')}đ : '0đ'}
+                    <td className="p-4 text-right font-bold">
+                      {doc.view_price ? `${doc.view_price.toLocaleString('vi-VN')}đ` : '0đ'}
                     </td>
-                    <td className={p-4 text-right }>
-                      {doc.download_price ? ${doc.download_price.toLocaleString('vi-VN')}đ : '0đ'}
+                    <td className="p-4 text-right">
+                      {doc.download_price ? `${doc.download_price.toLocaleString('vi-VN')}đ` : '0đ'}
                     </td>
                     <td className="p-4 text-center">
-                      <span className={inline-block text-xs font-bold px-2 py-1 rounded-full }>
+                      <span className={`${statusBadge} inline-block text-xs font-bold px-2 py-1 rounded-full`}>
                         {statusText}
                       </span>
                     </td>
-                    <td className={p-4 text-center font-bold }>
+                    <td className="p-4 text-center font-bold">
                       {doc.sales_count}
                     </td>
                     <td className="p-4 text-right text-xs text-slate-500">

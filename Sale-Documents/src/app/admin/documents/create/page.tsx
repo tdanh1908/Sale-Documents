@@ -22,6 +22,10 @@ export default function CreateDocumentPage() {
   const [docType, setDocType] = useState("Lý thuyết");
   const [grade, setGrade] = useState("");
   const [description, setDescription] = useState("");
+  const [author, setAuthor] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState("");
+  const [detailedDescription, setDetailedDescription] = useState("");
   
   // Pricing State
   const [priceType, setPriceType] = useState("paid");
@@ -125,25 +129,38 @@ export default function CreateDocumentPage() {
       // Tạo slug hợp lệ (vd: "chuyen-de-toan-123456")
       const slug = sanitizeFilename(name).toLowerCase() + '-' + Date.now().toString().slice(-6);
 
-      // 3. Insert dữ liệu vào bảng public.documents
-      // Lưu ý: Dùng đúng tên cột từ catalog.sql và schema update
-      const { data: newDoc, error: dbError } = await supabase.from("documents").insert({
+      // 3. Chuẩn hóa dữ liệu đầu vào (Sanitize Payload)
+      const isFree = priceType === "free";
+      const sanitizedPageCount = Math.max(1, Number(pages) || 1);
+      const sanitizedUnitPrice = isFree ? 0 : Math.max(0, Number(unitPrice) || 0);
+      const sanitizedViewPrice = isFree ? 0 : Math.max(0, Number(viewPrice) || 0);
+      const sanitizedDlPrice = isFree ? 0 : Math.max(0, Number(dlPrice) || 0);
+
+      const payload = {
         slug: slug,
-        title: name,
+        title: name.trim(),
         subject: subjectMap[subject] || "toan",
         doc_type: docTypeMap[docType] || "ly_thuyet",
-        category: grade || '12', 
-        description: description,
-        is_free: priceType === "free",
-        page_count: pages,           // Tên cột chuẩn từ catalog.sql
-        price_per_page: unitPrice,   // Tên cột chuẩn từ catalog.sql
-        view_price: viewPrice,       // Tên cột chuẩn từ catalog.sql
-        download_price: dlPrice,     // Tên cột chuẩn từ catalog.sql
-        full_file_path: fullPath,    // Tên cột từ schema update
-        demo_file_url: demoUrl,      // Đổi từ demo_file_path sang demo_file_url
+        category: grade ? grade.trim() : '12', 
+        description: description ? description.trim() : null,
+        author: author ? author.trim() : null,
+        tags: tags.length > 0 ? tags : null,
+        detailed_description: detailedDescription ? detailedDescription.trim() : null,
+        is_free: isFree,
+        page_count: sanitizedPageCount,           
+        price_per_page: sanitizedUnitPrice,   
+        view_price: sanitizedViewPrice,       
+        download_price: sanitizedDlPrice,     
+        full_file_path: fullPath,    
+        demo_file_url: demoUrl,      
         cover_path: coverImage ? demoPath : null, 
-        status: 'published'          // Mặc định đăng ngay
-      }).select("id").single();
+        status: 'published'          
+      };
+
+      console.log("🚀 Payload Insert Documents:", payload);
+
+      // Insert dữ liệu vào bảng public.documents
+      const { data: newDoc, error: dbError } = await supabase.from("documents").insert(payload).select("id").single();
 
       if (dbError) throw new Error("Lỗi lưu dữ liệu bảng documents: " + dbError.message);
 
@@ -195,6 +212,9 @@ export default function CreateDocumentPage() {
     setDocType("Lý thuyết");
     setGrade("");
     setDescription("");
+    setAuthor("");
+    setTags([]);
+    setDetailedDescription("");
     setPriceType("paid");
     setPages(100);
     setUnitPrice(200);
@@ -340,6 +360,65 @@ export default function CreateDocumentPage() {
                 className="w-full h-11 px-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-[#2563EB] transition text-slate-800 dark:text-slate-100" 
               />
             </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Tên tác giả</label>
+                <input 
+                  type="text" 
+                  placeholder="Ví dụ: Nguyễn Văn A..." 
+                  value={author}
+                  onChange={(e) => setAuthor(e.target.value)}
+                  className="w-full h-11 px-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-[#2563EB] transition text-slate-800 dark:text-slate-100" 
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Tags (Nhấn Enter để thêm)</label>
+                <div className="w-full min-h-[44px] px-2 py-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl flex flex-wrap gap-1 items-center focus-within:border-[#2563EB] transition">
+                  {tags.map((tag, index) => (
+                    <span key={index} className="flex items-center gap-1 bg-[#2563EB]/10 text-[#2563EB] px-2 py-1 rounded-md text-xs font-bold">
+                      {tag}
+                      <button type="button" onClick={() => setTags(tags.filter((_, i) => i !== index))} className="hover:text-red-500">
+                        <i className="fa-solid fa-xmark"></i>
+                      </button>
+                    </span>
+                  ))}
+                  <input 
+                    type="text" 
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (tagInput.trim() && !tags.includes(tagInput.trim())) {
+                          setTags([...tags, tagInput.trim()]);
+                          setTagInput("");
+                        }
+                      }
+                    }}
+                    placeholder="Thêm tag..." 
+                    className="flex-1 min-w-[80px] h-8 bg-transparent outline-none text-sm px-2 text-slate-800 dark:text-slate-100 placeholder-slate-400" 
+                  />
+                </div>
+                <div className="mt-2.5 flex flex-wrap gap-1.5">
+                  {["Toán", "Vật Lý", "Hóa Học", "Sinh Học", "Ngữ Văn", "Lý thuyết", "Bài tập", "Đề thi"].map(tag => (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => {
+                        if (!tags.includes(tag)) {
+                          setTags([...tags, tag]);
+                        }
+                      }}
+                      className={`px-2 py-1 text-xs font-bold rounded-lg border transition ${tags.includes(tag) ? 'bg-[#2563EB]/10 border-[#2563EB]/30 text-[#2563EB]' : 'bg-white dark:bg-[#1E293B] border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
@@ -382,12 +461,24 @@ export default function CreateDocumentPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Mô tả (Bạn sẽ học được gì, mục lục...)</label>
+              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Mô tả ngắn</label>
               <textarea 
-                rows={4} 
+                rows={3} 
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
+                placeholder="Tóm tắt nội dung tài liệu..."
                 className="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-[#2563EB] transition resize-none text-slate-800 dark:text-slate-100"
+              ></textarea>
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Mô tả chi tiết</label>
+              <textarea 
+                rows={8} 
+                value={detailedDescription}
+                onChange={(e) => setDetailedDescription(e.target.value)}
+                placeholder="Mục lục, chi tiết từng phần (Hỗ trợ Markdown)..."
+                className="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-[#2563EB] transition resize-y text-slate-800 dark:text-slate-100"
               ></textarea>
             </div>
           </div>
