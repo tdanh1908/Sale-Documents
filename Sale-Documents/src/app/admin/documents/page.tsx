@@ -1,14 +1,62 @@
-import Link from "next/link";
-import { createServerClient } from "@/lib/supabase/server";
+"use client";
 
-export default async function DocumentsPage() {
-  const supabase = await createServerClient();
-  
-  // Lấy toàn bộ tài liệu từ database, mới nhất lên đầu
-  const { data: documents } = await supabase
-    .from('documents')
-    .select('*')
-    .order('created_at', { ascending: false });
+import Link from "next/link";
+import { createBrowserClient } from "@/lib/supabase/client";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+
+export default function DocumentsPage() {
+  const supabase = createBrowserClient();
+  const router = useRouter();
+  const [documents, setDocuments] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDocuments = async () => {
+      const { data } = await supabase
+        .from('documents')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (data) {
+        setDocuments(data);
+      }
+      setLoading(false);
+    };
+    fetchDocuments();
+  }, []);
+
+  const handleToggleStatus = async (id: string, currentStatus: string) => {
+    const newStatus = (currentStatus === 'published' || currentStatus === 'draft') ? 'hidden' : 'published';
+    const { error } = await supabase
+      .from('documents')
+      .update({ status: newStatus })
+      .eq('id', id);
+    
+    if (!error) {
+      setDocuments(docs => docs.map(doc => doc.id === id ? { ...doc, status: newStatus } : doc));
+      router.refresh();
+    } else {
+      console.error(error);
+      alert("Có lỗi xảy ra khi cập nhật trạng thái!");
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm("Bạn có chắc chắn muốn xóa vĩnh viễn tài liệu này không? Hành động này không thể hoàn tác.")) {
+      const { error } = await supabase
+        .from('documents')
+        .delete()
+        .eq('id', id);
+      
+      if (!error) {
+        setDocuments(docs => docs.filter(doc => doc.id !== id));
+        router.refresh();
+      } else {
+        console.error(error);
+        alert("Có lỗi xảy ra khi xóa tài liệu!");
+      }
+    }
+  };
 
   // Helper hiển thị môn học
   const getSubjectInfo = (subjectCode: string) => {
@@ -96,7 +144,13 @@ export default async function DocumentsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-sm font-medium">
-              {documents?.map((doc: any) => {
+              {loading ? (
+                <tr>
+                  <td colSpan={11} className="p-8 text-center text-slate-500">
+                    Đang tải dữ liệu...
+                  </td>
+                </tr>
+              ) : documents?.map((doc: any) => {
                 const subjectInfo = getSubjectInfo(doc.subject);
                 const isHidden = doc.status === 'hidden';
                 const isDraft = doc.status === 'draft';
@@ -121,7 +175,7 @@ export default async function DocumentsPage() {
                 const timeStr = date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
 
                 return (
-                  <tr key={doc.id} className={`hover:bg-slate-50 dark:hover:bg-slate-900/30 transition group ${isHidden ? 'bg-slate-50/50 dark:bg-slate-900/20' : ''}`}>
+                  <tr key={doc.id} className={hover:bg-slate-50 dark:hover:bg-slate-900/30 transition group }>
                     <td className="p-4 text-center">
                       <label className="custom-checkbox flex items-center justify-center cursor-pointer">
                         <input type="checkbox" className="hidden row-checkbox" value={doc.id} />
@@ -131,37 +185,37 @@ export default async function DocumentsPage() {
                       </label>
                     </td>
                     <td className="p-4">
-                      <div className={`w-10 h-14 rounded overflow-hidden bg-slate-50 border border-slate-200 dark:border-slate-700 ${isHidden || isDraft ? 'opacity-60 grayscale' : ''}`}>
+                      <div className={w-10 h-14 rounded overflow-hidden bg-slate-50 border border-slate-200 dark:border-slate-700 }>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={`https://placehold.co/100x140/${subjectInfo.bgCode}/FFF?text=${encodeURIComponent(subjectInfo.label)}`} className="w-full h-full object-cover" alt="Thumb" />
+                        <img src={https://placehold.co/100x140//FFF?text=} className="w-full h-full object-cover" alt="Thumb" />
                       </div>
                     </td>
                     <td className="p-4">
-                      <div className={`font-bold line-clamp-2 ${isHidden ? 'text-slate-500 dark:text-slate-400 line-through decoration-slate-400' : isDraft ? 'text-slate-600 dark:text-slate-400' : 'text-slate-800 dark:text-slate-100'}`}>
+                      <div className={ont-bold line-clamp-2 }>
                         {doc.title}
                       </div>
                       <div className="text-[10px] text-slate-500 font-mono mt-1" title={doc.id}>ID: {doc.id.substring(0, 8)}...</div>
                     </td>
                     <td className="p-4">
-                      <span className={`${subjectInfo.colorClass} text-xs px-2 py-1 rounded`}>
+                      <span className={${subjectInfo.colorClass} text-xs px-2 py-1 rounded}>
                         {subjectInfo.label}
                       </span>
                     </td>
-                    <td className={`p-4 text-center ${isHidden ? 'text-slate-500' : ''}`}>
+                    <td className={p-4 text-center }>
                       {doc.page_count}
                     </td>
-                    <td className={`p-4 text-right font-bold ${isHidden || isDraft ? 'text-slate-500' : 'text-[#2563EB]'}`}>
-                      {doc.view_price ? `${doc.view_price.toLocaleString('vi-VN')}đ` : '0đ'}
+                    <td className={p-4 text-right font-bold }>
+                      {doc.view_price ? ${doc.view_price.toLocaleString('vi-VN')}đ : '0đ'}
                     </td>
-                    <td className={`p-4 text-right ${isHidden || isDraft ? 'text-slate-400' : 'text-slate-500'}`}>
-                      {doc.download_price ? `${doc.download_price.toLocaleString('vi-VN')}đ` : '0đ'}
+                    <td className={p-4 text-right }>
+                      {doc.download_price ? ${doc.download_price.toLocaleString('vi-VN')}đ : '0đ'}
                     </td>
                     <td className="p-4 text-center">
-                      <span className={`inline-block text-xs font-bold px-2 py-1 rounded-full ${statusBadge}`}>
+                      <span className={inline-block text-xs font-bold px-2 py-1 rounded-full }>
                         {statusText}
                       </span>
                     </td>
-                    <td className={`p-4 text-center font-bold ${isHidden || isDraft ? 'text-slate-500' : ''}`}>
+                    <td className={p-4 text-center font-bold }>
                       {doc.sales_count}
                     </td>
                     <td className="p-4 text-right text-xs text-slate-500">
@@ -172,18 +226,19 @@ export default async function DocumentsPage() {
                         <button className="w-8 h-8 rounded-lg text-slate-500 hover:bg-blue-50 hover:text-[#2563EB] transition" title="Sửa thông tin"><i className="fa-solid fa-pen"></i></button>
                         <button className="w-8 h-8 rounded-lg text-slate-500 hover:bg-orange-50 hover:text-[#F97316] transition" title="Đổi giá"><i className="fa-solid fa-tag"></i></button>
                         <button className="w-8 h-8 rounded-lg text-slate-500 hover:bg-purple-50 hover:text-purple-600 transition" title="Thay file"><i className="fa-solid fa-file-pdf"></i></button>
-                        {doc.status === 'published' ? (
-                          <button className="w-8 h-8 rounded-lg text-slate-500 hover:bg-red-50 hover:text-red-500 transition" title="Gỡ khỏi cửa hàng"><i className="fa-solid fa-eye-slash"></i></button>
+                        {doc.status === 'published' || isDraft ? (
+                          <button onClick={() => handleToggleStatus(doc.id, doc.status)} className="w-8 h-8 rounded-lg text-slate-500 hover:bg-red-50 hover:text-red-500 transition" title="Gỡ khỏi cửa hàng"><i className="fa-solid fa-eye-slash"></i></button>
                         ) : (
-                          <button className="w-8 h-8 rounded-lg text-green-500 hover:bg-green-50 hover:text-green-600 transition" title="Khôi phục bán"><i className="fa-solid fa-rotate-left"></i></button>
+                          <button onClick={() => handleToggleStatus(doc.id, doc.status)} className="w-8 h-8 rounded-lg text-green-500 hover:bg-green-50 hover:text-green-600 transition" title="Khôi phục bán"><i className="fa-solid fa-rotate-left"></i></button>
                         )}
+                        <button onClick={() => handleDelete(doc.id)} className="w-8 h-8 rounded-lg text-slate-500 hover:bg-red-50 hover:text-red-600 transition" title="Xóa vĩnh viễn"><i className="fa-solid fa-trash"></i></button>
                       </div>
                     </td>
                   </tr>
                 );
               })}
               
-              {(!documents || documents.length === 0) && (
+              {!loading && (!documents || documents.length === 0) && (
                 <tr>
                   <td colSpan={11} className="p-8 text-center text-slate-500">
                     Chưa có tài liệu nào trên hệ thống.

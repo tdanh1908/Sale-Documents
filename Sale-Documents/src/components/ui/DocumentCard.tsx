@@ -1,5 +1,8 @@
+"use client";
+
 import { Star, FileText, ShoppingCart, Heart } from "lucide-react";
 import Link from "next/link";
+import { useCart } from "@/contexts/CartContext";
 
 interface DocumentCardProps {
   id: string;
@@ -57,6 +60,18 @@ export function DocumentCard({
     cyan: "bg-cyan-50 text-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-400",
     slate: "bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300",
     highlight: "bg-[#FACC15] text-orange-800",
+  };
+
+  const { cartItems, addToCart, removeFromCart } = useCart();
+  const isInCart = cartItems.includes(id);
+
+  const handleCartClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (isInCart) {
+      removeFromCart(id);
+    } else {
+      addToCart(id);
+    }
   };
 
   const getBadgeClass = (color: string) => colorMap[color] || colorMap["blue"];
@@ -157,7 +172,15 @@ export function DocumentCard({
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button className="w-11 h-11 rounded-xl bg-orange-50 text-[#F97316] dark:bg-orange-900/30 dark:text-orange-400 hover:bg-[#F97316] hover:text-white transition flex items-center justify-center flex-shrink-0" title="Thêm vào giỏ">
+                  <button 
+                    onClick={handleCartClick}
+                    className={`w-11 h-11 rounded-xl transition flex items-center justify-center flex-shrink-0 ${
+                      isInCart 
+                        ? "bg-[#F97316] text-white" 
+                        : "bg-orange-50 text-[#F97316] dark:bg-orange-900/30 dark:text-orange-400 hover:bg-[#F97316] hover:text-white"
+                    }`}
+                    title={isInCart ? "Xóa khỏi giỏ" : "Thêm vào giỏ"}
+                  >
                     <ShoppingCart className="w-5 h-5" />
                   </button>
                   <button className="flex-1 h-11 bg-[#2563EB] text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition">
@@ -189,7 +212,15 @@ export function DocumentCard({
                 <div className="text-[10px] text-slate-400 line-through mt-0.5">{originalPrice}</div>
               )}
             </div>
-            <button className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-orange-100 text-[#F97316] dark:bg-orange-900/40 dark:text-orange-400 hover:bg-[#F97316] hover:text-white transition flex items-center justify-center flex-shrink-0">
+            <button 
+              onClick={handleCartClick}
+              className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full transition flex items-center justify-center flex-shrink-0 ${
+                isInCart 
+                  ? "bg-[#F97316] text-white" 
+                  : "bg-orange-100 text-[#F97316] dark:bg-orange-900/40 dark:text-orange-400 hover:bg-[#F97316] hover:text-white"
+              }`}
+              title={isInCart ? "Xóa khỏi giỏ" : "Thêm vào giỏ"}
+            >
               <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </div>

@@ -8,32 +8,8 @@ import {
   Info, Headset, Clock, BookOpen, Search 
 } from "lucide-react";
 
-// Mock data cho giỏ hàng ban đầu
-const initialCart = [
-  {
-    id: "item_1",
-    subject: "Môn Toán",
-    title: "Bộ 50 đề thi thử THPT QG Môn Toán 2026 (Có đáp án chi tiết)",
-    image: "https://placehold.co/200x266/3B82F6/FFF?text=TOAN+12",
-    colorClass: "blue",
-    selectedPackage: "online", // online, download
-    packages: {
-      online: { price: 49000, label: "Xem Online" },
-      download: { price: 59000, label: "Xem + Tải về" }
-    }
-  },
-  {
-    id: "item_2",
-    subject: "Môn Hóa",
-    title: "Chuyên đề Vận dụng cao Hóa học vô cơ",
-    image: "https://placehold.co/200x266/10B981/FFF?text=HOA+HOC",
-    colorClass: "green",
-    selectedPackage: "online",
-    packages: {
-      online: { price: 35000, label: "Xem Online" }
-    }
-  }
-];
+import { createBrowserClient } from "@/lib/supabase/client";
+import { useCart } from "@/contexts/CartContext";
 
 const suggestedItems = [
   { id: "sug_1", title: "Công thức Lý 12", price: 5000, image: "https://placehold.co/150x200/8B5CF6/FFF?text=LY", subject: "Môn Lý", colorClass: "purple" },
@@ -42,23 +18,63 @@ const suggestedItems = [
 
 export default function CartPage() {
   const [step, setStep] = useState(1);
-  const [cart, setCart] = useState(initialCart);
+  const [cart, setCart] = useState<any[]>([]);
+  const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
   const [promoCode, setPromoCode] = useState("");
   const [appliedPromo, setAppliedPromo] = useState<string | null>(null);
+  const { removeFromCart } = useCart();
+  const [supabase] = useState(() => createBrowserClient());
+  const [user, setUser] = useState<any>(null);
   
   // Timer state (15:00)
   const [timeLeft, setTimeLeft] = useState(15 * 60);
-
-  // Success state: 'auto' or 'manual'
   const [successType, setSuccessType] = useState("auto");
 
-  // Format currency
+  useEffect(() => {
+    let mounted = true;
+    async function fetchCart() {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          if (mounted) setUser(session.user);
+          const { data, error } = await supabase
+            .from('cart_items')
+            .select('*, documents(*)')
+            .eq('user_id', session.user.id);
+          
+          if (error) throw error;
+          
+          if (mounted && data) {
+            setCart(data);
+            setSelectedItemIds(data.map((item: any) => item.id));
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching cart:", err);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+    fetchCart();
+  }, [supabase]);
+
   const formatMoney = (amount: number) => amount.toLocaleString("vi-VN") + "đ";
 
   // Calculate totals
-  const subTotal = cart.reduce((total, item) => {
-    const pkg = (item.packages as any)[item.selectedPackage];
-    return total + (pkg?.price || 0);
+  const selectedItems = cart.filter(item => selectedItemIds.includes(item.id));
+  const subTotal = selectedItems.reduce((total, item) => {
+    try {
+      const doc = item.documents;
+      if (!doc) return total;
+      const basePrice = doc.price || doc.view_price || 0;
+      const finalDocPrice = item.option === 'download' 
+        ? Math.round((basePrice * 1.2) / 500) * 500
+        : basePrice;
+      return total + finalDocPrice;
+    } catch(e) {
+      return total;
+    }
   }, 0);
   
   let discount = 0;
@@ -67,10 +83,9 @@ export default function CartPage() {
   }
   
   const finalTotal = subTotal - discount;
-  const isFreeOrder = finalTotal === 0 && cart.length > 0;
+  const isFreeOrder = finalTotal === 0 && selectedItemIds.length > 0;
   const isUnderMinOrder = finalTotal > 0 && finalTotal < 2000;
 
-  // Countdown timer effect
   useEffect(() => {
     if (step === 2 && timeLeft > 0) {
       const timerId = setInterval(() => {
@@ -86,32 +101,44 @@ export default function CartPage() {
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  const handlePackageChange = (itemId: string, pkgType: string) => {
-    setCart(cart.map(item => item.id === itemId ? { ...item, selectedPackage: pkgType } : item));
+  const handleUpdateOption = async (cartItemId: string, newOption: string) => {
+    setCart(prev => prev.map(c => c.id === cartItemId ? { ...c, option: newOption } : c));
+    const { error } = await supabase
+      .from('cart_items')
+      .update({ option: newOption })
+      .eq('id', cartItemId);
+    if (error) {
+      console.error(error);
+      alert("Lỗi cập nhật tùy chọn");
+    }
   };
 
-  const handleRemoveItem = (itemId: string) => {
-    setCart(cart.filter(item => item.id !== itemId));
-    // Reset promo if cart becomes empty
-    if (cart.length === 1) {
+  const handleRemoveItem = async (cartItemId: string, documentId: string) => {
+    setCart(prev => prev.filter(c => c.id !== cartItemId));
+    setSelectedItemIds(prev => prev.filter(id => id !== cartItemId));
+    await removeFromCart(documentId);
+    if (cart.length <= 1) {
       setAppliedPromo(null);
       setPromoCode("");
     }
   };
 
+  const handleSelectAll = () => {
+    if (selectedItemIds.length === cart.length) {
+      setSelectedItemIds([]);
+    } else {
+      setSelectedItemIds(cart.map(item => item.id));
+    }
+  };
+
+  const handleSelectItem = (id: string) => {
+    setSelectedItemIds(prev => 
+      prev.includes(id) ? prev.filter(itemId => itemId !== id) : [...prev, id]
+    );
+  };
+
   const handleAddSuggested = (sug: typeof suggestedItems[0]) => {
-    const newItem = {
-      id: `added_${sug.id}_${cart.length}`,
-      subject: sug.subject,
-      title: sug.title,
-      image: sug.image,
-      colorClass: sug.colorClass,
-      selectedPackage: "online",
-      packages: {
-        online: { price: sug.price, label: "Xem Online" }
-      }
-    };
-    setCart([...cart, newItem]);
+    // Keep it as a mock add or implement later
   };
 
   const handleApplyPromo = () => {
@@ -125,18 +152,16 @@ export default function CartPage() {
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
-    // Could add a toast here
   };
 
   const handleCheckout = () => {
     if (isUnderMinOrder) return;
-    
     if (isFreeOrder) {
       setSuccessType("auto");
       setStep(3);
     } else {
       setStep(2);
-      setTimeLeft(15 * 60); // reset timer
+      setTimeLeft(15 * 60);
     }
   };
 
@@ -214,7 +239,9 @@ export default function CartPage() {
                 )}
 
                 {/* Giỏ hàng trống */}
-                {cart.length === 0 ? (
+                {loading ? (
+                  <div className="flex justify-center py-12 text-slate-500">Đang tải giỏ hàng...</div>
+                ) : cart.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 text-center bg-white dark:bg-[#1E293B] rounded-3xl border border-slate-200 dark:border-slate-800">
                     <div className="w-24 h-24 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-400 mb-4">
                       <ShoppingBasket className="w-10 h-10" />
@@ -227,69 +254,100 @@ export default function CartPage() {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {cart.map((item) => (
-                      <div key={item.id} className="bg-white dark:bg-[#1E293B] rounded-2xl p-4 border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row gap-4 relative">
-                        {/* Ảnh bìa */}
-                        <div className={`w-20 h-28 sm:w-24 sm:h-32 flex-shrink-0 rounded-xl overflow-hidden bg-${item.colorClass}-50`}>
-                          <img src={item.image} alt="Bìa sách" className="w-full h-full object-cover" />
-                        </div>
-                        
-                        {/* Thông tin & Tùy chọn */}
-                        <div className="flex-1 flex flex-col justify-between">
-                          <div className="pr-8 sm:pr-0">
-                            <span className={`text-[10px] sm:text-xs font-bold text-${item.colorClass}-600 dark:text-${item.colorClass}-400 bg-${item.colorClass}-50 dark:bg-${item.colorClass}-900/30 px-2 py-1 rounded-md mb-2 inline-block`}>
-                              {item.subject}
-                            </span>
-                            <h3 className="font-bold text-sm sm:text-base leading-snug line-clamp-2 mb-2 text-slate-800 dark:text-slate-100">{item.title}</h3>
+                    <div className="flex items-center gap-3 p-4 bg-white dark:bg-[#1E293B] rounded-2xl border border-slate-200 dark:border-slate-700">
+                      <input 
+                        type="checkbox" 
+                        className="w-5 h-5 rounded border-slate-300 text-[#2563EB] focus:ring-[#2563EB] accent-blue-600"
+                        checked={cart.length > 0 && selectedItemIds.length === cart.length}
+                        onChange={handleSelectAll}
+                      />
+                      <span className="font-bold text-slate-800 dark:text-slate-100">Chọn tất cả ({cart.length} sản phẩm)</span>
+                    </div>
+                    {cart.map((item) => {
+                      const doc = item.documents;
+                      if (!doc) return null;
+                      
+                      const basePrice = doc.price || doc.view_price || 0;
+                      const downloadPrice = Math.round((basePrice * 1.2) / 500) * 500;
+                      const currentPrice = item.option === 'download' ? downloadPrice : basePrice;
+
+                      return (
+                        <div key={item.id} className="bg-white dark:bg-[#1E293B] rounded-2xl p-4 border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row gap-4 relative items-start sm:items-center">
+                          <input 
+                            type="checkbox" 
+                            className="w-5 h-5 rounded border-slate-300 text-[#2563EB] focus:ring-[#2563EB] accent-blue-600 mt-2 sm:mt-0"
+                            checked={selectedItemIds.includes(item.id)}
+                            onChange={() => handleSelectItem(item.id)}
+                          />
+                          <div className={`w-20 h-28 sm:w-24 sm:h-32 flex-shrink-0 rounded-xl overflow-hidden bg-blue-50`}>
+                            <img src={`https://placehold.co/200x266/3B82F6/FFF?text=TL`} alt="Bìa sách" className="w-full h-full object-cover" />
                           </div>
                           
-                          {/* Chọn gói */}
-                          <div className="flex flex-wrap gap-2 mt-2">
-                            {Object.entries(item.packages).map(([pkgKey, pkgValue]) => {
-                              const isChecked = item.selectedPackage === pkgKey;
-                              return (
-                                <label key={pkgKey} className="relative cursor-pointer">
-                                  <input 
-                                    type="radio" 
-                                    name={`pkg_${item.id}`} 
-                                    value={pkgKey} 
-                                    className="absolute opacity-0 w-0 h-0" 
-                                    checked={isChecked} 
-                                    onChange={() => handlePackageChange(item.id, pkgKey)} 
-                                  />
-                                  <div className={`flex items-center gap-2 px-3 py-2 border rounded-xl transition text-sm ${isChecked ? 'border-[#2563EB] bg-blue-50 dark:bg-blue-900/20' : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'}`}>
-                                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition ${isChecked ? 'border-[#2563EB] bg-[#2563EB]' : 'border-slate-300 dark:border-slate-600'}`}>
-                                      {isChecked && <div className="w-1.5 h-1.5 bg-white rounded-full"></div>}
-                                    </div>
-                                    <span className="font-medium text-slate-700 dark:text-slate-300">{pkgValue.label}</span>
+                          <div className="flex-1 flex flex-col justify-between">
+                            <div className="pr-8 sm:pr-0">
+                              <span className={`text-[10px] sm:text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded-md mb-2 inline-block`}>
+                                {doc.subject || 'Khác'}
+                              </span>
+                              <h3 className="font-bold text-sm sm:text-base leading-snug line-clamp-2 mb-2 text-slate-800 dark:text-slate-100">{doc.title}</h3>
+                            </div>
+                            
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              <label className="relative cursor-pointer">
+                                <input 
+                                  type="radio" 
+                                  name={`pkg_${item.id}`} 
+                                  value="view_only" 
+                                  className="absolute opacity-0 w-0 h-0" 
+                                  checked={item.option !== 'download'} 
+                                  onChange={() => handleUpdateOption(item.id, 'view_only')} 
+                                />
+                                <div className={`flex items-center gap-2 px-3 py-2 border rounded-xl transition text-sm ${item.option !== 'download' ? 'border-[#2563EB] bg-blue-50 dark:bg-blue-900/20' : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'}`}>
+                                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition ${item.option !== 'download' ? 'border-[#2563EB] bg-[#2563EB]' : 'border-slate-300 dark:border-slate-600'}`}>
+                                    {item.option !== 'download' && <div className="w-1.5 h-1.5 bg-white rounded-full"></div>}
                                   </div>
-                                </label>
-                              );
-                            })}
-                          </div>
-                        </div>
+                                  <span className="font-medium text-slate-700 dark:text-slate-300">Xem Online</span>
+                                </div>
+                              </label>
 
-                        {/* Giá & Xóa */}
-                        <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-between border-t border-slate-100 sm:border-0 pt-3 sm:pt-0 mt-3 sm:mt-0">
-                          <div className="font-extrabold text-[#2563EB] text-lg">{formatMoney((item.packages as any)[item.selectedPackage]?.price || 0)}</div>
+                              <label className="relative cursor-pointer">
+                                <input 
+                                  type="radio" 
+                                  name={`pkg_${item.id}`} 
+                                  value="download" 
+                                  className="absolute opacity-0 w-0 h-0" 
+                                  checked={item.option === 'download'} 
+                                  onChange={() => handleUpdateOption(item.id, 'download')} 
+                                />
+                                <div className={`flex items-center gap-2 px-3 py-2 border rounded-xl transition text-sm ${item.option === 'download' ? 'border-[#2563EB] bg-blue-50 dark:bg-blue-900/20' : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'}`}>
+                                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition ${item.option === 'download' ? 'border-[#2563EB] bg-[#2563EB]' : 'border-slate-300 dark:border-slate-600'}`}>
+                                    {item.option === 'download' && <div className="w-1.5 h-1.5 bg-white rounded-full"></div>}
+                                  </div>
+                                  <span className="font-medium text-slate-700 dark:text-slate-300">Xem + Tải về</span>
+                                </div>
+                              </label>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-between border-t border-slate-100 sm:border-0 pt-3 sm:pt-0 mt-3 sm:mt-0">
+                            <div className="font-extrabold text-[#2563EB] text-lg">{formatMoney(currentPrice)}</div>
+                            <button 
+                              className="w-11 h-11 rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition flex items-center justify-center" 
+                              aria-label="Xóa" 
+                              onClick={() => handleRemoveItem(item.id, item.document_id)}
+                            >
+                              <Trash2 className="w-5 h-5" />
+                            </button>
+                          </div>
+                          
                           <button 
-                            className="w-11 h-11 rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition flex items-center justify-center" 
-                            aria-label="Xóa" 
-                            onClick={() => handleRemoveItem(item.id)}
+                            className="absolute top-2 right-2 w-8 h-8 sm:hidden rounded-full text-slate-400 bg-slate-100/50 hover:bg-slate-200 dark:bg-slate-800/50 dark:hover:bg-slate-700 flex items-center justify-center" 
+                            onClick={() => handleRemoveItem(item.id, item.document_id)}
                           >
-                            <Trash2 className="w-5 h-5" />
+                            <X className="w-4 h-4" />
                           </button>
                         </div>
-                        
-                        {/* Nút xóa tuyệt đối trên mobile */}
-                        <button 
-                          className="absolute top-2 right-2 w-8 h-8 sm:hidden rounded-full text-slate-400 bg-slate-100/50 hover:bg-slate-200 dark:bg-slate-800/50 dark:hover:bg-slate-700 flex items-center justify-center" 
-                          onClick={() => handleRemoveItem(item.id)}
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
 
@@ -343,7 +401,7 @@ export default function CartPage() {
                       <button 
                         className="h-11 px-4 bg-slate-800 text-white dark:bg-slate-700 font-bold text-sm rounded-xl hover:bg-slate-900 dark:hover:bg-slate-600 transition disabled:opacity-50"
                         onClick={handleApplyPromo}
-                        disabled={!promoCode.trim() || cart.length === 0}
+                        disabled={!promoCode.trim() || selectedItemIds.length === 0}
                       >
                         Áp dụng
                       </button>
@@ -358,7 +416,7 @@ export default function CartPage() {
                   {/* Các dòng tiền */}
                   <div className="space-y-3 mb-4 text-sm text-slate-600 dark:text-slate-300">
                     <div className="flex justify-between">
-                      <span>Tổng tiền hàng ({cart.length})</span>
+                      <span>Tổng tiền hàng ({selectedItemIds.length} sản phẩm được chọn)</span>
                       <span className="font-bold text-slate-800 dark:text-slate-100">{formatMoney(subTotal)}</span>
                     </div>
                     {discount > 0 && (
@@ -383,12 +441,12 @@ export default function CartPage() {
                   {/* Buttons */}
                   <button 
                     className={`w-full h-12 text-white font-extrabold text-base rounded-2xl transition flex items-center justify-center gap-2 shadow-lg shadow-blue-200 dark:shadow-none ${
-                      cart.length === 0 || isUnderMinOrder 
+                      selectedItemIds.length === 0 || isUnderMinOrder 
                         ? 'bg-slate-300 dark:bg-slate-700 cursor-not-allowed text-slate-500 shadow-none' 
                         : 'bg-[#2563EB] hover:bg-[#1D4ED8]'
                     }`}
                     onClick={handleCheckout}
-                    disabled={cart.length === 0 || isUnderMinOrder}
+                    disabled={selectedItemIds.length === 0 || isUnderMinOrder}
                   >
                     Thanh toán ngay <ArrowRight className="w-4 h-4" />
                   </button>
@@ -548,7 +606,7 @@ export default function CartPage() {
                   </div>
                   <div className="flex justify-between mb-3 text-sm">
                     <span className="text-slate-500">Số tài liệu:</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200">{cart.length} cuốn</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200">{selectedItemIds.length} cuốn</span>
                   </div>
                   <div className="flex justify-between text-sm border-t border-slate-200 dark:border-slate-700 pt-3 mt-3">
                     <span className="text-slate-500">Tổng thanh toán:</span>
@@ -591,3 +649,4 @@ export default function CartPage() {
     </div>
   );
 }
+

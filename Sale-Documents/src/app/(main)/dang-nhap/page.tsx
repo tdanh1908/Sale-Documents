@@ -40,6 +40,9 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithPassword({
       email: data.email,
       password: data.password,
+      options: {
+        captchaToken: turnstileToken,
+      },
     });
 
     if (error) {
@@ -79,7 +82,7 @@ export default function LoginPage() {
             <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'} onSuccess={setTurnstileToken} />
           </div>
 
-          <button disabled={loading} type="submit" className="w-full bg-blue-600 text-white font-medium py-3 rounded-lg hover:bg-blue-700 transition shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
+          <button disabled={loading || !turnstileToken} type="submit" className="w-full bg-blue-600 text-white font-medium py-3 rounded-lg hover:bg-blue-700 transition shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
             {loading ? 'Đang xác thực...' : 'Đăng nhập'}
           </button>
         </form>

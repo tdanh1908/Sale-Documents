@@ -8,7 +8,10 @@ import { useEffect, useState, useRef } from "react";
 import { createBrowserClient } from "@/lib/supabase/client";
 import { useRouter, usePathname } from "next/navigation";
 
+import { useCart } from "@/contexts/CartContext";
+
 export function Header() {
+  const { cartItems } = useCart();
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -115,9 +118,11 @@ export function Header() {
             className="relative w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition"
           >
             <ShoppingCart className="w-5 h-5" />
-            <span className="absolute -top-1 -right-1 bg-[#F97316] text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white dark:border-[#1E293B]">
-              2
-            </span>
+            {cartItems.length > 0 && (
+              <span className="absolute -top-1 -right-1 bg-[#F97316] text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white dark:border-[#1E293B]">
+                {cartItems.length}
+              </span>
+            )}
           </Link>
           
           {/* Thư viện (Desktop) */}
