@@ -16,6 +16,7 @@ export default function DocumentDetailPage() {
   const [error, setError] = useState(false);
   const [selectedOption, setSelectedOption] = useState("view_only");
   const [activeTab, setActiveTab] = useState("desc");
+  const [isDownloading, setIsDownloading] = useState(false);
   const { addToCart, cartItems } = useCart();
   const isAdded = cartItems.some(item => item.document_id === id && item.option === selectedOption);
 
@@ -55,6 +56,48 @@ export default function DocumentDetailPage() {
 
     fetchDocument();
   }, [id, supabase]);
+
+  const handleDownloadFree = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!document?.full_file_path) {
+      alert("Không tìm thấy file tải về!");
+      return;
+    }
+
+    if (isDownloading) return;
+    setIsDownloading(true);
+
+    try {
+      const { data, error } = await supabase
+        .storage
+        .from('documents')
+        .createSignedUrl(document.full_file_path, 60);
+
+      if (error || !data?.signedUrl) {
+        throw new Error("Không thể tạo link tải về.");
+      }
+
+      const response = await fetch(data.signedUrl);
+      if (!response.ok) throw new Error("Không tải được file.");
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = window.document.createElement('a');
+      a.href = url;
+      a.download = (document.title || 'Tai-lieu') + '.pdf';
+      window.document.body.appendChild(a);
+      a.click();
+      window.document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Lỗi tải file:", err);
+      alert("Có lỗi xảy ra khi tải file!");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -323,9 +366,25 @@ export default function DocumentDetailPage() {
                       <div className="text-sm text-slate-500 font-medium">Tài liệu chia sẻ miễn phí</div>
                     </div>
 
-                    <div className="flex flex-col gap-2">
-                      <button className="w-full h-12 bg-[#2563EB] text-white font-extrabold text-sm rounded-2xl hover:bg-[#1D4ED8] transition flex items-center justify-center gap-2 shadow-lg shadow-blue-200 dark:shadow-none">
-                        <i className="fa-solid fa-book-open"></i> XEM MIỄN PHÍ
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); router.push(`/read/${document.id}`); }}
+                        className="flex-1 h-12 bg-[#2563EB] text-white font-extrabold text-sm rounded-2xl hover:bg-[#1D4ED8] transition flex items-center justify-center gap-2 shadow-lg shadow-blue-200 dark:shadow-none"
+                      >
+                        📖 Đọc Online
+                      </button>
+                      <button 
+                        onClick={handleDownloadFree}
+                        disabled={isDownloading}
+                        className={`flex-1 h-12 bg-green-500 text-white font-extrabold text-sm rounded-2xl hover:bg-green-600 transition flex items-center justify-center gap-2 shadow-lg shadow-green-200 dark:shadow-none ${isDownloading ? 'opacity-70 cursor-wait' : ''}`}
+                      >
+                        {isDownloading ? (
+                          <>
+                            <i className="fa-solid fa-spinner fa-spin"></i> Đang tải...
+                          </>
+                        ) : (
+                          <>⬇️ Tải về</>
+                        )}
                       </button>
                     </div>
                   </div>
