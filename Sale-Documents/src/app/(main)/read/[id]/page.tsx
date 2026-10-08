@@ -126,6 +126,53 @@ export default function ReadDocumentPage() {
     return () => window.document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
+  // Set up IntersectionObserver for Continuous Scrolling
+  useEffect(() => {
+    if (!numPages) return;
+    
+    const timer = setTimeout(() => {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              const pageNum = parseInt(entry.target.id.replace('page-', ''), 10);
+              if (!isNaN(pageNum)) {
+                setPageNumber((prev) => {
+                  if (prev !== pageNum) {
+                    setPageInput(pageNum.toString());
+                    return pageNum;
+                  }
+                  return prev;
+                });
+              }
+            }
+          });
+        },
+        {
+          root: window.document.getElementById('pdf-scroll-container'),
+          rootMargin: '0px',
+          threshold: 0.5,
+        }
+      );
+
+      const pageElements = window.document.querySelectorAll('.pdf-page-anchor');
+      pageElements.forEach((el) => observer.observe(el));
+
+      return () => observer.disconnect();
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [numPages]);
+
+  const scrollToPage = (pageNum: number) => {
+    setPageNumber(pageNum);
+    setPageInput(pageNum.toString());
+    const target = window.document.getElementById(`page-${pageNum}`);
+    if (target) {
+       target.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
     setNumPages(numPages);
     setPageNumber(1);
@@ -136,7 +183,7 @@ export default function ReadDocumentPage() {
     e.preventDefault();
     const val = parseInt(pageInput);
     if (val >= 1 && val <= (numPages || 1)) {
-      setPageNumber(val);
+      scrollToPage(val);
     } else {
       setPageInput(pageNumber.toString());
     }
@@ -249,10 +296,9 @@ export default function ReadDocumentPage() {
               <div className="p-4 flex flex-col gap-4">
                 {numPages && Array.from(new Array(numPages), (el, index) => (
                   <div 
-                    key={`page_${index + 1}`}
+                    key={`sidebar_page_${index + 1}`}
                     onClick={() => {
-                      setPageNumber(index + 1);
-                      setPageInput((index + 1).toString());
+                      scrollToPage(index + 1);
                       if (window.innerWidth < 768) setIsSidebarOpen(false);
                     }}
                     className={`cursor-pointer rounded overflow-hidden flex flex-col justify-center items-center p-1 transition ${pageNumber === index + 1 ? 'bg-blue-500/20 ring-2 ring-blue-500' : 'hover:bg-slate-200 dark:hover:bg-slate-700'}`}
@@ -271,15 +317,26 @@ export default function ReadDocumentPage() {
               </div>
             </div>
 
-            {/* Main Viewer */}
-            <div className="flex-1 h-full overflow-y-auto flex justify-center p-4 md:p-8">
-               <Page 
-                 pageNumber={pageNumber} 
-                 className="shadow-2xl bg-white max-w-full"
-                 renderTextLayer={true}
-                 renderAnnotationLayer={true}
-                 width={Math.min(window.innerWidth - (isSidebarOpen && window.innerWidth >= 768 ? 250 : 40), 900)}
-               />
+            {/* Main Viewer - Continuous Scrolling */}
+            <div 
+              id="pdf-scroll-container"
+              className="flex-1 h-full overflow-y-auto flex flex-col items-center gap-8 bg-slate-200 dark:bg-slate-900 p-4 md:p-8 pb-20 scroll-smooth"
+            >
+               {numPages && Array.from(new Array(numPages), (el, index) => (
+                  <div 
+                    key={`main_page_${index + 1}`}
+                    id={`page-${index + 1}`}
+                    className="pdf-page-anchor w-full flex justify-center"
+                  >
+                     <Page 
+                       pageNumber={index + 1} 
+                       className="shadow-2xl bg-white max-w-full"
+                       renderTextLayer={true}
+                       renderAnnotationLayer={true}
+                       width={Math.min(window.innerWidth - (isSidebarOpen && window.innerWidth >= 768 ? 250 : 40), 900)}
+                     />
+                  </div>
+               ))}
             </div>
           </Document>
         ) : (
