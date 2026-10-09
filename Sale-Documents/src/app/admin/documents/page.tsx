@@ -82,9 +82,9 @@ export default function DocumentsPage() {
           <p className="text-sm text-slate-500 dark:text-slate-400">Tổng số: {totalCount.toLocaleString('vi-VN')} tài liệu trên hệ thống</p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="h-11 px-4 bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition shadow-sm flex items-center gap-2">
+          <Link href="/admin/documents/logs" className="h-11 px-4 bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition shadow-sm flex items-center gap-2">
             <i className="fa-solid fa-clock-rotate-left"></i> Nhật ký
-          </button>
+          </Link>
           <Link href="/admin/documents/create" className="h-11 px-5 bg-[#2563EB] text-white rounded-xl text-sm font-bold hover:bg-[#1D4ED8] transition shadow-sm flex items-center gap-2">
             <i className="fa-solid fa-plus"></i> Thêm tài liệu
           </Link>

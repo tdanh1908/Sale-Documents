@@ -29,8 +29,11 @@ export default function CreateDocumentPage() {
   
   // Pricing State
   const [priceType, setPriceType] = useState("paid");
-  const [pages, setPages] = useState(100);
-  const [unitPrice, setUnitPrice] = useState(200);
+  const [pageCount, setPageCount] = useState("");
+  const [unitPrice, setUnitPrice] = useState("");
+  const [viewPrice, setViewPrice] = useState("");
+  const [downloadPrice, setDownloadPrice] = useState("");
+  const [isCountingPages, setIsCountingPages] = useState(false);
 
   // File Upload State
   const [fullFile, setFullFile] = useState<File | null>(null);
@@ -41,13 +44,34 @@ export default function CreateDocumentPage() {
   // Modal State
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
 
-  // Derived state
-  const viewPrice = pages * unitPrice;
-  const dlPrice = Math.round(viewPrice * 1.2);
+  // Effect tính giá tự động khi pageCount hoặc unitPrice thay đổi, nhưng cho phép sửa tay
+  useEffect(() => {
+    const pCount = Number(pageCount) || 0;
+    const uPrice = Number(unitPrice) || 0;
+    if (pCount > 0 && uPrice > 0) {
+      const vPrice = pCount * uPrice;
+      setViewPrice(vPrice.toString());
+      setDownloadPrice(Math.round(vPrice * 1.2).toString());
+    }
+  }, [pageCount, unitPrice]);
 
   const sanitizeFilename = (name: string) => {
     const noTones = name.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     return noTones.replace(/[^a-zA-Z0-9.\-]/g, "-").replace(/-+/g, "-");
+  };
+
+  const countPdfPages = async (file: File) => {
+    setIsCountingPages(true);
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      setPageCount(pdf.numPages.toString());
+    } catch (error) {
+      console.error("Lỗi đếm số trang PDF:", error);
+      setPageCount("");
+    } finally {
+      setIsCountingPages(false);
+    }
   };
 
   const generatePdfCover = async (file: File) => {
@@ -68,7 +92,7 @@ export default function CreateDocumentPage() {
       canvas.height = viewport.height;
       canvas.width = viewport.width;
       
-      await page.render({ canvasContext: context, viewport: viewport }).promise;
+      await page.render({ canvasContext: context, viewport: viewport } as any).promise;
       
       const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
       setCoverImage(dataUrl);
@@ -78,6 +102,12 @@ export default function CreateDocumentPage() {
   };
 
   const handleSubmit = async () => {
+    const isFree = priceType === "free";
+    const sanitizedPageCount = Math.max(1, Number(pageCount) || 1);
+    const sanitizedUnitPrice = isFree ? 0 : Math.max(0, Number(unitPrice) || 0);
+    const sanitizedViewPrice = isFree ? 0 : Math.max(0, Number(viewPrice) || 0);
+    const sanitizedDlPrice = isFree ? 0 : Math.max(0, Number(downloadPrice) || 0);
+
     if (!name.trim()) {
       alert("Vui lòng nhập tên tài liệu!");
       return;
@@ -161,12 +191,6 @@ export default function CreateDocumentPage() {
       }
 
       // 3. Chuẩn hóa dữ liệu đầu vào (Sanitize Payload)
-      const isFree = priceType === "free";
-      const sanitizedPageCount = Math.max(1, Number(pages) || 1);
-      const sanitizedUnitPrice = isFree ? 0 : Math.max(0, Number(unitPrice) || 0);
-      const sanitizedViewPrice = isFree ? 0 : Math.max(0, Number(viewPrice) || 0);
-      const sanitizedDlPrice = isFree ? 0 : Math.max(0, Number(dlPrice) || 0);
-
       const payload = {
         slug: slug,
         title: name.trim(),
@@ -204,7 +228,7 @@ export default function CreateDocumentPage() {
             bucket: 'documents',
             storage_path: fullPath,
             file_size: fullFile.size,
-            page_count: pages,
+            page_count: sanitizedPageCount,
             is_current: true
           },
           {
@@ -222,6 +246,27 @@ export default function CreateDocumentPage() {
         if (filesError) {
           console.error("Cảnh báo lưu document_files:", filesError.message);
           // Không throw error ở đây để người dùng vẫn thấy thành công nếu bản record chính đã lưu
+        }
+
+        // 4.5 Insert Audit Log (Bọc try/catch để không gián đoạn UI nếu log lỗi)
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          const adminEmail = session?.user?.email || 'admin@system.local';
+          
+          await supabase.from("admin_audit_logs").insert({
+            admin_email: adminEmail,
+            action_type: 'CREATE',
+            entity_name: 'DOCUMENT',
+            entity_id: newDoc.id,
+            changes: { 
+              title: payload.title, 
+              subject: payload.subject,
+              is_free: payload.is_free,
+              view_price: payload.view_price 
+            }
+          });
+        } catch (logErr) {
+          console.error("Lỗi khi ghi nhật ký hoạt động:", logErr);
         }
       }
 
@@ -247,8 +292,10 @@ export default function CreateDocumentPage() {
     setTags([]);
     setDetailedDescription("");
     setPriceType("paid");
-    setPages(100);
-    setUnitPrice(200);
+    setPageCount("");
+    setUnitPrice("");
+    setViewPrice("");
+    setDownloadPrice("");
     setFullFile(null);
     setDemoFile(null);
     setCoverImage(null);
@@ -301,7 +348,9 @@ export default function CreateDocumentPage() {
                     className="hidden" 
                     onChange={(e) => {
                       if (e.target.files && e.target.files.length > 0) {
-                        setFullFile(e.target.files[0]);
+                        const file = e.target.files[0];
+                        setFullFile(file);
+                        countPdfPages(file); // Gọi hàm đếm trang
                       }
                     }} 
                   />
@@ -315,6 +364,7 @@ export default function CreateDocumentPage() {
                         onClick={(e) => {
                           e.preventDefault();
                           setFullFile(null);
+                          setPageCount(""); // Xóa số trang khi gỡ file
                         }}
                         className="bg-red-100 text-red-600 px-3 py-1 rounded-full text-xs font-bold hover:bg-red-200 transition flex items-center gap-1"
                       >
@@ -547,11 +597,15 @@ export default function CreateDocumentPage() {
               <div className="bg-slate-50 dark:bg-[#0F172A]/50 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 transition-opacity">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end mb-6">
                   <div>
-                    <label className="block text-xs font-bold text-slate-500 mb-1">Số trang PDF (Tự trích xuất)</label>
+                    <label className="block text-xs font-bold text-slate-500 mb-1">
+                      Số trang PDF (Tự trích xuất) {isCountingPages && <i className="fa-solid fa-spinner fa-spin text-blue-500 ml-1"></i>}
+                    </label>
                     <input 
                       type="number" 
-                      value={pages}
-                      onChange={(e) => setPages(Number(e.target.value))}
+                      value={pageCount}
+                      onChange={(e) => setPageCount(e.target.value)}
+                      placeholder={isCountingPages ? "Đang đếm..." : "0"}
+                      disabled={isCountingPages}
                       className="w-full h-11 px-3 bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-800 dark:text-slate-100 outline-none focus:border-[#2563EB]" 
                     />
                   </div>
@@ -560,8 +614,8 @@ export default function CreateDocumentPage() {
                     <input 
                       type="number" 
                       value={unitPrice}
-                      step="50"
-                      onChange={(e) => setUnitPrice(Number(e.target.value))}
+                      onChange={(e) => setUnitPrice(e.target.value)}
+                      placeholder="VD: 200"
                       className="w-full h-11 px-3 bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-[#2563EB] text-slate-800 dark:text-slate-100" 
                     />
                   </div>
@@ -572,14 +626,24 @@ export default function CreateDocumentPage() {
                     <div className="absolute -top-2.5 left-3 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-[10px] font-bold px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800">Giá Xem Online (Gợi ý)</div>
                     <div className="flex items-center justify-between mt-2">
                       <span className="text-xs text-slate-500">= Số trang × Đơn giá</span>
-                      <input type="text" readOnly value={viewPrice.toLocaleString('vi-VN') + "đ"} className="w-24 text-right font-black text-[#2563EB] bg-transparent border-b border-slate-200 dark:border-slate-700 outline-none" />
+                      <input 
+                        type="number" 
+                        value={viewPrice} 
+                        onChange={(e) => setViewPrice(e.target.value)}
+                        className="w-24 text-right font-black text-[#2563EB] bg-transparent border-b border-slate-200 dark:border-slate-700 outline-none focus:border-blue-500" 
+                      />
                     </div>
                   </div>
                   <div className="bg-white dark:bg-[#1E293B] p-3 rounded-xl border border-orange-200 dark:border-orange-800 shadow-sm relative">
                     <div className="absolute -top-2.5 left-3 bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300 text-[10px] font-bold px-2 py-0.5 rounded border border-orange-200 dark:border-orange-800">Giá Tải PDF (Gợi ý)</div>
                     <div className="flex items-center justify-between mt-2">
                       <span className="text-xs text-slate-500">= Giá xem × 1.2</span>
-                      <input type="text" readOnly value={dlPrice.toLocaleString('vi-VN') + "đ"} className="w-24 text-right font-black text-[#F97316] bg-transparent border-b border-slate-200 dark:border-slate-700 outline-none" />
+                      <input 
+                        type="number" 
+                        value={downloadPrice} 
+                        onChange={(e) => setDownloadPrice(e.target.value)}
+                        className="w-24 text-right font-black text-[#F97316] bg-transparent border-b border-slate-200 dark:border-slate-700 outline-none focus:border-orange-500" 
+                      />
                     </div>
                   </div>
                 </div>
@@ -617,14 +681,14 @@ export default function CreateDocumentPage() {
                 {name || "Tên tài liệu sẽ hiện ở đây..."}
               </h3>
               <div className="flex items-center text-xs text-slate-500 dark:text-slate-400 gap-3 mb-3">
-                <span><i className="fa-regular fa-file-pdf"></i> <span>{pages}</span> trang</span>
+                <span><i className="fa-regular fa-file-pdf"></i> <span>{pageCount || 0}</span> trang</span>
               </div>
               
               <div className="mt-auto pt-3 border-t border-slate-100 dark:border-slate-800/50 flex items-center justify-between">
                 {priceType === "paid" ? (
                   <div>
                     <div className="text-[10px] text-slate-500">Từ</div>
-                    <div className="font-extrabold text-[#2563EB] text-xl">{viewPrice.toLocaleString('vi-VN')}đ</div>
+                    <div className="font-extrabold text-[#2563EB] text-xl">{Number(viewPrice || 0).toLocaleString('vi-VN')}đ</div>
                   </div>
                 ) : (
                   <div>

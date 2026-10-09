@@ -33,8 +33,8 @@ export default function EditDocumentPage() {
   
   // Pricing State
   const [priceType, setPriceType] = useState("paid");
-  const [pages, setPages] = useState(100);
-  const [unitPrice, setUnitPrice] = useState(200);
+  const [pages, setPages] = useState<any>("");
+  const [unitPrice, setUnitPrice] = useState<any>("");
 
   // File Upload State
   const [fullFile, setFullFile] = useState<File | null>(null);
@@ -50,34 +50,34 @@ export default function EditDocumentPage() {
     const fetchDoc = async () => {
       const { data, error } = await supabase.from('documents').select('*').eq('id', id).single();
       if (data && !error) {
-        setName(data.title || "");
+        setName((data as any).title || "");
         setSubject(
-          data.subject === "toan" ? "Toán" :
-          data.subject === "ly" ? "Lý" :
-          data.subject === "hoa" ? "Hóa" :
-          data.subject === "sinh" ? "Sinh" :
-          data.subject === "van" ? "Văn" :
-          data.subject === "anh" ? "Anh" : "Toán"
+          (data as any).subject === "toan" ? "Toán" :
+          (data as any).subject === "ly" ? "Lý" :
+          (data as any).subject === "hoa" ? "Hóa" :
+          (data as any).subject === "sinh" ? "Sinh" :
+          (data as any).subject === "van" ? "Văn" :
+          (data as any).subject === "anh" ? "Anh" : "Toán"
         );
         setDocType(
-          data.doc_type === "ly_thuyet" ? "Lý thuyết" :
-          data.doc_type === "bai_tap" ? "Bài tập" : "Đề thi"
+          (data as any).doc_type === "ly_thuyet" ? "Lý thuyết" :
+          (data as any).doc_type === "bai_tap" ? "Bài tập" : "Đề thi"
         );
-        setGrade(data.category || "");
-        setDescription(data.description || "");
-        setAuthor(data.author || "");
-        setTags(data.tags || []);
-        setDetailedDescription(data.detailed_description || "");
-        setPriceType(data.is_free ? "free" : "paid");
-        setPages(data.page_count || 100);
-        setUnitPrice(data.price_per_page || 200);
+        setGrade((data as any).category || "");
+        setDescription((data as any).description || "");
+        setAuthor((data as any).author || "");
+        setTags((data as any).tags || []);
+        setDetailedDescription((data as any).detailed_description || "");
+        setPriceType((data as any).is_free ? "free" : "paid");
+        setPages((data as any).page_count ? String((data as any).page_count) : "");
+        setUnitPrice((data as any).price_per_page ? String((data as any).price_per_page) : "");
       }
     };
     fetchDoc();
   }, [id, supabase]);
 
   // Derived state
-  const viewPrice = pages * unitPrice;
+  const viewPrice = (Number(pages) || 0) * (Number(unitPrice) || 0);
   const dlPrice = Math.round(viewPrice * 1.2);
 
   const sanitizeFilename = (name: string) => {
@@ -103,7 +103,7 @@ export default function EditDocumentPage() {
       canvas.height = viewport.height;
       canvas.width = viewport.width;
       
-      await page.render({ canvasContext: context, viewport: viewport }).promise;
+      await page.render({ canvasContext: context, viewport: viewport } as any).promise;
       
       const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
       setCoverImage(dataUrl);
@@ -113,6 +113,12 @@ export default function EditDocumentPage() {
   };
 
   const handleSubmit = async () => {
+    const isFree = priceType === "free";
+    const sanitizedPageCount = Math.max(1, Number(pages) || 1);
+    const sanitizedUnitPrice = isFree ? 0 : Math.max(0, Number(unitPrice) || 0);
+    const sanitizedViewPrice = isFree ? 0 : Math.max(0, Number(viewPrice) || 0);
+    const sanitizedDlPrice = isFree ? 0 : Math.max(0, Number(dlPrice) || 0);
+
     if (!name.trim()) {
       alert("Vui lòng nhập tên tài liệu!");
       return;
@@ -175,12 +181,6 @@ export default function EditDocumentPage() {
       const slug = generateValidSlug(name);
 
       // 3. Chuẩn hóa dữ liệu đầu vào (Sanitize Payload)
-      const isFree = priceType === "free";
-      const sanitizedPageCount = Math.max(1, Number(pages) || 1);
-      const sanitizedUnitPrice = isFree ? 0 : Math.max(0, Number(unitPrice) || 0);
-      const sanitizedViewPrice = isFree ? 0 : Math.max(0, Number(viewPrice) || 0);
-      const sanitizedDlPrice = isFree ? 0 : Math.max(0, Number(dlPrice) || 0);
-
       const payload: any = {
         slug: slug,
         title: name.trim(),
@@ -232,8 +232,8 @@ export default function EditDocumentPage() {
     setTags([]);
     setDetailedDescription("");
     setPriceType("paid");
-    setPages(100);
-    setUnitPrice(200);
+    setPages("");
+    setUnitPrice("");
     setFullFile(null);
     setDemoFile(null);
     setCoverImage(null);

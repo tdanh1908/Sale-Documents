@@ -1,0 +1,33 @@
+Dựa trên tiến độ bạn đã làm (giao diện thẻ, thả tim, trang chi tiết, đọc PDF cơ bản, và tải file), đối chiếu với Prompt 4, dưới đây là các đầu việc lớn bạn chưa thực hiện:
+
+1. Toàn bộ Hệ thống Admin (Chưa có)
+
+Hệ thống ghi log mọi thao tác của Admin (Audit log).
+
+2. Bảo mật Cốt lõi & Phân quyền (Đang sai yêu cầu)
+
+Hiện tại tài liệu của bạn đang để ở Bucket Public và tải bằng Public URL. Theo yêu cầu, File đầy đủ phải nằm ở Bucket Private, chỉ được truy cập qua Signed URL có thời hạn.
+
+Chưa có logic Server kiểm tra quyền (Người dùng đã mua quyền Xem hay quyền Tải chưa) trước khi trả về file.
+
+3. Luồng Bán hàng & Gói Premium (Chưa có)
+
+Chưa có luồng Mua lẻ (Thêm vào giỏ hàng với Giá xem / Giá tải).
+
+Chưa có logic tính suất Premium: Bảng premium_download_slots, logic kiểm tra 5 suất/30 ngày, và cảnh báo "Đã dùng 2/5 suất".
+
+4. Chức năng Thư viện & Trình xem nâng cao (Chưa hoàn thiện)
+
+Trang danh sách chưa có bộ lọc phức tạp (Checkbox môn/lớp) và tìm kiếm Full-text search phân trang.
+
+Trình xem PDF hiện tại chưa có tính năng khóa chuột phải, chống chọn/copy văn bản.
+
+Mới chỉ làm hàm cộng lượt tải (downloads + 1), chưa có bảng download_logs ghi nhận chi tiết lịch sử từng lượt tải.
+
+5. Backend Workers & Testing (Chưa có)
+
+Chưa cài đặt Giới hạn tốc độ (Rate limiting) chống lạm dụng sinh link tải/ảnh bìa.
+
+Chưa viết Unit Test cho chức năng phân quyền tải file.
+
+Bạn kiểm tra lại nhé, bạn muốn ưu tiên xử lý khối công việc nào tiếp theo để tôi chuẩn bị định hướng hoặc viết code (plain text) hỗ trợ bạn?
